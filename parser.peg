@@ -43,3 +43,17 @@ dot	  ::= '.';
 
 ident	  ::= (digit / lower / upper / '_')+;
 
+simple_expr ::=
+    / lparen expr rparen
+    / lparen rperen
+    / bool
+    / float
+    / int
+    / ident
+    ;
+
+exper	::=
+    / simple_expr
+    / not expr
+    ;
+
