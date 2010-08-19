@@ -1,0 +1,45 @@
+
+space	::= (' ' / '\t'/ '\n' / '\r')*;
+digit	::= ['0'-'9'];
+lower	::= ['a'-'z'];
+upper	::= ['A'-'Z'];
+
+lparen 	::= '(';
+rparen 	::= ')';
+
+minus 	::= '-';
+plus	::= '+';
+minus_d	::= "-.";
+plus_d	::= "+.";
+ast_d	::= "*.";
+slash_d	::= "/.";
+equal	::= '=';
+less_greater  ::= "<>";
+less_equal    ::= "<=";
+less	      ::= '<';
+greater_equal ::= ">=";
+
+integer	::= digit+;
+real	::= digit+ ('.' digit* / ['e' 'E'] ['+' '-']? digit+);
+(* number ::= real / integer; *) 
+
+true	::= "true";
+false	::= "false";
+bool	::= true / false;
+not	::= "not";
+
+if	::= "if";
+then	::= "then";
+else	::= "else";
+let	::= "let";
+in	::= "in";
+rec	::= "rec";
+
+any 	::= '_';
+assign	::= "<-";
+semicolon ::= ";";
+conma	  ::= ',';
+dot	  ::= '.';
+
+ident	  ::= (digit / lower / upper / '_')+;
+
