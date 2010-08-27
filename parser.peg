@@ -52,8 +52,16 @@ simple_expr ::=
     / ident
     ;
 
-exper	::=
+expr	::=
     / simple_expr
     / not expr
     ;
+
+
+if_exp	::=
+    	if expr then expr (else expr)?;
+
+let_exp	::=
+      let ident equal expr in expr
+    / let rec? ident+ equal expr in expr;
 
