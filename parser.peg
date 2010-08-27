@@ -1,8 +1,8 @@
 
-space	::= (' ' / '\t'/ '\n' / '\r')*;
-digit	::= ['0'-'9'];
-lower	::= ['a'-'z'];
-upper	::= ['A'-'Z'];
+space	::= (' ' | '\t'| '\n' | '\r')*;
+digit	::= [0-9];
+lower	::= [a-z];
+upper	::= [A-Z];
 
 s ::= space;
 
@@ -23,14 +23,13 @@ less_equal    ::= "<=";
 less	      ::= '<';
 greater_equal ::= ">=";
 
-integer	::= digit+;
-(* real	::= digit+ ('.' digit* / ['e' 'E'] ['+' '-']? digit+); *)
-real    ::= digit+ ('.' digit* / ('.' digit*)? ['e' 'E'] ['+' '-']? digit+);
-(* number ::= real / integer; *) 
+integer	::= ('-' | '+')? (digit | '_')+;
+real    ::= ('-' | '+')? digit+ ('.' digit*)? (('e' | 'E') ('-' | '+')? digit+)?;
+
 
 true	::= "true";
 false	::= "false";
-bool	::= true / false;
+bool	::= true | false;
 
 if	::= "if";
 then	::= "then";
@@ -41,51 +40,57 @@ rec	::= "rec";
 
 any 	::= '_';
 assign	::= "<-";
-semicolon ::= ";";
+semicolon ::= ';';
 conma	  ::= ',';
 dot	  ::= '.';
 
-ident	  ::= (digit / lower / upper / '_')+;
+ident	  ::= (digit | lower | upper | '_')+;
 
 simple_expr ::=
-    / lparen s expr s rparen
-    / lparen s rperen
-    / bool
-    / float
-    / integer
-    / ident
+      lparen s expr s rparen
+    | lparen s rparen
+    | bool
+    | real
+    | integer
+    | ident
     ;
 
 expr	::=
-    / simple_expr
-    / let_expr
-    / if_expr
-    / add_expr
-    / mul_expr
+      simple_expr
+    | apply_expr
+    | let_expr
+    | if_expr
+    | add_expr
+    | mul_expr
     ;
 
 add_expr ::=
-      value s (plus_d / minus_d / plus / minus) s add_expr;
+      value s (plus_d | minus_d | plus | minus) s add_expr;
 
 mul_expr ::=
-      expr s (ast_d / slash_d / ast / slash) s mul_expr;
+      expr s (ast_d | slash_d | ast | slash) s mul_expr;
 
 value ::=
-      mul_expr / expr;
+      mul_expr | expr;
 
 if_expr ::=
     	if s expr s then s expr s (else s expr)?;
 
 let_expr ::=
       let s ident s equal s expr s in expr
-    / let rec? formal_args equal expr in expr;
+    | let s rec? s formal_args s equal s expr s in s expr;
+
+apply_expr ::=
+      ident actual_args;
 
 formal_args ::=
       ident s formal_args;
 
 actual_args ::=
-      simple_expr s autual_args;
+      simple_expr s actual_args;
 
 tuple_expr ::=
       simple_expr (s conma s simple_expr)+;
+
+start ::= expr* EOF;
 
