@@ -4,6 +4,8 @@ digit	::= ['0'-'9'];
 lower	::= ['a'-'z'];
 upper	::= ['A'-'Z'];
 
+s ::= space;
+
 lparen 	::= '(';
 rparen 	::= ')';
 
@@ -11,6 +13,8 @@ minus 	::= '-';
 plus	::= '+';
 minus_d	::= "-.";
 plus_d	::= "+.";
+ast	::= '*';
+slash	::= '/';
 ast_d	::= "*.";
 slash_d	::= "/.";
 equal	::= '=';
@@ -26,7 +30,6 @@ real	::= digit+ ('.' digit* / ['e' 'E'] ['+' '-']? digit+);
 true	::= "true";
 false	::= "false";
 bool	::= true / false;
-not	::= "not";
 
 if	::= "if";
 then	::= "then";
@@ -44,24 +47,44 @@ dot	  ::= '.';
 ident	  ::= (digit / lower / upper / '_')+;
 
 simple_expr ::=
-    / lparen expr rparen
-    / lparen rperen
+    / lparen s expr s rparen
+    / lparen s rperen
     / bool
     / float
-    / int
+    / integer
     / ident
     ;
 
 expr	::=
     / simple_expr
-    / not expr
+    / let_expr
+    / if_expr
+    / add_expr
+    / mul_expr
     ;
 
+add_expr ::=
+      value s (plus_d / minus_d / plus / minus) s add_expr;
 
-if_exp	::=
-    	if expr then expr (else expr)?;
+mul_expr ::=
+      expr s (ast_d / slash_d / ast / slash) s mul_expr;
 
-let_exp	::=
-      let ident equal expr in expr
-    / let rec? ident+ equal expr in expr;
+value ::=
+      mul_expr / expr;
+
+if_expr ::=
+    	if s expr s then s expr s (else s expr)?;
+
+let_expr ::=
+      let s ident s equal s expr s in expr
+    / let rec? formal_args equal expr in expr;
+
+formal_args ::=
+      ident s formal_args;
+
+actual_args ::=
+      simple_expr s autual_args;
+
+tuple_expr ::=
+      simple_expr (s conma s simple_expr)+;
 
