@@ -24,7 +24,8 @@ less	      ::= '<';
 greater_equal ::= ">=";
 
 integer	::= digit+;
-real	::= digit+ ('.' digit* / ['e' 'E'] ['+' '-']? digit+);
+(* real	::= digit+ ('.' digit* / ['e' 'E'] ['+' '-']? digit+); *)
+real    ::= digit+ ('.' digit* / ('.' digit*)? ['e' 'E'] ['+' '-']? digit+);
 (* number ::= real / integer; *) 
 
 true	::= "true";
