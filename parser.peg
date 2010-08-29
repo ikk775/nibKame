@@ -17,26 +17,32 @@ ast	::= '*';
 slash	::= '/';
 ast_d	::= "*.";
 slash_d	::= "/.";
+
 equal	::= '=';
 less_greater  ::= "<>";
 less_equal    ::= "<=";
 less	      ::= '<';
 greater_equal ::= ">=";
+greater       ::= '>';
 
-integer	::= ('-' | '+')? (digit | '_')+;
-real    ::= ('-' | '+')? digit+ ('.' digit*)? (('e' | 'E') ('-' | '+')? digit+)?;
+Comparator ::= less_greater | less_equal | less | equal | greater_equal | greater;
+
+integer	::= <Integer>{ ('-' | '+')? digit (digit | '_')* }</Integer>;
+real ::= <Real>{ ('-' | '+')? digit+ dot digit* (('e' | 'E') ('-' | '+')? digit+)? }</Real>;
 
 
 true	::= "true";
 false	::= "false";
-bool	::= true | false;
+bool	::= <Boolean> true | false </Boolean>;
 
 if	::= "if";
 then	::= "then";
 else	::= "else";
 let	::= "let";
 in	::= "in";
-rec	::= "rec";
+rec	::= <Rec> "rec" </Rec>;
+
+reserved ::= if | then | else | let | in | rec | bool;
 
 any 	::= '_';
 assign	::= "<-";
@@ -44,7 +50,7 @@ semicolon ::= ';';
 conma	  ::= ',';
 dot	  ::= '.';
 
-ident	  ::= (digit | lower | upper | '_')+;
+ident	  ::= <Ident>{ ~reserved (lower | upper | '_' ) (digit | lower | upper | '_')* }</Ident>;
 
 simple_expr ::=
       lparen s expr s rparen
@@ -55,42 +61,51 @@ simple_expr ::=
     | ident
     ;
 
-expr	::=
-      simple_expr
-    | apply_expr
-    | let_expr
+expr ::= <Expr>
+      let_expr
     | if_expr
+    | apply_expr
     | add_expr
     | mul_expr
-    ;
+    | comp_expr
+    | tuple_expr
+    | simple_expr
+    </Expr>;
 
 add_expr ::=
-      value s (plus_d | minus_d | plus | minus) s add_expr;
+      <Add> term (s pm_opr s term)+ </Add>;
+
+pm_opr ::= <PM>{ plus_d | minus_d | plus | minus }</PM>;
+
+term ::=
+      mul_expr | simple_expr;
 
 mul_expr ::=
-      expr s (ast_d | slash_d | ast | slash) s mul_expr;
+      <Mul> simple_expr (s as_opr s simple_expr)+ </Mul>;
 
-value ::=
-      mul_expr | expr;
+as_opr ::= <AS>{ (ast_d | slash_d | ast | slash) }</AS>;
+
+comp_expr ::=
+      <Comp> (add_expr | simple_expr) (s Comparator s (add_expr | simple_expr))+ </Comp>;
 
 if_expr ::=
-    	if s expr s then s expr s (else s expr)?;
+    	<If> if s expr s then s expr s (else s expr)? </If>;
 
 let_expr ::=
-      let s ident s equal s expr s in expr
-    | let s rec? s formal_args s equal s expr s in s expr;
+      <VarDecl> let s ident s equal s expr s in expr </VarDecl>
+    | <FunDecl> let s rec? s ident s formal_args s equal s expr (s in s <Body> expr </Body> )? </FunDecl>;
 
 apply_expr ::=
-      ident actual_args;
+      <Apply> ident s actual_args </Apply>;
 
 formal_args ::=
-      ident s formal_args;
+      <Formal_args> ident (s ident)* </Formal_args>;
 
 actual_args ::=
-      simple_expr s actual_args;
+      <Actual_args> simple_expr (s simple_expr)+ </Actual_args>;
 
 tuple_expr ::=
       simple_expr (s conma s simple_expr)+;
 
-start ::= expr* EOF;
+start ::= <ExprList> (expr s)* </ExprList> EOF;
 
