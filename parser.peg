@@ -9,21 +9,21 @@ s ::= space;
 lparen 	::= '(';
 rparen 	::= ')';
 
-minus 	::= '-';
-plus	::= '+';
-minus_d	::= "-.";
-plus_d	::= "+.";
-ast	::= '*';
-slash	::= '/';
-ast_d	::= "*.";
-slash_d	::= "/.";
+minus 	::= minus: '-';
+plus	::= plus: '+';
+minus_d	::= minus_d: "-.";
+plus_d	::= plus_d: "+.";
+ast	::= ast: '*';
+slash	::= slash: '/';
+ast_d	::= ast_d: "*.";
+slash_d	::= slash_d: "/.";
 
-equal	::= '=';
-less_greater  ::= "<>";
-less_equal    ::= "<=";
-less	      ::= '<';
-greater_equal ::= ">=";
-greater       ::= '>';
+equal	::= eq: '=';
+less_greater  ::= neq: "<>";
+less_equal    ::= le: "<=";
+less	      ::= lt: '<';
+greater_equal ::= ge: ">=";
+greater       ::= gt: '>';
 
 Comparator ::= less_greater | less_equal | less | equal | greater_equal | greater;
 
@@ -31,16 +31,16 @@ integer	::= <Integer>{ ('-' | '+')? digit (digit | '_')* }</Integer>;
 real ::= <Real>{ ('-' | '+')? digit+ dot digit* (('e' | 'E') ('-' | '+')? digit+)? }</Real>;
 
 
-true	::= "true";
-false	::= "false";
+true	::= ture: "true";
+false	::= false: "false";
 bool	::= <Boolean> true | false </Boolean>;
 
 if	::= "if";
 then	::= "then";
 else	::= "else";
 let	::= "let";
-in	::= "in";
-rec	::= <Rec> "rec" </Rec>;
+in	::= has_body: "in";
+rec	::= rec: "rec";
 
 reserved ::= if | then | else | let | in | rec | bool;
 
@@ -75,7 +75,7 @@ expr ::= <Expr>
 add_expr ::=
       <Add> term (s pm_opr s term)+ </Add>;
 
-pm_opr ::= <PM>{ plus_d | minus_d | plus | minus }</PM>;
+pm_opr ::= plus_d | minus_d | plus | minus;
 
 term ::=
       mul_expr | simple_expr;
@@ -83,7 +83,7 @@ term ::=
 mul_expr ::=
       <Mul> simple_expr (s as_opr s simple_expr)+ </Mul>;
 
-as_opr ::= <AS>{ (ast_d | slash_d | ast | slash) }</AS>;
+as_opr ::= (ast_d | slash_d | ast | slash);
 
 comp_expr ::=
       <Comp> (add_expr | simple_expr) (s Comparator s (add_expr | simple_expr))+ </Comp>;
@@ -93,7 +93,7 @@ if_expr ::=
 
 let_expr ::=
       <VarDecl> let s ident s equal s expr s in expr </VarDecl>
-    | <FunDecl> let s rec? s ident s formal_args s equal s expr (s in s <Body> expr </Body> )? </FunDecl>;
+    | <FunDecl> let s rec? s ident s formal_args s equal s expr (s in s expr)? </FunDecl>;
 
 apply_expr ::=
       <Apply> ident s actual_args </Apply>;
