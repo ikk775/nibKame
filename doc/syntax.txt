@@ -1,0 +1,43 @@
+. 構文
+.. 構文木(のS式表現)
+... リテラルなど
+.... unit
+  - unit
+    unit
+.... リスト
+  - [ <a> ; ... ]
+    (<a> ...)
+.... タプル
+  - <a> , ...
+    (tuple <a> ...)
+.... 配列
+  - [| <atom> ; ... |]
+    (array <a> ...)
+
+... 演算子
+.... 算術演算
+  - <a> + <b>
+    (+ <a> <b>)
+  その他も同様
+.... 連結
+  - <a> :: <b>
+    (cons <a> <b>)
+
+... 構文
+.... let式
+  - let <id> = <e1> in <e2>
+    (let <id> <e1> <e2>)
+.... if式
+  - if <e1> then <e2> else <e3>
+    (if <e1> <e2> <e3>)
+.... match式
+  - match <e1> with | <pattern> -> <expr> ...
+    (match <e1> (<pattern> <expr>) ...)
+.... fun式
+  - fun <id> ... -> <expr>
+    (fun (<id> ...) <expr>)
+.... 関数呼び
+  - f <arg>
+    (f <arg>)
+
+# vim: set ft=howm-memo ts=8 noexpandtab sts=2 sw=2 :
