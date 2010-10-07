@@ -22,6 +22,7 @@ type t =
   | LetRec of (Id.t * Type.t) * t * t
   | If of t * t * t
   | Match of t * (t * t) list
+  | Variant of Id.t * (Id.t * Type.t) list
   | Fun of (Id.t * Type.t) list * t
   | Var of Id.t
   | Apply of t * t list
