@@ -1,13 +1,55 @@
 \documentclass[a4paper, 10pt, oneside, notitlepage, onecolumn]{jsarticle}
 \usepackage{ascmac}
 \usepackage[osf]{mathpazo}
-\usepackage{listings}
-\usepackage{jlisting}
 \pagestyle{myheadings}
 
-\title{}
 \author{}
 
 \begin{document}
-\maketitle
+\begin{flushright}
+    2010年10月7日
+\end{flushright}
+\begin{center}
+    4J後期実験テーマ概要\\
+\hspace{0.1em}
+    \textsc{\LARGE 関数型言語の設計と実装}
+\end{center}
+\begin{flushright}
+    L班 07317 小堀 育男\\
+        07322 酒本 典明
+\end{flushright}
+\section{目的}
+    教育目的で作られたコンパイラ――
+    特にML系の言語ではMinCamlが有名であるが、
+    それは、ML系の言語としては、代数的データ型やパターンマッチングなどの
+    重要な機能を欠いており、その機能を補うのが目的である。
+
+    また、MinCamlはSPARCとPowerPCをターゲットとしているが、
+    我々は一般に普及しているx86をターゲットとする。
+
+\section{概要}
+\subsection{nibKameの仕様}
+    言語仕様は以下のとおりとする。
+    \begin{itemize}
+	    \item 型推論をする
+	    \item 以下の組み込み型を用意する。
+	    \begin{itemize}
+	        \item 整数型、浮動小数点数型
+	        \item 文字型
+	        \item Bool型
+	        \item Array型、List型
+	    \end{itemize}
+	    \item 無名関数を使えるようにする。
+	    \item \texttt{let}式、\texttt{match}式、
+	        \texttt{fun}式を使えるようにする。
+    \end{itemize}
+
+\subsection{コンパイラの仕様}
+    コンパイラの仕様は以下のとおりとする。
+    \begin{itemize}
+        \item 対象言語はnibKameとする。
+        \item ターゲットはx86アセンブリとする。
+        \item 主な記述言語はOCamlとする。
+    \end{itemize}
+
 \end{document}
