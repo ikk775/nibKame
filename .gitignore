@@ -2,3 +2,6 @@
 *~
 *.cmi
 *.cmo
+*.aux
+*.dvi
+
