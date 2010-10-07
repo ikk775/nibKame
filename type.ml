@@ -3,6 +3,7 @@ type t =
   | Bool
   | Int
   | Float
+  | Char
   | Fun of t list * t
   | Tuple of t list
   | Array of t
