@@ -1,46 +1,105 @@
 ﻿. 構文
+.. 二種類の構文木
+  - ソースをパーズする先の構文木
+    ユーザプログラムのマクロはここで作用する。
+    仮に繁木と呼ぶことにする。
+    パーザはこの形のいずれかにパーズすべき。
+  - 型推論に渡される構文木
+    仮に正規化木と呼ぶことにする。
+    型推論器はこの形の木が渡されると期待すべき。
 .. 構文木(のS式表現)
 ... リテラルなど
 .... unit
   - unit
-    unit
+    繁木:
+      unit
+    正規化木:
+      unit
 .... リスト
   - [ <a> ; ... ]
-    (<a> ...)
+    繁木:
+      (<a> ...)
+    正規化木:
+      (list <a> ...)
 .... タプル
   - <a> , ...
-    (tuple <a> ...)
+    繁木:
+      (tuple <a> ...)
+    正規化木:
+      (tuple <a> ...)
 .... 配列
   - [| <atom> ; ... |]
-    (array <a> ...)
+    繁木:
+      (array <a> ...)
+    正規化木:
+      (array <a> ...)
 
 ... 演算子
 .... 算術演算
   - <a> + <b>
-    (+ <a> <b>)
+    繁木:
+      (+ <a> <b> ...)
+    正規化木:
+      (+ <a> <b>)
   その他も同様
 .... 連結
   - <a> :: <b>
-    (cons <a> <b>)
+    繁木:
+      (:: <a> <b>)
+    正規化木:
+      (cons <a> <b>)
 .... 式の並び
   - <e1> ; <e2>
-    (; <e1> <e2>)
+    繁木:
+      (; <e1> <e2> ...)
+    正規化木:
+      (; <e1> <e2>)
 
 ... 構文
 .... let式
   - let <id> = <e1> in <e2>
-    (let <id> <e1> <e2>)
+    繁木:
+      (let <id> <e1> <e2>)
+    正規化木:
+      (let <id> <e1> <e2>)
 .... if式
   - if <e1> then <e2> else <e3>
-    (if <e1> <e2> <e3>)
+    繁木:
+      (if <e1> <e2> <e3>)
+    正規化木:
+      (if <e1> <e2> <e3>)
 .... match式
   - match <e1> with | <pattern> -> <expr> ...
-    (match <e1> (<pattern> <expr>) ...)
+    繁木:
+      (match <e1> (<pattern> <expr>) ...)
+    正規化木:
+      なし
+  - match <e1> with | <pattern> when <guard> -> <expr> ...
+    繁木:
+      (match <e1> (<pattern> when <expr>) ...)
+    正規化木:
+      なし
 .... fun式
+  - fun <id> -> <expr>
+    繁木:
+      (fun (<id>) <expr>)
+    正規化木:
+      (fun (<id>) <expr>)
   - fun <id> ... -> <expr>
-    (fun (<id> ...) <expr>)
+    繁木:
+      (fun (<id> ...) <expr>)
+    正規化木:
+      なし
 .... 関数呼び
   - f <arg>
-    (f <arg>)
+    繁木:
+      (f <arg>)
+    正規化木:
+      (f <arg>)
+  - f <arg> ...
+    繁木:
+      (f <arg> ...)
+    正規化木:
+      なし
 
 # vim: set ft=howm-memo ts=8 noexpandtab sts=2 sw=2 :
