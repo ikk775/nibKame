@@ -28,3 +28,19 @@ let nextToken stream =
       | None -> raise End_of_file
   in
     iter stream
+
+
+(*
+  read_expr : char Stream.t -> Syntax.t
+*)
+let rec read_expr stream =
+  match nextToken stream with
+    | "(" ->
+	Syntax.Unit
+    | "unit" -> Syntax.Unit
+    | str ->
+	try Syntax.Int (int_of_string str) with
+	  | Failure "int_of_string" ->
+	      try Syntax.Float (float_of_string str) with
+		| Failure "float_of_string" ->
+		    (Syntax.Var str)
