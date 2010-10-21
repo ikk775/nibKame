@@ -3,6 +3,7 @@ type t =
   | Bool of bool
   | Int of int
   | Float of float
+  | Char of char
   | Add of t * t
   | Sub of t * t
   | Mul of t * t
@@ -26,3 +27,5 @@ type t =
   | Var of Id.t
   | Apply of t * t list
   | Tuple of t list
+  | Array of t list
+  | List of t list
