@@ -33,6 +33,58 @@
       (array <a> ...)
     正規化木:
       (array <a> ...)
+.... 数値
+  - Int
+    1 とか 2 とか -2 とか
+  - Char
+    'a'
+    #\a
+    どっちにする？
+
+... 型
+.... バリアント
+  - type <typeconstr-name> = <constructor1> | <constructor2> of <typexpr> * <typexpr>
+    繁木:
+    正規化木:
+      (type <type-name> ()
+       (<constructor1>)
+       (<constructor2> (tuple <typexpr> <typexpr>)))
+  - type <type-varible1>, <type-varible2> ... <typeconstr-name> = <constructor1> | <constructor2> of <typexpr> * <typexpr>
+    繁木:
+    正規化木:
+      (type <type-name> (<type-varible1> <type-varible2>)
+       (<constructor1>)
+       (<constructor2> <typexpr> <typexpr>))
+
+... 副作用
+.... 配列
+.... 参照型
+  - ref <expr>
+    繁木:
+      (ref <expr>)
+    正規化木:
+      なし
+#     (array <expr>) となる
+.... 参照
+  - <expr1>.(<expr2>)
+    繁木:
+      (. <expr1> <expr2>)
+    正規化木:
+      配列に対して
+      (array-ref <expr1> <expr2>)
+  - !<expr>
+    繁木:
+      (! <expr>)
+    正規化木:
+    なし
+#     (array-ref <expr> 0) となる
+.... 代入
+  - <expr1>.(<expr2>) <- <expr3>
+    繁木:
+      (<-  <expr>)
+    正規化木:
+      配列に対して
+      (array-set <expr1> <expr2> <expr3>)
 
 ... 演算子
 .... 算術演算
@@ -59,13 +111,15 @@
 .... let式
   - let <id> = <e1> in <e2>
     繁木:
-      (let <id> <e1> <e2>)
     正規化木:
       (let <id> <e1> <e2>)
+  - let rec <id> = <e1> in <e2>
+    繁木:
+    正規化木:
+      (letrec <id> <e1> <e2>)
 .... if式
   - if <e1> then <e2> else <e3>
     繁木:
-      (if <e1> <e2> <e3>)
     正規化木:
       (if <e1> <e2> <e3>)
 .... match式
@@ -79,6 +133,15 @@
       (match <e1> (<pattern> when <expr>) ...)
     正規化木:
       なし
+..... パターン式
+  - リテラル
+    そのまま
+  - 変数
+    そのまま
+  - <constructor> <varible> : データコンストラクタ
+    (<constructor> <varible>)
+  - <varible>, ... : タプル
+   (tuple <varible> ...)
 .... fun式
   - fun <id> -> <expr>
     繁木:
