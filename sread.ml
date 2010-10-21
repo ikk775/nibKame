@@ -12,7 +12,7 @@ let nextToken stream =
 		 Stream.junk stm;
 		 Buffer.add_char buff ch;
 		 str stm)
-      | None -> raise End_of_file in
+      | None -> Buffer.contents buff in
     (* Buffer.reset buff; *)
   let rec iter stm =
     match Stream.peek stream with
