@@ -81,11 +81,15 @@ let rec read_expr stm =
 	      ending stm 
 		(Syntax.Fun
 		   ((match nextToken stm with
-		       | "(" -> iter (fun x -> (x, Type.Var (ref None)))
+		       | "(" -> iter (fun x -> (x, Type.gentype ()))
 		       | _ -> raise (Failure "unreconized string")),
 		    read_expr stm))
-	| "let"
-	| "letrec" -> Syntax.Unit
+	| "let" ->
+	    ending stm (Syntax.Let ((nextToken stm, Type.gentype ()),
+				    read_expr stm, read_expr stm))
+	| "letrec" ->
+	    ending stm (Syntax.LetRec ((nextToken stm, Type.gentype()),
+				       read_expr stm, read_expr stm))
 	| funname -> Syntax.Unit
   in
     match nextToken stm with
