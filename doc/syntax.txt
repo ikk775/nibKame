@@ -154,15 +154,10 @@
     正規化木:
       なし
 .... 関数呼び
-  - f <arg>
+  - <fun> <arg>
     繁木:
-      (f <arg>)
+      (apply <fun> <arg>)
     正規化木:
-      (f <arg>)
-  - f <arg> ...
-    繁木:
-      (f <arg> ...)
-    正規化木:
-      なし
+      (apply <fun> <arg>)
 
 # vim: set ft=howm-memo ts=8 noexpandtab sts=2 sw=2 :
