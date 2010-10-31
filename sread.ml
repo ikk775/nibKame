@@ -90,7 +90,9 @@ let rec read_expr stm =
 	| "letrec" ->
 	    ending stm (Syntax.LetRec ((nextToken stm, Type.gentype()),
 				       read_expr stm, read_expr stm))
-	| funname -> Syntax.Unit
+	| "apply" -> Syntax.Apply (read_expr stm, list_reader (fun x-> x))
+
+	| any -> Syntax.Unit
   in
     match nextToken stm with
       | "(" ->
