@@ -1,0 +1,50 @@
+\documentclass[a4paper, 10pt, oneside, notitlepage, onecolumn]{jsarticle}
+\usepackage{ascmac}
+\usepackage[osf]{mathpazo}
+\pagestyle{myheadings}
+
+\author{}
+
+\begin{document}
+\begin{flushright}
+    2010年11月4日
+\end{flushright}
+\begin{center}
+    4J後期実験中間報告1\\
+\hspace{0.1em}
+    \textsc{\LARGE 関数型言語の設計と実装}
+\end{center}
+\begin{flushright}
+\end{flushright}
+\section{現状報告}
+プロジェクトは大幅に遅延している。
+詳細は以下に述べるが、主に工程表に記載されていなかったがプロジェクトにとって必要であった
+工程の開発が遅れており、工程表の書き直しが必要とされている。
+
+\subsection{進捗状況}
+\subsubsection{\texttt{sexpr.ml}}
+S式を読み込むライブラリのモジュールである。
+
+\subsubsection{\texttt{sread.ml}}
+S式から中間言語1へ変換するモジュールである。
+
+\section{問題点}
+\subsection{nibKameの仕様}
+コンパイラの実装に先立って行われるべき言語仕様が固まっていなかったため、その策定を行う必要があった。
+ゆえに、その間プロジェクトが遅れている。
+
+\subsection{構文木リーダの開発}
+これに意外と手間取り、また、これが完成しないと次の「中間言語への変換部の作成」に取り掛かれないため、
+その分プロジェクトが遅れている。
+
+\section{作業の並列性}
+想定していたより各作業の依存関係が強く、
+同時に進める予定の作業を進めることが出来なかった。
+
+\section{今後の予定}
+今後の予定は、
+工程表に記載されていなかった作業をスケジュールに組み込み、
+工程表を修正し、
+「中間言語への変換部の作成」等他の作業に依存されている作業を最優先で行う予定である。
+
+\end{document}
