@@ -1,107 +1,81 @@
-let nextToken stream =
-  let buff = Buffer.create 50 in
-  let rec str stm =
-    match Stream.peek stm with
-      | Some ch ->
-	  (match ch with
-	     | ')' -> Buffer.contents buff
-	     | ' ' | '\t' | '\n' ->
-		 Stream.junk stm;
-		 Buffer.contents buff
-	     | _ ->
-		 Stream.junk stm;
-		 Buffer.add_char buff ch;
-		 str stm)
-      | None -> Buffer.contents buff in
-    (* Buffer.reset buff; *)
-  let rec iter stm =
-    match Stream.peek stream with
-      | Some ch ->
-	  (match ch with
-	     | '(' | ')' ->
-		 Stream.junk stm;
-		 String.make 1 ch
-	     | ' ' | '\t' | '\n' ->
-		 Stream.junk stream;
-		 iter stm
-	     | _ -> str stm)
-      | None -> raise End_of_file
+
+let list_of_char str =
+  let len = String.length str in
+  let rec iter c =
+    if c < len then
+      (String.get str c) :: iter (c + 1)
+    else
+      []
   in
-    iter stream
+    iter 0
 
+let list_of_Char str =
+  let len = String.length str in
+  let rec iter c =
+    if c < len then
+      Syntax.Char (String.get str c) :: iter (c + 1)
+    else
+      []
+  in
+    iter 0
 
-let ending stm syn : Syntax.t =
-  ignore (nextToken stm);
-  syn
-
-exception S_expr_is_end
+open Sexpr
 
 (*
-  read_expr : char Stream.t -> Syntax.t
+  val change : Sexpr.t -> Syntax.t
+  バリアントは副作用によって動作することを前提としている.
 *)
-let rec read_expr stm =
-  let reader _ =
-    let rec list_reader func =
-      try (func (read_expr stm)) :: list_reader func with
-	| S_expr_is_end -> []
-    in
-      match nextToken stm with
-	| ")" -> Syntax.Unit
-	    
-	| "list" -> Syntax.List (list_reader (fun x -> x))
-	| "tuple" -> Syntax.Tuple (list_reader (fun x -> x))
-	| "array" -> Syntax.Array (list_reader (fun x -> x))
+let rec change = function
+  | Sstring s -> Syntax.Array (list_of_Char s)
+  | Sident i -> 
+      (match i with
+	 | "true" -> Syntax.Bool true
+	 | "false" -> Syntax.Bool false
+	 | "unit" -> Syntax.Unit
+	 | any -> Syntax.Var any)
+  | Sint i -> Syntax.Int i
+  | Sfloat f -> Syntax.Float f
+  | Schar c -> Syntax.Char c
+  | Sexpr l ->
+      match l with
+	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
+	    Syntax.Variant name (* Fixing ME !! *)
 
-	| "+" -> ending stm (Syntax.Add (read_expr stm, read_expr stm))
-	| "-" -> ending stm (Syntax.Sub (read_expr stm, read_expr stm))
-	| "*" -> ending stm (Syntax.Mul (read_expr stm, read_expr stm))
-	| "/" -> ending stm (Syntax.Div (read_expr stm, read_expr stm))
-	| "+." -> ending stm (Syntax.Fadd (read_expr stm, read_expr stm))
-	| "-." -> ending stm (Syntax.Fsub (read_expr stm, read_expr stm))
-	| "*." -> ending stm (Syntax.Fmul (read_expr stm, read_expr stm))
-	| "/." -> ending stm (Syntax.Fdiv (read_expr stm, read_expr stm))
-	    
-	| "=" -> ending stm (Syntax.Eq (read_expr stm, read_expr stm))
-	| "<>" -> ending stm (Syntax.NotEq (read_expr stm, read_expr stm))
-	| "<=" -> ending stm (Syntax.LsEq (read_expr stm, read_expr stm))
-	| "<" -> ending stm (Syntax.Ls (read_expr stm, read_expr stm))
-	| ">" -> ending stm (Syntax.Gt (read_expr stm, read_expr stm))
-	| ">=" -> ending stm (Syntax.GtEq (read_expr stm, read_expr stm))
-	    
-	| "cons" -> ending stm (Syntax.Cons (read_expr stm, read_expr stm))
-	| ";" -> ending stm (Syntax.Seq (read_expr stm, read_expr stm))
-	| "if" -> ending stm (Syntax.If (read_expr stm, read_expr stm,
-					 read_expr stm))
-	| "fun" -> 
-	    let rec iter func =
-	      match nextToken stm with
-		| ")" -> []
-		| str -> (func str) :: iter func
-	    in
-	      ending stm 
-		(Syntax.Fun
-		   ((match nextToken stm with
-		       | "(" -> iter (fun x -> (x, Type.gentype ()))
-		       | _ -> raise (Failure "unreconized string")),
-		    read_expr stm))
-	| "let" ->
-	    ending stm (Syntax.Let ((nextToken stm, Type.gentype ()),
-				    read_expr stm, read_expr stm))
-	| "letrec" ->
-	    ending stm (Syntax.LetRec ((nextToken stm, Type.gentype()),
-				       read_expr stm, read_expr stm))
-	| "apply" -> Syntax.Apply (read_expr stm, list_reader (fun x-> x))
+	| Sident "list" :: tail -> Syntax.List (List.map change tail)
+	| Sident "tuple" :: tail -> Syntax.Tuple (List.map change tail)
+	| Sident "array" :: tail -> Syntax.Array (List.map change tail)
+
+	| Sident "+" :: a :: b :: [] -> Syntax.Add (change a, change b)
+	| Sident "-" :: a :: b :: [] -> Syntax.Sub (change a, change b)
+	| Sident "*" :: a :: b :: [] -> Syntax.Mul (change a, change b)
+	| Sident "/" :: a :: b :: [] -> Syntax.Div (change a, change b)
+	| Sident "+." :: a :: b :: [] -> Syntax.Fadd (change a, change b)
+	| Sident "-." :: a :: b :: [] -> Syntax.Fsub (change a, change b)
+	| Sident "*." :: a :: b :: [] -> Syntax.Fmul (change a, change b)
+	| Sident "/." :: a :: b :: [] -> Syntax.Fdiv (change a, change b)
+
+	| Sident "=" :: a :: b :: [] -> Syntax.Eq (change a, change b)
+	| Sident "<>" :: a :: b :: [] -> Syntax.NotEq (change a, change b)
+	| Sident "<=" :: a :: b :: [] -> Syntax.LsEq (change a, change b)
+	| Sident "<" :: a :: b :: [] -> Syntax.Ls (change a, change b)
+	| Sident ">" :: a :: b :: [] -> Syntax.Gt (change a, change b)
+	| Sident ">=" :: a :: b :: [] -> Syntax.GtEq (change a, change b)
+
+	| Sident "cons" :: a :: b :: [] -> Syntax.Cons (change a, change b)
+	| Sident ";" :: a :: b :: [] -> Syntax.Seq (change a, change b)
+
+	| Sident "if" :: a :: b :: c :: [] ->
+	    Syntax.If (change a, change b, change c)
+	| Sident "let" :: Sident name :: a :: b :: [] ->
+	    Syntax.Let ((name, Type.gentype()), change a, change b)
+	| Sident "letrec" :: Sident name :: a :: b :: [] ->
+	    Syntax.LetRec ((name, Type.gentype()), change a, change b)
+	| Sident "fun" :: Sexpr l :: a :: [] ->
+	    Syntax.Fun (List.map 
+			  (fun x -> let Sident a = x in a, Type.gentype())
+			  l,
+			change a)
+	| Sident "apply" :: a :: args ->
+	    Syntax.Apply (change a, List.map change args)
 
 	| any -> Syntax.Unit
-  in
-    match nextToken stm with
-      | "(" ->
-	  reader ()
-      | ")" -> raise S_expr_is_end
-      | "unit" -> Syntax.Unit
-      | str ->
-	  try Syntax.Int (int_of_string str) with
-	    | Failure "int_of_string" ->
-		try Syntax.Float (float_of_string str) with
-		  | Failure "float_of_string" ->
-		      (Syntax.Var str)
