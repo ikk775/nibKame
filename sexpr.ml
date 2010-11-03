@@ -78,18 +78,21 @@ let lexer = Genlex.make_lexer []
 
 let rec build_tree = function
   | D a ->
-      let s = lexer (Stream.of_string a) in
-	(match Stream.next s with
-	  | Genlex.Ident i -> Sident i
-	  | Genlex.Int i -> Sint i
-	  | Genlex.Float f -> Sfloat f
-	  | Genlex.Char c -> Schar c
-	  | Genlex.String s -> Sstring s
-	(*  | Genlex.Kwd _ -> raise Not_found *))
+      if String.get a 0 = '\'' 
+	&& String.get a (String.length a - 1) <> '\'' then
+	Sident a 
+      else
+	let s = lexer (Stream.of_string a) in
+	  (match Stream.next s with
+	     | Genlex.Ident i -> Sident i
+	     | Genlex.Int i -> Sint i
+	     | Genlex.Float f -> Sfloat f
+	     | Genlex.Char c -> Schar c
+	     | Genlex.String s -> Sstring s
+		 (*  | Genlex.Kwd _ -> raise Not_found *))
   | L a -> Sexpr (List.map build_tree a)
   | E -> Sexpr []
 
 
 let read stream =
   build_tree (make_te stream)
-
