@@ -7,4 +7,4 @@ type t =
   | Schar of char
   | Sexpr of t list
 
-val reader: char Stream.t -> t
+val read: char Stream.t -> t
