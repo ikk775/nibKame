@@ -64,6 +64,9 @@ let rec change = function
 	| Sident "cons" :: a :: b :: [] -> Syntax.Cons (change a, change b)
 	| Sident ";" :: a :: b :: [] -> Syntax.Seq (change a, change b)
 
+	| Sident "&&" :: a :: b :: [] -> Syntax.And (change a, change b)
+	| Sident "||" :: a :: b :: [] -> Syntax.Or (change a, change b)
+
 	| Sident "if" :: a :: b :: c :: [] ->
 	    Syntax.If (change a, change b, change c)
 	| Sident "let" :: Sident name :: a :: b :: [] ->
