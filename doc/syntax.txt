@@ -54,7 +54,11 @@
     正規化木:
       (type <type-name> (<type-varible1> <type-varible2>)
        (<constructor1>)
-       (<constructor2> <typexpr> <typexpr>))
+       (<constructor2> (tuple <typexpr> <typexpr>)))
+.... 型制約
+  - <expr> : <typeexpr>
+    正規化木:
+      (type-constraint <expr> <typeexpr>)
 
 ... 副作用
 .... 配列
