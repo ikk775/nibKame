@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="nibKame" company="GuNCT" webLink="http://github.com/ikk775/nibKame" view-date="2010-09-26" view-index="1" gantt-divider-location="355" resource-divider-location="301" version="2.0">
+<project name="nibKame" company="GuNCT" webLink="http://github.com/ikk775/nibKame" view-date="2010-09-26" view-index="0" gantt-divider-location="355" resource-divider-location="301" version="2.0">
     <description/>
     <view zooming-state="default:5" id="gantt-chart"/>
     <view id="resource-table">
@@ -31,15 +31,15 @@
             <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
             <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
         </taskproperties>
-        <task id="13" name="言語仕様策定" meeting="false" start="2010-10-11" duration="18" complete="80" priority="2" expand="true">
+        <task id="13" name="言語仕様策定" color="#8cb6ce" meeting="false" start="2010-10-11" duration="18" complete="72" priority="2" expand="true">
             <depend id="2" type="2" difference="0" hardness="Strong"/>
             <depend id="7" type="1" difference="0" hardness="Rubber"/>
             <depend id="16" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="15" name="S式リーダモジュールの作成" meeting="false" start="2010-10-11" duration="18" complete="90" priority="1" expand="true">
+        <task id="15" name="S式リーダモジュールの作成" color="#8cb6ce" meeting="false" start="2010-10-11" duration="18" complete="90" priority="1" expand="true">
             <depend id="1" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="14" name="S式表現の仕様策定" meeting="false" start="2010-10-11" duration="18" complete="80" priority="1" expand="true">
+        <task id="14" name="S式表現の仕様策定" color="#8cb6ce" meeting="false" start="2010-10-11" duration="18" complete="80" priority="1" expand="true">
             <depend id="1" type="2" difference="0" hardness="Strong"/>
         </task>
         <task id="1" name="S式→中間言語への変換部の作成" color="#8cb6ce" meeting="false" start="2010-11-04" duration="5" complete="0" priority="1" expand="true">
@@ -98,8 +98,8 @@
         <resource id="1" name="na4zagin3" function="0" contacts="" phone=""/>
     </resources>
     <allocations>
-        <allocation task-id="13" resource-id="1" function="Default:0" responsible="false" load="50.0"/>
         <allocation task-id="13" resource-id="0" function="Default:0" responsible="true" load="50.0"/>
+        <allocation task-id="13" resource-id="1" function="Default:0" responsible="false" load="50.0"/>
         <allocation task-id="15" resource-id="0" function="Default:0" responsible="true" load="30.0"/>
         <allocation task-id="14" resource-id="1" function="Default:0" responsible="true" load="50.0"/>
         <allocation task-id="1" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
@@ -108,17 +108,17 @@
         <allocation task-id="3" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="4" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="5" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="6" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="6" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="7" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="6" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="7" resource-id="0" function="Default:0" responsible="false" load="100.0"/>
+        <allocation task-id="7" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="8" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="9" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="10" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="12" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="12" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="11" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
+        <allocation task-id="12" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="11" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="11" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
     </allocations>
     <vacations/>
     <taskdisplaycolumns>
@@ -126,7 +126,29 @@
         <displaycolumn property-id="tpd4" order="1" width="75"/>
         <displaycolumn property-id="tpd5" order="2" width="75"/>
     </taskdisplaycolumns>
-    <previous/>
+    <previous>
+        <previous-tasks name="中間報告1">
+            <previous-task id="13" start="2010-10-11" duration="18" meeting="false" super="false"/>
+            <previous-task id="15" start="2010-10-11" duration="18" meeting="false" super="false"/>
+            <previous-task id="14" start="2010-10-11" duration="18" meeting="false" super="false"/>
+            <previous-task id="1" start="2010-11-04" duration="5" meeting="false" super="false"/>
+            <previous-task id="0" start="2010-11-11" duration="5" meeting="false" super="false"/>
+            <previous-task id="2" start="2010-11-04" duration="9" meeting="false" super="false"/>
+            <previous-task id="3" start="2010-11-17" duration="10" meeting="false" super="false"/>
+            <previous-task id="4" start="2010-11-17" duration="5" meeting="false" super="false"/>
+            <previous-task id="5" start="2010-11-24" duration="5" meeting="false" super="false"/>
+            <previous-task id="16" start="2010-11-24" duration="1" meeting="true" super="false"/>
+            <previous-task id="6" start="2010-11-25" duration="10" meeting="false" super="false"/>
+            <previous-task id="7" start="2010-10-22" duration="13" meeting="false" super="false"/>
+            <previous-task id="8" start="2010-11-25" duration="10" meeting="false" super="false"/>
+            <previous-task id="9" start="2010-12-09" duration="5" meeting="false" super="false"/>
+            <previous-task id="10" start="2010-12-09" duration="5" meeting="false" super="false"/>
+            <previous-task id="18" start="2010-12-16" duration="1" meeting="true" super="false"/>
+            <previous-task id="12" start="2010-12-16" duration="22" meeting="false" super="false"/>
+            <previous-task id="11" start="2010-12-16" duration="22" meeting="false" super="false"/>
+            <previous-task id="19" start="2011-01-17" duration="1" meeting="true" super="false"/>
+        </previous-tasks>
+    </previous>
     <roles roleset-name="Default"/>
     <roles>
         <role id="0" name="プロジェクトマネージャー・デザイナー・コーダー・レビュワー・ドキュメンター・テスター"/>
