@@ -94,12 +94,12 @@
         <task id="19" name="完成" meeting="true" start="2011-01-17" duration="1" complete="0" priority="1" expand="true"/>
     </tasks>
     <resources>
-        <resource id="0" name="小堀育男" function="0" contacts="" phone=""/>
-        <resource id="1" name="酒本典明" function="0" contacts="" phone=""/>
+        <resource id="0" name="ikk775" function="0" contacts="" phone=""/>
+        <resource id="1" name="na4zagin3" function="0" contacts="" phone=""/>
     </resources>
     <allocations>
-        <allocation task-id="13" resource-id="0" function="Default:0" responsible="true" load="50.0"/>
         <allocation task-id="13" resource-id="1" function="Default:0" responsible="false" load="50.0"/>
+        <allocation task-id="13" resource-id="0" function="Default:0" responsible="true" load="50.0"/>
         <allocation task-id="15" resource-id="0" function="Default:0" responsible="true" load="30.0"/>
         <allocation task-id="14" resource-id="1" function="Default:0" responsible="true" load="50.0"/>
         <allocation task-id="1" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
@@ -108,17 +108,17 @@
         <allocation task-id="3" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="4" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="5" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="6" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="6" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
-        <allocation task-id="7" resource-id="0" function="Default:0" responsible="false" load="100.0"/>
+        <allocation task-id="6" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="7" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="7" resource-id="0" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="8" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="9" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="10" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="12" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="12" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
-        <allocation task-id="11" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="12" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="11" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
+        <allocation task-id="11" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
     </allocations>
     <vacations/>
     <taskdisplaycolumns>
