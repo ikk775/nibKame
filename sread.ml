@@ -13,7 +13,7 @@ let list_of_Char str =
   let len = String.length str in
   let rec iter c =
     if c < len then
-      Syntax.Char (String.get str c) :: iter (c + 1)
+      Syntax.Literal (Syntax.Char (String.get str c)) :: iter (c + 1)
     else
       []
   in
@@ -29,13 +29,13 @@ let rec change = function
   | Sstring s -> Syntax.Array (list_of_Char s)
   | Sident i -> 
       (match i with
-	 | "true" -> Syntax.Bool true
-	 | "false" -> Syntax.Bool false
-	 | "unit" -> Syntax.Unit
+	 | "true" -> Syntax.Literal (Syntax.Bool true)
+	 | "false" -> Syntax.Literal (Syntax.Bool false)
+	 | "unit" -> Syntax.Literal Syntax.Unit
 	 | any -> Syntax.Var any)
-  | Sint i -> Syntax.Int i
-  | Sfloat f -> Syntax.Float f
-  | Schar c -> Syntax.Char c
+  | Sint i -> Syntax.Literal (Syntax.Int i)
+  | Sfloat f -> Syntax.Literal (Syntax.Float f)
+  | Schar c -> Syntax.Literal (Syntax.Char c)
   | Sexpr l ->
       match l with
 	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
