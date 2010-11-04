@@ -14,6 +14,8 @@ type t =
   | Fdiv of t * t
   | Cons of t * t
   | Seq of t * t
+  | And of t * t
+  | Or of t * t
   | Eq of t * t
   | NotEq of t * t
   | LsEq of t * t
