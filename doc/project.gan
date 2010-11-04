@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="nibKame" company="GuNCT" webLink="http://github.com/ikk775/nibKame" view-date="2010-10-10" view-index="0" gantt-divider-location="355" resource-divider-location="301" version="2.0">
+<project name="nibKame" company="GuNCT" webLink="http://github.com/ikk775/nibKame" view-date="2010-09-26" view-index="1" gantt-divider-location="355" resource-divider-location="301" version="2.0">
     <description/>
-    <view zooming-state="default:4" id="gantt-chart"/>
+    <view zooming-state="default:5" id="gantt-chart"/>
     <view id="resource-table">
         <field id="0" name="名前" width="55" order="0"/>
         <field id="1" name="役割" width="44" order="1"/>
@@ -31,68 +31,94 @@
             <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
             <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
         </taskproperties>
-        <task id="0" name="型推論部の作成" color="#8cb6ce" meeting="false" start="2010-10-14" duration="5" complete="0" priority="1" expand="true">
+        <task id="13" name="言語仕様策定" meeting="false" start="2010-10-11" duration="18" complete="80" priority="2" expand="true">
+            <depend id="2" type="2" difference="0" hardness="Strong"/>
+            <depend id="7" type="1" difference="0" hardness="Rubber"/>
+            <depend id="16" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="15" name="S式リーダモジュールの作成" meeting="false" start="2010-10-11" duration="18" complete="90" priority="1" expand="true">
+            <depend id="1" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="14" name="S式表現の仕様策定" meeting="false" start="2010-10-11" duration="18" complete="80" priority="1" expand="true">
+            <depend id="1" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="1" name="S式→中間言語への変換部の作成" color="#8cb6ce" meeting="false" start="2010-11-04" duration="5" complete="0" priority="1" expand="true">
+            <depend id="0" type="2" difference="0" hardness="Strong"/>
+            <depend id="16" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="0" name="型推論部の作成" color="#8cb6ce" meeting="false" start="2010-11-11" duration="5" complete="0" priority="1" expand="true">
+            <depend id="16" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="2" name="正規化部の作成" color="#8cb6ce" meeting="false" start="2010-11-04" duration="9" complete="0" priority="1" expand="true">
+            <depend id="3" type="2" difference="0" hardness="Strong"/>
+            <depend id="4" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="3" name="最適化部の作成" color="#8cb6ce" meeting="false" start="2010-11-17" duration="10" complete="0" priority="1" expand="true"/>
+        <task id="4" name="仮想機械語への変換部の作成" color="#8cb6ce" meeting="false" start="2010-11-17" duration="5" complete="0" priority="0" expand="true">
+            <depend id="5" type="2" difference="0" hardness="Strong"/>
+            <depend id="16" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="5" name="仮想機械語最適化部の作成" color="#8cb6ce" meeting="false" start="2010-11-24" duration="5" complete="0" priority="1" expand="true"/>
+        <task id="16" name="基本部分完成" meeting="true" start="2010-11-24" duration="1" complete="0" priority="1" expand="true">
             <depend id="6" type="2" difference="0" hardness="Strong"/>
-        </task>
-        <task id="1" name="S式→中間言語への変換部の作成" color="#8cb6ce" meeting="false" start="2010-10-12" duration="5" complete="0" priority="1" expand="true">
-            <depend id="6" type="2" difference="0" hardness="Strong"/>
-        </task>
-        <task id="2" name="正規化部の作成" color="#8cb6ce" meeting="false" start="2010-10-21" duration="10" complete="0" priority="1" expand="true">
-            <depend id="6" type="2" difference="0" hardness="Strong"/>
-        </task>
-        <task id="3" name="最適化部の作成" color="#8cb6ce" meeting="false" start="2010-11-04" duration="10" complete="0" priority="1" expand="true">
-            <depend id="6" type="2" difference="0" hardness="Rubber"/>
-        </task>
-        <task id="4" name="仮想機械語への変換部の作成" color="#8cb6ce" meeting="false" start="2010-11-18" duration="5" complete="0" priority="1" expand="true">
-            <depend id="6" type="2" difference="0" hardness="Strong"/>
-        </task>
-        <task id="5" name="仮想機械語最適化部の作成" color="#8cb6ce" meeting="false" start="2010-11-18" duration="5" complete="0" priority="1" expand="true">
-            <depend id="6" type="2" difference="0" hardness="Rubber"/>
+            <depend id="8" type="2" difference="0" hardness="Strong"/>
+            <depend id="12" type="2" difference="0" hardness="Strong"/>
+            <depend id="18" type="2" difference="0" hardness="Strong"/>
         </task>
         <task id="6" name="基本仕様のデバッグ" color="#8cb6ce" meeting="false" start="2010-11-25" duration="10" complete="0" priority="1" expand="true">
-            <depend id="12" type="2" difference="0" hardness="Strong"/>
+            <depend id="18" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="7" name="標準ライブラリの作成" color="#8cb6ce" meeting="false" start="2010-11-01" duration="13" complete="0" priority="1" expand="true">
+        <task id="7" name="標準ライブラリの作成" color="#8cb6ce" meeting="false" start="2010-10-22" duration="13" complete="13" priority="0" expand="true">
             <depend id="12" type="2" difference="0" hardness="Strong"/>
+            <depend id="18" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="8" name="FFIの作成" color="#8cb6ce" meeting="false" start="2010-11-25" duration="10" complete="0" priority="1" expand="true"/>
+        <task id="8" name="FFIの作成" color="#8cb6ce" meeting="false" start="2010-11-25" duration="10" complete="0" priority="1" expand="true">
+            <depend id="12" type="2" difference="0" hardness="Rubber"/>
+            <depend id="18" type="2" difference="0" hardness="Strong"/>
+        </task>
         <task id="9" name="構文木変換部の作成" color="#8cb6ce" meeting="false" start="2010-12-09" duration="5" complete="0" priority="1" expand="true">
             <depend id="12" type="2" difference="0" hardness="Strong"/>
+            <depend id="18" type="2" difference="0" hardness="Strong"/>
         </task>
         <task id="10" name="字句・構文解析部の作成" color="#8cb6ce" meeting="false" start="2010-12-09" duration="5" complete="0" priority="1" expand="true">
             <depend id="12" type="2" difference="0" hardness="Strong"/>
+            <depend id="18" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="11" name="GCの作成" color="#8cb6ce" meeting="false" start="2010-12-16" duration="22" complete="0" priority="1" expand="true"/>
-        <task id="12" name="全体的なデバッグ" color="#8cb6ce" meeting="false" start="2010-12-16" duration="22" complete="0" priority="1" expand="true"/>
-        <task id="13" name="言語仕様策定" meeting="false" start="2010-10-11" duration="9" complete="0" priority="1" expand="true"/>
-        <task id="14" name="S式表現の仕様策定" meeting="false" start="2010-10-11" duration="1" complete="80" priority="1" expand="true"/>
-        <task id="15" name="S式リーダモジュールの作成" meeting="false" start="2010-10-11" duration="1" complete="0" priority="1" expand="true">
-            <depend id="1" type="2" difference="0" hardness="Strong"/>
+        <task id="18" name="目標達成" meeting="true" start="2010-12-16" duration="1" complete="0" priority="1" expand="true"/>
+        <task id="12" name="全体的なデバッグ" color="#8cb6ce" meeting="false" start="2010-12-16" duration="22" complete="0" priority="1" expand="true">
+            <depend id="19" type="2" difference="0" hardness="Strong"/>
         </task>
+        <task id="11" name="GCの作成" color="#ffff99" meeting="false" start="2010-12-16" duration="22" complete="0" priority="0" expand="true">
+            <depend id="19" type="2" difference="0" hardness="Rubber"/>
+        </task>
+        <task id="19" name="完成" meeting="true" start="2011-01-17" duration="1" complete="0" priority="1" expand="true"/>
     </tasks>
     <resources>
-        <resource id="0" name="ikk775" function="Default:0" contacts="" phone=""/>
-        <resource id="1" name="na4zagin3" function="Default:0" contacts="" phone=""/>
+        <resource id="0" name="小堀育男" function="0" contacts="" phone=""/>
+        <resource id="1" name="酒本典明" function="0" contacts="" phone=""/>
     </resources>
     <allocations>
-        <allocation task-id="0" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="13" resource-id="0" function="Default:0" responsible="true" load="50.0"/>
+        <allocation task-id="13" resource-id="1" function="Default:0" responsible="false" load="50.0"/>
+        <allocation task-id="15" resource-id="0" function="Default:0" responsible="true" load="30.0"/>
+        <allocation task-id="14" resource-id="1" function="Default:0" responsible="true" load="50.0"/>
         <allocation task-id="1" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="0" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="2" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="3" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="4" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="5" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="6" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="6" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="7" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="6" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="7" resource-id="0" function="Default:0" responsible="false" load="100.0"/>
+        <allocation task-id="7" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="8" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="9" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="10" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="11" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
-        <allocation task-id="11" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="12" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
         <allocation task-id="12" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
-        <allocation task-id="14" resource-id="1" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="12" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
+        <allocation task-id="11" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="11" resource-id="1" function="Default:0" responsible="false" load="100.0"/>
     </allocations>
     <vacations/>
     <taskdisplaycolumns>
@@ -102,4 +128,8 @@
     </taskdisplaycolumns>
     <previous/>
     <roles roleset-name="Default"/>
+    <roles>
+        <role id="0" name="プロジェクトマネージャー・デザイナー・コーダー・レビュワー・ドキュメンター・テスター"/>
+        <role id="1" name=""/>
+    </roles>
 </project>
