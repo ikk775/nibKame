@@ -19,7 +19,28 @@ let list_of_Char str =
   in
     iter 0
 
+let list_of_pChar str =
+  let len = String.length str in
+  let rec iter c =
+    if c < len then
+      Syntax.P_Literal (Syntax.Char (String.get str c)) :: iter (c + 1)
+    else []
+  in
+    iter 0
+
 open Sexpr
+
+let rec pattern_of_list = function
+  | Sstring s -> Syntax.P_Array (list_of_pChar s)
+  | Sident ident -> Syntax.P_Ident ident
+  | Sint i -> Syntax.P_Literal (Syntax.Int i)
+  | Sfloat f -> Syntax.P_Literal (Syntax.Float f)
+  | Schar c -> Syntax.P_Literal (Syntax.Char c)
+  | Sexpr l -> match l with
+      | Sident "list" :: l -> Syntax.P_List (List.map pattern_of_list l)
+      | Sident "tuple" :: l -> Syntax.P_Tuple (List.map pattern_of_list l)
+      | Sident "array" :: l -> Syntax.P_Array (List.map pattern_of_list l)
+      | Sident constructor :: p -> Syntax.P_Variant (pattern_of_list p)
 
 (*
   val change : Sexpr.t -> Syntax.t
@@ -69,8 +90,8 @@ let rec change = function
 
 	| Sident "if" :: a :: b :: c :: [] ->
 	    Syntax.If (change a, change b, change c)
-	| Sident "let" :: Sident name :: a :: b :: [] ->
-	    Syntax.Let ((name, Type.gentype()), change a, change b)
+	| Sident "let" :: pat :: a :: b :: [] ->
+	    Syntax.Let (pattern_of_list pat, change a, change b)
 	| Sident "letrec" :: Sident name :: a :: b :: [] ->
 	    Syntax.LetRec ((name, Type.gentype()), change a, change b)
 	| Sident "fun" :: Sexpr l :: a :: [] ->
