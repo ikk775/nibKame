@@ -142,8 +142,8 @@
     そのまま
   - 変数
     そのまま
-  - <constructor> <varible> : データコンストラクタ
-    (<constructor> <varible>)
+  - <constructor> <pattern> : データコンストラクタ
+    (<constructor> <pattern>)
   - <varible>, ... : タプル
    (tuple <varible> ...)
 .... fun式
