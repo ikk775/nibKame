@@ -7,7 +7,7 @@ type lit =
 
 type pat =
   | P_Ident of Id.t
-  | P_literal of lit
+  | P_Literal of lit
   | P_Tuple of pat list
   | P_List of pat list
   | P_Array of pat list
