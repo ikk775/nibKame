@@ -12,6 +12,7 @@ type pat =
   | P_List of pat list
   | P_Array of pat list
   | P_Variant of Id.t * pat
+  | Any
 
 type t =
   | Literal of lit

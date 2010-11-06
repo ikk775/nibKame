@@ -32,6 +32,7 @@ open Sexpr
 
 let rec pattern_of_list = function
   | Sstring s -> Syntax.P_Array (list_of_pChar s)
+  | Sident "_" -> Syntax.Any
   | Sident ident -> Syntax.P_Ident ident
   | Sint i -> Syntax.P_Literal (Syntax.Int i)
   | Sfloat f -> Syntax.P_Literal (Syntax.Float f)
