@@ -93,8 +93,12 @@ let rec change = function
 	    Syntax.If (change a, change b, change c)
 	| Sident "let" :: pat :: a :: b :: [] ->
 	    Syntax.Let (pattern_of_list pat, change a, change b)
+	| Sident "toplec" :: pat :: a :: [] ->
+	    Syntax.TopLet (pattern_of_list pat, change a)
 	| Sident "letrec" :: Sident name :: a :: b :: [] ->
 	    Syntax.LetRec ((name, Type.gentype()), change a, change b)
+	| Sident "topletrec" :: Sident name :: a :: [] ->
+	    Syntax.TopLetRec ((name, Type.gentype()), change a)
 	| Sident "fun" :: Sexpr l :: a :: [] ->
 	    Syntax.Fun (List.map 
 			  (fun x -> let Sident a = x in a, Type.gentype())
