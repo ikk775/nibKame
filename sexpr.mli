@@ -8,3 +8,4 @@ type t =
   | Sexpr of t list
 
 val read: char Stream.t -> t
+val write: Format.formatter -> t -> unit

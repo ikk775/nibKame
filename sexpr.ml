@@ -96,3 +96,19 @@ let rec build_tree = function
 
 let read stream =
   build_tree (make_te stream)
+
+let rec write fmtr  = function
+	| Sstring s -> Format.fprintf fmtr "%S" s
+	| Schar c -> Format.fprintf fmtr "%C" c
+	| Sident s -> Format.fprintf fmtr "%s" s
+	| Sint i -> Format.fprintf fmtr "%d" i
+	| Sfloat f -> Format.fprintf fmtr "%f" f
+	| Sexpr l ->
+			Format.fprintf fmtr "(";
+			if l != []
+			then
+				write fmtr (List.hd l);
+				if (List.tl l) != []
+				then
+					List.iter (Format.fprintf fmtr " "; write fmtr) (List.tl l);
+			Format.fprintf fmtr ")"
