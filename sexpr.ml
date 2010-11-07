@@ -97,18 +97,32 @@ let rec build_tree = function
 let read stream =
   build_tree (make_te stream)
 
+let rec eq_Sexpr x y =
+	match x, y with
+	| Sstring x, Sstring y when x = y -> true
+	| Sident x, Sident y when x = y -> true
+	| Sint x, Sint y when x = y -> true
+	| Schar x, Schar y when x = y -> true
+	| Sfloat x, Sfloat y when x = y -> true
+	| Sexpr x, Sexpr y -> 
+		List.for_all2 eq_Sexpr x y
+	| _ -> false
+
 let rec write fmtr  = function
 	| Sstring s -> Format.fprintf fmtr "%S" s
-	| Schar c -> Format.fprintf fmtr "%C" c
 	| Sident s -> Format.fprintf fmtr "%s" s
-	| Sint i -> Format.fprintf fmtr "%d" i
-	| Sfloat f -> Format.fprintf fmtr "%f" f
+	| Schar c -> Format.fprintf fmtr "%C" c
+	| Sint i -> Format.fprintf fmtr "%s" (string_of_int i)
+	| Sfloat f -> Format.fprintf fmtr "%.30f"  f
 	| Sexpr l ->
-			Format.fprintf fmtr "(";
-			if l != []
-			then
-				write fmtr (List.hd l);
-				if (List.tl l) != []
-				then
-					List.iter (Format.fprintf fmtr " "; write fmtr) (List.tl l);
-			Format.fprintf fmtr ")"
+			Format.fprintf fmtr "@[(";
+			(try
+			write fmtr (List.hd l);
+			List.iter (fun e -> Format.fprintf fmtr "@ "; write fmtr e) (List.tl l)
+			with
+				| Failure "hd" -> ()
+				| Failure "tl" -> ());
+			Format.fprintf fmtr ")@]@,"
+
+let of_string x =
+	TestUtil.call_with_output_string (fun fmtr -> write fmtr x)
