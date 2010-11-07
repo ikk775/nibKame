@@ -1,7 +1,13 @@
 .*.sw?
+_.sw?
 *~
 *.cmi
 *.cmo
 *.aux
 *.dvi
 *.log
+*.byte
+_build/
+.paths
+.settings
+.project
