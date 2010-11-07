@@ -208,7 +208,7 @@ module Arbitrary_float = struct
             (float a +. (float b /. (float c +. 1.)))
 end
 
-module Aribitrary_pair(Fst:ARBITRARY)(Snd:ARBITRARY) = struct
+module Arbitrary_pair(Fst:ARBITRARY)(Snd:ARBITRARY) = struct
   type t = Fst.t * Snd.t
   let arbitrary =
     Fst.arbitrary >>= fun v1 ->
@@ -216,7 +216,7 @@ module Aribitrary_pair(Fst:ARBITRARY)(Snd:ARBITRARY) = struct
         ret_gen (v1,v2)
 end
 
-module Aribitrary_triple(Fst:ARBITRARY)(Snd:ARBITRARY)(Trd:ARBITRARY) = struct
+module Arbitrary_triple(Fst:ARBITRARY)(Snd:ARBITRARY)(Trd:ARBITRARY) = struct
   type t = Fst.t * Snd.t * Trd.t
   let arbitrary =
     Fst.arbitrary >>= fun v1 ->
