@@ -71,15 +71,14 @@ module Arbitrary_expr = struct
                 arb_sub (depth - 1) >>= fun e1 ->
                     arb_sub (depth - 1) >>= fun e2 ->
                         oneof[
-                          ret_gen (Typing.E_Constant s);
-                          ret_gen (Typing.E_Variable s);
+                          arb_sub 0;
                           ret_gen (Typing.E_Fun(s, e));
                           ret_gen (Typing.E_Apply(e1, e2));
                           ret_gen (Typing.E_Let(s, e1, e2))
                           ]
     in
-    choose_int(0, 3) >>= fun i ->
-        arb_sub i
+    sized (fun i ->
+        arb_sub (truncate (log (float_of_int i))))
 end
 
 module Arbitrary_string_list = Arbitrary_list(Arbitrary_string)
@@ -96,17 +95,15 @@ module Arbitrary_oType = struct
               ret_gen (Typing.O_Variable s);
               ]
       else
-        Arbitrary_string.arbitrary >>= fun s ->
-            arb_sub (depth - 1) >>= fun e1 ->
-                arb_sub (depth - 1) >>= fun e2 ->
-                    oneof[
-                      ret_gen Typing.O_Constant;
-                      ret_gen (Typing.O_Variable s);
-                      ret_gen (Typing.O_Fun(e1, e2))
-                      ]
+        arb_sub (depth - 1) >>= fun e1 ->
+            arb_sub (depth - 1) >>= fun e2 ->
+                oneof[
+                  arb_sub 0;
+                  ret_gen (Typing.O_Fun(e1, e2))
+                  ]
     in
-    choose_int(0, 3) >>= fun i ->
-        arb_sub i
+    sized (fun i ->
+        arb_sub (truncate (log (float_of_int i))))
 end
 
 module Arbitrary_typeScheme = struct
@@ -118,16 +115,15 @@ module Arbitrary_typeScheme = struct
         Arbitrary_oType.arbitrary >>= fun t ->
             ret_gen (Typing.OType(t));
       else
-        Arbitrary_oType.arbitrary >>= fun ot ->
-            Arbitrary_string_list.arbitrary >>= fun vs ->
-                arb_sub (depth - 1) >>= fun qt ->
-                    oneof[
-                      ret_gen (Typing.OType(ot));
-                      ret_gen (Typing.QType(vs, qt))
-                      ]
+        Arbitrary_string_list.arbitrary >>= fun vs ->
+            arb_sub (depth - 1) >>= fun qt ->
+                oneof[
+                  arb_sub 0;
+                  ret_gen (Typing.QType(vs, qt))
+                  ]
     in
-    choose_int(0, 3) >>= fun i ->
-        arb_sub i
+    sized (fun i ->
+        arb_sub (truncate (log (float_of_int i))))
 end
 
 (* Testables instances *)
@@ -168,10 +164,10 @@ let prop_typeVars_duplication : 'a -> bool =
   fun xs ->
       let vs = Typing.typeVars xs in
       List.length vs == List.length (ExtList.List.unique vs)
-let () = Check_oType_to_bool.quickCheck prop_typeVars_duplication
+let () = Check_oType_to_bool.verboseCheck prop_typeVars_duplication
 
 let prop_freeTypeVars_duplication : 'a -> bool =
   fun xs ->
       let vs = Typing.freeTypeVars xs in
       List.length vs == List.length (ExtList.List.unique vs)
-let () = Check_typeScheme_to_bool.quickCheck prop_freeTypeVars_duplication
+let () = Check_typeScheme_to_bool.verboseCheck prop_freeTypeVars_duplication
