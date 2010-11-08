@@ -40,3 +40,5 @@ let rec freeTypeVarsEnv = function
   | TypeEnv l -> ExtList.List.unique (List.fold_left (fun a b -> List.append a (freeTypeVars (snd b))) [] l)
   
   
+let () = print_string (Std.dump (MyUtil.String.explode "abc"))
+let () = print_string (Std.dump (MyUtil.String.explode "abc"))

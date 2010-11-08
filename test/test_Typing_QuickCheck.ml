@@ -38,8 +38,8 @@ module PShow_typeScheme = struct
   let show : t -> pretty_str =
     fun s fmt () ->
         let rec f: t -> string = function
-          | Typing.OType t -> Format.sprintf "OType(%s)" (call_with_output_string (fun ff -> PShow_oType.show t ff ()))
-          | Typing.QType(vs, ts) -> Format.sprintf "QType(%s, %s)" (call_with_output_string (fun ff -> PShow_string_list.show vs ff ())) (f ts)
+          | Typing.OType t -> Format.sprintf "OType(%s)" (MyUtil.Format.call_with_output_string (fun ff -> PShow_oType.show t ff ()))
+          | Typing.QType(vs, ts) -> Format.sprintf "QType(%s, %s)" (MyUtil.Format.call_with_output_string (fun ff -> PShow_string_list.show vs ff ())) (f ts)
         in
         Format.fprintf fmt "%s" (f s)
 end

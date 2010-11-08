@@ -1,18 +1,18 @@
 open QuickCheck
 
-let call_with_output_string proc =
-  let buf = Buffer.create 127 in
-  let buf_f = Format.formatter_of_buffer buf in
-  proc buf_f;
-  Format.pp_print_flush buf_f ();
-  Buffer.contents buf
+module PShow_pair(Fst: PSHOW)(Snd: PSHOW) = struct
+  type t = Fst.t * Snd.t
+  let show : t -> pretty_str =
+    fun p fmt () ->
+      let x, y = p in
+      let a1, a2 = Fst.show x, Snd.show y in
+        Format.fprintf fmt "(%a, %a)" a1 () a2 ()
+end
 
-let rec iota ?(step=1) s e =
-  if s > e then []
-  else s :: iota ~step (s + step) e
-
-let rec setDiff xs ys =
-  List.filter (fun x -> not (List.mem x ys)) xs
+module type ARBITRARY_CHAR_LIST = sig
+  type t = char list
+  val arbitrary : t gen
+end
 
 module type ARBITRARY_STRING = sig
   type t = string
@@ -31,3 +31,16 @@ module Arbitrary_string = struct
   let arbitrary =
     Arbitrary_ascii_char_list.arbitrary >>= lift_gen ExtString.String.implode
 end
+
+let gen_prop_equality to_string eq x y =
+  if (eq x y)
+  then
+    true
+  else
+    (Format.printf "Mismatching: @,@[%s@ != %s@]\n@?"
+        (to_string x)
+        (to_string y);
+      false)
+
+module Implies_bool = Implies(Testable_bool)
+

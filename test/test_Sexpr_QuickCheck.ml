@@ -22,7 +22,7 @@ end
 module Arbitrary_short_symbol_string = struct
   type t = string
   let arbitrary =
-    elements (TestUtil.setDiff (iota 0x20 0x7e) (List.append (iota 0x30 0x39) (List.map Char.code [' ';'(';')']))) >>= fun a ->
+    elements (MyUtil.List.setDiff (MyUtil.List.iota 0x20 0x7e) (List.append (MyUtil.List.iota 0x30 0x39) (List.map Char.code [' ';'(';')']))) >>= fun a ->
         let str = String.create 1 in
         str.[0] <- Char.chr a;
         ret_gen str
@@ -31,10 +31,10 @@ module Arbitrary_symbol_string = struct
   type t = string
   let arbitrary =
     let gen_hd_letter =
-      elements (TestUtil.setDiff (iota 0x20 0x7e) (List.append (iota 0x30 0x39) (List.map Char.code sexprSpecialLetters))) >>= lift_gen Char.chr
+      elements (MyUtil.List.setDiff (MyUtil.List.iota 0x20 0x7e) (List.append (MyUtil.List.iota 0x30 0x39) (List.map Char.code sexprSpecialLetters))) >>= lift_gen Char.chr
     in
     let gen_tl_letter =
-      elements (TestUtil.setDiff (iota 0x20 0x7e) (List.map Char.code sexprSpecialLetters)) >>= lift_gen Char.chr 
+      elements (MyUtil.List.setDiff (MyUtil.List.iota 0x20 0x7e) (List.map Char.code sexprSpecialLetters)) >>= lift_gen Char.chr 
     in
     sized choose_int0 >>=
       vector gen_tl_letter >>= (fun cs ->
@@ -123,23 +123,13 @@ module Testable_fun_Sexpr_ss_list_to_bool =
   (Testable_bool) ;;
 module Check_fun_Sexpr_ss_list_to_bool = Check(Testable_fun_Sexpr_ss_list_to_bool)
 
-let gen_prop_equality to_string eq x y =
-  if (eq x y)
-  then
-    true
-  else
-    (Format.printf "Mismatching: @,@[%s@ != %s@]\n@?"
-        (to_string x)
-        (to_string y);
-      false)
-
 let prop_read_write : 'a -> bool =
   fun x ->
       try
         let y =
           Sexpr.read
             (Stream.of_string
-                (call_with_output_string
+                (MyUtil.Format.call_with_output_string
                     (fun fmtr ->
                           (Sexpr.write fmtr x))))
         in
