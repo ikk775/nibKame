@@ -16,9 +16,8 @@ let nextToken stream =
 	  Buffer.add_char buff '\\';
 	  Buffer.add_char buff (Stream.next stm);
 	  in_string stm
-      | Some '"' ->
-	  Stream.junk stm;
-	  Buffer.add_char buff '"';
+      | Some '"' | Some '\'' ->
+	  Buffer.add_char buff (Stream.next stm);
 	  Buffer.contents buff
       | Some c ->
 	  Stream.junk stm;
@@ -49,9 +48,8 @@ let nextToken stream =
 	     | ' ' | '\t' | '\n' ->
 		 Stream.junk stm;
 		 iter stm
-	     | '"' ->
-		 Stream.junk stm;
-		 Buffer.add_char buff '"';
+	     | '"' | '\'' ->
+		 Buffer.add_char buff (Stream.next stm);
 		 in_string stm
 	     | _ -> str stm)
       | None -> raise End_of_file
