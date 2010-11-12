@@ -124,5 +124,5 @@ let rec write fmtr  = function
         | Failure "tl" -> ());
       Format.fprintf fmtr ")@]@,"
 
-let of_string x =
-  TestUtil.call_with_output_string (fun fmtr -> write fmtr x)
+let to_string x =
+  MyUtil.Format.call_with_output_string (fun fmtr -> write fmtr x)
