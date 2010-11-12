@@ -16,9 +16,8 @@ let nextToken stream =
 	  Buffer.add_char buff '\\';
 	  Buffer.add_char buff (Stream.next stm);
 	  in_string stm
-      | Some '"' ->
-	  Stream.junk stm;
-	  Buffer.add_char buff '"';
+      | Some '"' | Some '\'' ->
+	  Buffer.add_char buff (Stream.next stm);
 	  Buffer.contents buff
       | Some c ->
 	  Stream.junk stm;
@@ -49,9 +48,8 @@ let nextToken stream =
 	     | ' ' | '\t' | '\n' ->
 		 Stream.junk stm;
 		 iter stm
-	     | '"' ->
-		 Stream.junk stm;
-		 Buffer.add_char buff '"';
+	     | '"' | '\'' ->
+		 Buffer.add_char buff (Stream.next stm);
 		 in_string stm
 	     | _ -> str stm)
       | None -> raise End_of_file
@@ -74,25 +72,62 @@ and make_list stm =
     | L a -> (L a) :: make_list stm
     | E -> []
 
-let lexer = Genlex.make_lexer []
+(* 
+let char_list_of_string str =
+  let len = String.length str in
+  let rec iter c =
+    if c < len then str.[c] :: iter (c + 1)
+    else [] in
+    iter 0
+
+let string_of_char_list list =
+  let len = List.length list in
+  let str = String.create len in
+  let rec iter c = function
+    | x :: xs -> String.set str c x; iter (c + 1) xs
+    | [] -> str
+  in
+    iter 0 list
+
+ Using ExtString.String.explode and implode
+*)
+
+let rec unescape l = function
+  | '\\' :: c :: tail ->
+      (match c with
+	 | 't' -> unescape ('\t' :: l) tail
+	 | 'n' -> unescape ('\n' :: l) tail
+	 | 'r' -> unescape ('\r' :: l) tail
+	 | 'b' -> unescape ('\b' :: l) tail
+	 | '\'' -> unescape ('\'' :: l) tail
+	 | '"' -> unescape ('"' :: l) tail
+	 | '\\' -> unescape ('\\' :: l) tail
+	 | _ -> invalid_arg "unreconized escape sequence")
+  | c :: tail -> unescape (c :: l) tail
+  | [] -> l
+
+let isdigit = function
+  | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-'
+      -> true
+  | _ -> false
 
 let rec build_tree = function
   | D a ->
-      if String.get a 0 = '\'' 
-	&& String.get a (String.length a - 1) <> '\'' then
-	Sident a 
-      else
-	let s = lexer (Stream.of_string a) in
-	  (match Stream.next s with
-	     | Genlex.Ident i -> Sident i
-	     | Genlex.Int i -> Sint i
-	     | Genlex.Float f -> Sfloat f
-	     | Genlex.Char c -> Schar c
-	     | Genlex.String s -> Sstring s
-		 (*  | Genlex.Kwd _ -> raise Not_found *))
+      let l = ExtString.String.explode a in
+	(match List.hd l with     
+	   | '"' -> Sstring (ExtString.String.implode (List.rev (List.tl (unescape [] (List.tl l)))))
+	   | '\'' ->
+	        (match unescape [] (List.tl l) with
+		  | '\'' :: c :: [] -> Schar c
+		  | _ ->  invalid_arg "that char was too long")
+	   | c when isdigit c -> 
+	       (try Sint (int_of_string a) with
+		 | Failure _  -> (try Sfloat (float_of_string a) with
+		     | _ -> invalid_arg "invalid number 1")
+		 | _ -> invalid_arg "invalid number 2")
+	   | _ -> Sident a)
   | L a -> Sexpr (List.map build_tree a)
   | E -> Sexpr []
-
 
 let read stream =
   build_tree (make_te stream)
@@ -124,5 +159,5 @@ let rec write fmtr  = function
         | Failure "tl" -> ());
       Format.fprintf fmtr ")@]@,"
 
-let of_string x =
-  TestUtil.call_with_output_string (fun fmtr -> write fmtr x)
+let to_string x =
+  MyUtil.Format.call_with_output_string (fun fmtr -> write fmtr x)
