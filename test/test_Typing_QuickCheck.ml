@@ -18,6 +18,7 @@ module PShow_expr = struct
           | Typing.E_Fun(s, t) -> Format.sprintf "E_Fun(%S, %s)" s (f t)
           | Typing.E_Apply(t1, t2) -> Format.sprintf "E_Apply(%s, %s)" (f t1) (f t2)
           | Typing.E_Let(s, t1, t2) -> Format.sprintf "E_Let(%S, %s, %s)" s (f t1) (f t2)
+          | Typing.E_Fix(s, t1) -> Format.sprintf "E_Fix(%S, %s)" s (f t1)
         in
         Format.fprintf fmt "%s" (f s)
 end
@@ -26,7 +27,7 @@ module PShow_oType = struct
   let show : t -> pretty_str =
     fun s fmt () ->
         let rec f: t -> string = function
-          | Typing.O_Constant -> Format.sprintf "O_Constant"
+          | Typing.O_Constant s -> Format.sprintf "O_Constant(%S)" s
           | Typing.O_Variable s -> Format.sprintf "O_Variable(%S)" s
           | Typing.O_Fun(t1, t2) -> Format.sprintf "O_Fun(%s, %s)" (f t1) (f t2)
         in
@@ -91,7 +92,7 @@ module Arbitrary_oType = struct
       then
         Arbitrary_string.arbitrary >>= fun s ->
             oneof [
-              ret_gen Typing.O_Constant;
+              ret_gen (Typing.O_Constant s);
               ret_gen (Typing.O_Variable s);
               ]
       else

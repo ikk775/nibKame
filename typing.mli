@@ -8,6 +8,7 @@ type expr =
   | E_Fun of exprVar * expr
   | E_Apply of expr * expr
   | E_Let of exprVar * expr * expr
+  | E_Fix of exprVar * expr
 type oType =
     O_Constant of typeConst
   | O_Variable of typeVar
