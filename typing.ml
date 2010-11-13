@@ -3,14 +3,6 @@ type typeConst = Id.t
 type exprVar = Id.t
 type exprConst = Id.t
 
-type expr =
-  | E_Constant of exprConst
-  | E_Variable of exprVar
-  | E_Fun of exprVar * expr
-  | E_Apply of expr * expr
-  | E_Let of exprVar * expr * expr
-  | E_Fix of exprVar * expr
-
 type oType =
   | O_Constant of typeConst
   | O_Variable of typeVar
@@ -22,6 +14,15 @@ type typeScheme =
 
 type typeEnv =
   | TypeEnv of (exprVar * typeScheme) list
+
+type expr =
+  | E_Constant of exprConst
+  | E_Variable of exprVar
+  | E_Fun of exprVar * expr
+  | E_Apply of expr * expr
+  | E_Let of exprVar * expr * expr
+  | E_Fix of exprVar * expr
+  | E_Type of expr * oType
 
 type substitution =
   | Substitution of typeVar * oType
@@ -155,33 +156,39 @@ let unify: oType -> oType -> substitution list = fun t1 t2 ->
 
 let rec w (env:typeEnv) expr =
   match expr with
-    | E_Constant c -> [], getConstantType (E_Constant c)
+    | E_Constant c ->
+      let t = getConstantType (E_Constant c) in
+      [], t, E_Type(expr, t)
     | E_Variable v ->
       let ts = getVariableType env (E_Variable v) in
       let freeTypeVarsTs = freeTypeVars ts in
       let newTypeVars = genTypeVars (List.length freeTypeVarsTs) in
       let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
-      [], substitute subst (removeQuantifier ts)
+      let t = substitute subst (removeQuantifier ts) in
+      [], t, E_Type(expr, t)
     | E_Fun(v, expr) -> 
       let b = genTypeVar () in
-      let s1, t1 = w (addEnv env v (OType b)) expr in
-      s1, O_Fun(substitute s1 b, t1)
+      let s1, t1, expr' = w (addEnv env v (OType b)) expr in
+      let t2 = O_Fun(substitute s1 b, t1) in
+      s1, t2, E_Type(E_Fun(v, expr'), t2)
     | E_Apply(e1, e2) -> 
       let b = genTypeVar () in
-      let s1, t1 = w env e1 in
-      let s2, t2 = w (substituteEnv s1 env) e2 in
+      let s1, t1, e1' = w env e1 in
+      let s2, t2, e2' = w (substituteEnv s1 env) e2 in
       let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
-      composite s3 (composite s2 s1), substitute s3 b     
+      let t = substitute s3 b in
+      composite s3 (composite s2 s1), t, E_Type(E_Apply(e1', e2'), t)
     | E_Let(v, e1, e2)  -> 
-      let s1, t1 = w env e1 in
+      let s1, t1, e1' = w env e1 in
       let s1env = substituteEnv s1 env in
-      let s2, t2 = w (addEnv s1env v (clos s1env (OType t1))) e2 in
-      composite s2 s1, t2
+      let s2, t2, e2' = w (addEnv s1env v (clos s1env (OType t1))) e2 in
+      composite s2 s1, t2, E_Type(E_Let(v, e1', e2'), t2)
     | E_Fix(f, E_Fun(x, e)) -> 
       let b = genTypeVar () in
-      let s1, t1 = w (addEnv env f (OType b)) (E_Fun(x, e)) in
+      let s1, t1, e' = w (addEnv env f (OType b)) (E_Fun(x, e)) in
       let s2 = unify (substitute s1 b) t1 in
-      composite s2 s1, substitute s2 t1
+      let t2 = substitute s2 t1 in
+      composite s2 s1, t2, E_Type(E_Fix(f, E_Type(E_Fun(x, e'), t1)), t2)
     | _ -> invalid_arg "Invalid expr."
 
   
