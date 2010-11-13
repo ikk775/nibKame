@@ -161,6 +161,28 @@ module Testable_oType_list_to_bool =
 module Check_oType_list_to_bool = Check(Testable_oType_list_to_bool)
 
 (* Tests *)
+(*
+val typeVars : oType -> typeVar list
+val freeTypeVars : typeScheme -> typeVar list
+val freeTypeVarsEnv : typeEnv -> typeVar list
+val targetVars : substitution list -> oType list
+val substitute : substitution list -> oType -> oType
+val composite : substitution list -> substitution list -> substitution list
+val supp : substitution list -> oType list
+val eq_subst : substitution list -> substitution list -> bool
+val substituteTs : substitution list -> typeScheme -> typeScheme
+val substituteEnv : substitution list -> typeEnv -> typeEnv
+val addEnv : typeEnv -> exprVar -> typeScheme -> typeEnv
+val clos : typeEnv -> typeScheme -> typeScheme
+val unification : oType -> oType -> substitution list
+val w : typeEnv -> expr -> substitution list * oType
+*)
+let prop_genTypeVars_duplication =
+  fun n -> 
+    let vs = Typing.genTypeVars n in
+    List.length vs == List.length (ExtList.List.unique vs)
+let () = Check_int_to_bool.verboseCheck prop_genTypeVars_duplication
+    
 let prop_typeVars_duplication : 'a -> bool =
   fun xs ->
       let vs = Typing.typeVars xs in

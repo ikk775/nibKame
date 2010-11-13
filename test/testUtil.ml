@@ -44,3 +44,9 @@ let gen_prop_equality to_string eq x y =
 
 module Implies_bool = Implies(Testable_bool)
 
+module Testable_int_to_bool =
+  Testable_fun
+  (Arbitrary_int)
+  (PShow_int)
+  (Testable_bool) ;;
+module Check_int_to_bool = Check(Testable_int_to_bool)

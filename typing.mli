@@ -16,9 +16,12 @@ type oType =
 type typeScheme = OType of oType | QType of typeVar list * typeScheme
 type typeEnv = TypeEnv of (exprVar * typeScheme) list
 type substitution = Substitution of typeVar * oType
+val getConstantType : expr -> oType
+val getVariableType : typeEnv -> expr -> typeScheme
 val genTypeVarNum : int ref
 val genTypeVar : unit -> oType
 val genTypeVars : int -> oType list
+val removeQuantifier : typeScheme -> oType
 val typeVars : oType -> typeVar list
 val freeTypeVars : typeScheme -> typeVar list
 val freeTypeVarsEnv : typeEnv -> typeVar list
@@ -28,7 +31,8 @@ val composite : substitution list -> substitution list -> substitution list
 val supp : substitution list -> oType list
 val eq_subst : substitution list -> substitution list -> bool
 val substituteTs : substitution list -> typeScheme -> typeScheme
-val substituteEnv :
-  substitution list -> ('a * typeScheme) list -> ('a * typeScheme) list
-val addEnv : ('a * 'b) list -> 'a -> 'b -> ('a * 'b) list
+val substituteEnv : substitution list -> typeEnv -> typeEnv
+val addEnv : typeEnv -> exprVar -> typeScheme -> typeEnv
 val clos : typeEnv -> typeScheme -> typeScheme
+val unify : oType -> oType -> substitution list
+val w : typeEnv -> expr -> substitution list * oType

@@ -26,6 +26,15 @@ type typeEnv =
 type substitution =
   | Substitution of typeVar * oType
 
+let getConstantType = function
+  | E_Constant c -> O_Constant c
+  | _ -> invalid_arg "expected type E_Constant"
+
+let getVariableType env expr =
+  match env, expr with
+    | TypeEnv envList, E_Variable v -> List.assoc v envList
+    | _ -> invalid_arg "expected type E_Variable"
+
 let genTypeVarNum = ref 0
 
 let genTypeVar () =
@@ -33,13 +42,22 @@ let genTypeVar () =
   O_Variable ("$" ^ string_of_int !genTypeVarNum)
 
 let rec genTypeVars n =
-  genTypeVar () :: genTypeVars (n - 1)
+  if n > 0
+  then genTypeVar () :: genTypeVars (n - 1)
+  else []
+
+let rec removeQuantifier = function
+  | OType ot -> ot
+  | QType(_, ts) -> removeQuantifier ts
 
 let rec typeVars  = function
   | O_Constant _ -> []
   | O_Variable tv -> [tv]
   | O_Fun(t1, t2) -> ExtList.List.unique(List.append (typeVars t1) (typeVars t2))
 
+let occur tv t =
+  List.mem tv (typeVars t)
+ 
 let rec freeTypeVars = function
   | OType t -> typeVars t
   | QType(qv, ts) -> List.filter (fun x -> not (List.mem x qv)) (freeTypeVars ts)
@@ -96,11 +114,75 @@ let rec substituteTs ss ts =
         | qt -> QType(tvsc, substituteTs ss (substituteTs middle_subst qt))
 
 let substituteEnv ss env =
-  List.map (function ftw, tts -> ftw, substituteTs ss tts) env
-  
-let addEnv env tv ts =
-  (tv, ts) :: List.remove_assoc tv env
+  match env with
+    | TypeEnv envList -> TypeEnv(List.map (function ftw, tts -> ftw, substituteTs ss tts) envList)
+
+let substituteEqnPair ss pair =
+  match pair with
+    | x, y -> substitute ss x, substitute ss y
+ 
+let substituteEqnPairs ss pairs =
+  List.map (substituteEqnPair ss) pairs
+
+let addEnv = function TypeEnv envList -> fun tv ts -> 
+  TypeEnv((tv, ts) :: List.remove_assoc tv envList)
   
 let clos env ts =
   let freeVars = MyUtil.List.setDiff (freeTypeVars ts) (freeTypeVarsEnv env) in
   QType(freeVars, ts)
+
+exception Unification_Failure of (oType * oType) list * substitution list
+
+let rec unify_u eqns substs =
+  match eqns with
+    | (s, t) :: eqns' when s = t -> unify_u eqns' substs
+    | (O_Fun(t1, e1) , O_Fun(t2, e2)):: eqns' -> unify_u ((t1, t2) :: (e1, e2) :: eqns') substs
+    | (O_Constant c1, O_Constant c2) :: eqns' -> raise (Unification_Failure(eqns, substs))
+    | (t, O_Variable v) :: eqns' when (match t with O_Variable _ -> false | _ -> true) -> 
+      unify_u ((O_Variable v, t) :: eqns') substs
+    | (O_Variable v, t) :: eqns' when occur v t && (O_Variable v) <> t ->
+      raise (Unification_Failure(eqns, substs))
+    | (O_Variable v, t) :: eqns' when not (occur v t) ->
+      let substs' = [Substitution (v, t)] in
+      let eqns'' = substituteEqnPairs substs' eqns' in
+      let substs'' = composite substs' substs in
+      unify_u eqns'' substs''
+    | _ -> raise (Unification_Failure(eqns, substs))
+
+let unify: oType -> oType -> substitution list = fun t1 t2 -> 
+  match unify_u [(t1, t2)] [] with
+    | [], substs -> substs
+    | _ -> raise (Unification_Failure([(t1, t2)], []))
+
+let rec w (env:typeEnv) expr =
+  match expr with
+    | E_Constant c -> [], getConstantType (E_Constant c)
+    | E_Variable v ->
+      let ts = getVariableType env (E_Variable v) in
+      let freeTypeVarsTs = freeTypeVars ts in
+      let newTypeVars = genTypeVars (List.length freeTypeVarsTs) in
+      let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
+      [], substitute subst (removeQuantifier ts)
+    | E_Fun(v, expr) -> 
+      let b = genTypeVar () in
+      let s1, t1 = w (addEnv env v (OType b)) expr in
+      s1, O_Fun(substitute s1 b, t1)
+    | E_Apply(e1, e2) -> 
+      let b = genTypeVar () in
+      let s1, t1 = w env e1 in
+      let s2, t2 = w (substituteEnv s1 env) e2 in
+      let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
+      composite s3 (composite s2 s1), substitute s3 b     
+    | E_Let(v, e1, e2)  -> 
+      let s1, t1 = w env e1 in
+      let s1env = substituteEnv s1 env in
+      let s2, t2 = w (addEnv s1env v (clos s1env (OType t1))) e2 in
+      composite s2 s1, t2
+    | E_Fix(f, E_Fun(x, e)) -> 
+      let b = genTypeVar () in
+      let s1, t1 = w (addEnv env f (OType b)) (E_Fun(x, e)) in
+      let s2 = unify (substitute s1 b) t1 in
+      composite s2 s1, substitute s2 t1
+    | _ -> invalid_arg "Invalid expr."
+
+  
