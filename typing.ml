@@ -135,6 +135,7 @@ exception Unification_Failure of (oType * oType) list * substitution list
 
 let rec unify_u eqns substs =
   match eqns with
+    | [] -> substs
     | (s, t) :: eqns' when s = t -> unify_u eqns' substs
     | (O_Fun(t1, e1) , O_Fun(t2, e2)):: eqns' -> unify_u ((t1, t2) :: (e1, e2) :: eqns') substs
     | (O_Constant c1, O_Constant c2) :: eqns' -> raise (Unification_Failure(eqns, substs))
@@ -150,9 +151,7 @@ let rec unify_u eqns substs =
     | _ -> raise (Unification_Failure(eqns, substs))
 
 let unify: oType -> oType -> substitution list = fun t1 t2 -> 
-  match unify_u [(t1, t2)] [] with
-    | [], substs -> substs
-    | _ -> raise (Unification_Failure([(t1, t2)], []))
+  unify_u [(t1, t2)] []
 
 let rec w (env:typeEnv) expr =
   match expr with
