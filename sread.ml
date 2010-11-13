@@ -41,7 +41,8 @@ let rec pattern_of_list = function
       | Sident "list" :: l -> Syntax.P_List (List.map pattern_of_list l)
       | Sident "tuple" :: l -> Syntax.P_Tuple (List.map pattern_of_list l)
       | Sident "array" :: l -> Syntax.P_Array (List.map pattern_of_list l)
-      | Sident constructor :: p -> Syntax.P_Variant (pattern_of_list p)
+      | Sident constructor :: p -> Syntax.P_Variant (constructor, (List.map pattern_of_list p))
+      | _ -> invalid_arg "unexpected pattern."
 
 (*
   val change : Sexpr.t -> Syntax.t
@@ -107,4 +108,4 @@ let rec change = function
 	| Sident "apply" :: a :: args ->
 	    Syntax.Apply (change a, List.map change args)
 
-	| any -> Syntax.Unit
+	| any -> invalid_arg "unexpected token."
