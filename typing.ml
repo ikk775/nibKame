@@ -11,6 +11,7 @@ type expr =
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
   | E_Type of expr * Type.oType
+  | E_Declare of exprVar * Type.oType * expr
 
 type exprEnv =
   | ExprEnv of (Id.t * Type.oType) list
@@ -56,6 +57,7 @@ let rec substituteExpr ss expr =
     | E_Let(v, e1, e2) -> E_Let(v, subst e1, subst e2)
     | E_Fix(f, e) -> E_Fix(f, subst e)
     | E_Type(e, t) -> E_Type(subst e, Type.substitute ss t)
+    | E_Declare(v, t, e) -> E_Declare(v, Type.substitute ss t, subst e)
 
 let rec w (env:Type.typeEnv) expr =
   match expr with
@@ -72,8 +74,9 @@ let rec w (env:Type.typeEnv) expr =
     | E_Fun(v, expr) -> 
       let b = Type.genTypeVar () in
       let s1, t1, expr' = w (Type.addEnv env v (Type.OType b)) expr in
-      let t2 = Type.O_Fun(Type.substitute s1 b, t1) in
-      s1, t2, E_Type(E_Fun(v, expr'), t2)
+      let bt = Type.substitute s1 b in
+      let t2 = Type.O_Fun(bt, t1) in
+      s1, t2, E_Type(E_Fun(v, E_Declare(v, bt, expr')), t2)
     | E_Apply(e1, e2) -> 
       let b = Type.genTypeVar () in
       let s1, t1, e1' = w env e1 in
@@ -111,13 +114,17 @@ let rec w (env:Type.typeEnv) expr =
       let s1, t1, e1' = w env e1 in
       let s1env = Type.substituteEnv s1 env in
       let s2, t2, e2' = w (Type.addEnv s1env v (Type.clos s1env (Type.OType t1))) e2 in
-      Type.composite s2 s1, t2, E_Type(E_Let(v, e1', e2'), t2)
+      Type.composite s2 s1, t2, E_Type(E_Let(v, e1', E_Declare(v, t1, e2')), t2)
     | E_Fix(f, E_Fun(x, e)) -> 
       let b = Type.genTypeVar () in
       let s1, t1, e' = w (Type.addEnv env f (Type.OType b)) (E_Fun(x, e)) in
       let s2 = Type.unify (Type.substitute s1 b) t1 in
       let t2 = Type.substitute s2 t1 in
-      Type.composite s2 s1, t2, E_Type(E_Fix(f, E_Type(E_Fun(x, e'), t1)), t2)
+      let bt = Type.substitute s2 b in
+      Type.composite s2 s1, t2, E_Type(E_Fix(f, E_Declare(f, bt, E_Type(E_Fun(x, e'), t1))), t2)
     | _ -> invalid_arg "Invalid expr."
 
+let typing env expr =
+  let ss, t, expr' = w env expr in
+  t, substituteExpr ss expr'
   

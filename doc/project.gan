@@ -18,7 +18,7 @@
             </calendar>
         </day-types>
     </calendars>
-    <tasks>
+    <tasks color="#8cb6ce">
         <taskproperties>
             <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
             <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
@@ -46,7 +46,7 @@
             <depend id="0" type="2" difference="0" hardness="Strong"/>
             <depend id="16" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="0" name="型推論部の作成" color="#8cb6ce" meeting="false" start="2010-11-11" duration="5" complete="0" priority="1" expand="true">
+        <task id="0" name="型推論部の作成" color="#8cb6ce" meeting="false" start="2010-11-11" duration="5" complete="44" priority="1" expand="true">
             <depend id="16" type="2" difference="0" hardness="Strong"/>
         </task>
         <task id="2" name="正規化部の作成" color="#8cb6ce" meeting="false" start="2010-11-04" duration="9" complete="0" priority="1" expand="true">

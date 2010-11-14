@@ -10,6 +10,7 @@ type expr =
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
   | E_Type of expr * Type.oType
+  | E_Declare of exprVar * Type.oType * expr
 type exprEnv = ExprEnv of (Id.t * Type.oType) list
 val extExprEnv : (string * Type.oType) list ref
 val getExtExprEnv : (string * Type.oType) list
@@ -20,3 +21,4 @@ val getConstantType : expr -> Type.oType
 val getVariableType : Type.typeEnv -> expr -> Type.typeScheme
 val substituteExpr : Type.substitution list -> expr -> expr
 val w : Type.typeEnv -> expr -> Type.substitution list * Type.oType * expr
+val typing : Type.typeEnv -> expr -> Type.oType * expr
