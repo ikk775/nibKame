@@ -184,22 +184,105 @@ let rec of_sexpr = function
 
 
 let rec to_sexpr = function
-  | Unit -> Sexpr.Sident "unit"
-  | Bool -> Sexpr.Sident "bool"
-  | Int -> Sexpr.Sident "int"
-  | Float -> Sexpr.Sident "float"
-  | Char -> Sexpr.Sident "char"
+  | Unit -> Sexpr.Sident "t:unit"
+  | Bool -> Sexpr.Sident "t:bool"
+  | Int -> Sexpr.Sident "t:int"
+  | Float -> Sexpr.Sident "t:float"
+  | Char -> Sexpr.Sident "t:char"
   | Fun (t1s, t2) ->
-    Sexpr.Sexpr [Sexpr.Sident "fun"; Sexpr.Sexpr (List.map to_sexpr t1s); to_sexpr t2]
+    Sexpr.Sexpr [Sexpr.Sident "t:fun"; Sexpr.Sexpr (List.map to_sexpr t1s); to_sexpr t2]
   | Tuple ts -> 
-    Sexpr.Sexpr (Sexpr.Sident "tuple" :: (List.map to_sexpr ts))
+    Sexpr.Sexpr (Sexpr.Sident "t:tuple" :: (List.map to_sexpr ts))
   | List t -> 
-    Sexpr.Sexpr [Sexpr.Sident "list";  to_sexpr t]
+    Sexpr.Sexpr [Sexpr.Sident "t:list";  to_sexpr t]
   | Array t -> 
-    Sexpr.Sexpr [Sexpr.Sident "array";  to_sexpr t]
+    Sexpr.Sexpr [Sexpr.Sident "t:array";  to_sexpr t]
   | Variant t -> 
-    Sexpr.Sexpr [Sexpr.Sident "variant";  Sexpr.Sident t]
+    Sexpr.Sexpr [Sexpr.Sident "t:variant";  Sexpr.Sident t]
   | Var x -> 
-    Sexpr.Sexpr (Sexpr.Sident "var" :: match !x with
+    Sexpr.Sexpr (Sexpr.Sident "t:var" :: match !x with
       | None -> []
       | Some i -> [to_sexpr i])
+
+let rec oType_to_sexpr = function
+  | O_Constant t -> Sexpr.Sexpr [Sexpr.Sident "ot:constant"; to_sexpr t]
+  | O_Variable t -> Sexpr.Sexpr [Sexpr.Sident "ot:var"; Sexpr.Sident t]
+  | O_Tuple ts -> Sexpr.Sexpr (Sexpr.Sident "ot:tuple" :: (List.map oType_to_sexpr ts))
+  | O_Variant(t1, t2) ->
+    let rec variant_flatten = function
+      | O_Variant(t1, t2) ->  t1 :: variant_flatten t2
+      | t -> [t]
+    in
+    Sexpr.Sexpr (Sexpr.Sident "ot:variant" ::  oType_to_sexpr t1 :: List.map oType_to_sexpr (variant_flatten t2))
+  | O_Fun(t1, t2) -> 
+    let rec fun_flatten = function
+      | O_Fun(t1, t2) ->  t1 :: fun_flatten t2
+      | t -> [t]
+    in
+    Sexpr.Sexpr (Sexpr.Sident "ot:fun" ::  oType_to_sexpr t1 :: List.map oType_to_sexpr (fun_flatten t2))
+
+let rec oType_of_sexpr = function
+  | Sexpr.Sexpr [Sexpr.Sident "ot:constant"; t] -> O_Constant (of_sexpr t)
+  | Sexpr.Sexpr [Sexpr.Sident "ot:var"; Sexpr.Sident t] -> O_Variable t
+  | Sexpr.Sexpr (Sexpr.Sident "ot:tuple" :: ts) -> O_Tuple (List.map oType_of_sexpr ts)
+  | Sexpr.Sexpr (Sexpr.Sident "ot:variant" :: t1 :: t2 :: ts) -> 
+    let rec variant_nest = function
+      | t1 :: t2 :: []->  O_Variant(oType_of_sexpr t1, oType_of_sexpr t2)
+      | t :: ts -> O_Variant(oType_of_sexpr t, variant_nest ts)
+      | _ -> invalid_arg "unexpected token."
+    in
+    variant_nest (t1 :: t2 :: ts)
+  | Sexpr.Sexpr (Sexpr.Sident "ot:fun" :: t1 :: t2 :: ts) -> 
+    let rec fun_nest = function
+      | t1 :: t2 :: []->  O_Fun(oType_of_sexpr t1, oType_of_sexpr t2)
+      | t :: ts -> O_Fun(oType_of_sexpr t, fun_nest ts)
+      | _ -> invalid_arg "unexpected token."
+    in
+    fun_nest (t1 :: t2 :: ts)
+  | _ -> invalid_arg "unexpected token."
+
+let rec typeScheme_to_sexpr = function
+  | OType ot -> Sexpr.Sexpr [Sexpr.Sident "ts:type"; oType_to_sexpr ot]
+  | QType (vs, ts) -> Sexpr.Sexpr [Sexpr.Sident "ts:forall"; Sexpr.Sexpr (List.map (fun v -> Sexpr.Sident v) vs); typeScheme_to_sexpr ts]
+
+let rec typeScheme_of_sexpr = function
+  | Sexpr.Sexpr [Sexpr.Sident "ts:type"; ot] -> OType (oType_of_sexpr ot)
+  | Sexpr.Sexpr [Sexpr.Sident "ts:forall"; Sexpr.Sexpr vs; ts] -> 
+    let id_to_str = function
+      | Sexpr.Sident x -> x
+      | _ -> invalid_arg "unexpected token."
+    in
+    let vs' = List.map id_to_str vs in
+    QType (vs', typeScheme_of_sexpr ts)
+  | _ -> invalid_arg "unexpected token."
+
+let rec typeEnv_to_sexpr = function
+  | TypeEnv eqs ->
+    let eq_to_sexpr = function
+      | v, ts -> Sexpr.Sexpr [Sexpr.Sident v; typeScheme_to_sexpr ts]
+    in
+    Sexpr.Sexpr (Sexpr.Sident "te:env" :: List.map eq_to_sexpr eqs)
+
+let rec typeEnv_of_sexpr = function
+  | Sexpr.Sexpr (Sexpr.Sident "te:env" :: eqs) -> 
+    let eq_of_sexpr = function
+      | Sexpr.Sexpr [Sexpr.Sident v; ts] -> v, typeScheme_of_sexpr ts
+      | _ -> invalid_arg "unexpected token."
+    in
+    List.map eq_of_sexpr eqs
+  | _ -> invalid_arg "unexpected token."
+    
+let rec substitution_to_sexpr = function
+  | Substitution(tv, ot) -> Sexpr.Sexpr[Sexpr.Sident tv; oType_to_sexpr ot]
+
+let rec substitution_of_sexpr = function
+  | Sexpr.Sexpr[Sexpr.Sident tv; ot] -> Substitution (tv, oType_of_sexpr ot)
+  | _ -> invalid_arg "unexpected token."
+
+let rec substitutions_to_sexpr ss =
+  Sexpr.Sexpr ((Sexpr.Sident "substs") :: List.map substitution_to_sexpr ss)
+ 
+let rec substitutions_of_sexpr = function
+  | Sexpr.Sexpr ((Sexpr.Sident "substs") :: ss) -> 
+    List.map substitution_of_sexpr ss
+  | _ -> invalid_arg "unexpected token."
