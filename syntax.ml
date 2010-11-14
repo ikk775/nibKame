@@ -4,6 +4,7 @@ type lit =
   | Int of int
   | Float of float
   | Char of char
+  | ExtFun of string
 
 type pat =
   | P_Ident of Id.t

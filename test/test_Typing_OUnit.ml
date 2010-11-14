@@ -6,6 +6,7 @@ let _ =
   run_test_tt_main
     ("typing.ml" >:::
       [
+        (*
         "typeVars" >:::
         [
           "typeVars(O_Contant \"a\")" >::
@@ -39,4 +40,5 @@ let _ =
             (fun () -> assert_equal [] (freeTypeVars(OType(O_Constant("a"))))) 
             ;
           ]
+          *)
       ])

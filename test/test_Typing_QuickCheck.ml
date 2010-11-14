@@ -13,7 +13,7 @@ module PShow_expr = struct
   let show : t -> pretty_str =
     fun s fmt () ->
         let rec f: t -> string = function
-          | Typing.E_Constant s -> Format.sprintf "E_Constant(%S)" s
+          | Typing.E_Constant s -> Format.sprintf "E_Constant(%S)" (Std.dump s)
           | Typing.E_Variable s -> Format.sprintf "E_Variable(%S)" s
           | Typing.E_Fun(s, t) -> Format.sprintf "E_Fun(%S, %s)" s (f t)
           | Typing.E_Apply(t1, t2) -> Format.sprintf "E_Apply(%s, %s)" (f t1) (f t2)
@@ -23,24 +23,24 @@ module PShow_expr = struct
         Format.fprintf fmt "%s" (f s)
 end
 module PShow_oType = struct
-  type t = Typing.oType
+  type t = Type.oType
   let show : t -> pretty_str =
     fun s fmt () ->
         let rec f: t -> string = function
-          | Typing.O_Constant s -> Format.sprintf "O_Constant(%S)" s
-          | Typing.O_Variable s -> Format.sprintf "O_Variable(%S)" s
-          | Typing.O_Fun(t1, t2) -> Format.sprintf "O_Fun(%s, %s)" (f t1) (f t2)
+          | Type.O_Constant s -> Format.sprintf "O_Constant(%S)" (Std.dump s)
+          | Type.O_Variable s -> Format.sprintf "O_Variable(%S)" s
+          | Type.O_Fun(t1, t2) -> Format.sprintf "O_Fun(%s, %s)" (f t1) (f t2)
         in
         Format.fprintf fmt "%s" (f s)
 end
 module PShow_string_list = PShow_list(PShow_string)
 module PShow_typeScheme = struct
-  type t = Typing.typeScheme
+  type t = Type.typeScheme
   let show : t -> pretty_str =
     fun s fmt () ->
         let rec f: t -> string = function
-          | Typing.OType t -> Format.sprintf "OType(%s)" (MyUtil.Format.call_with_output_string (fun ff -> PShow_oType.show t ff ()))
-          | Typing.QType(vs, ts) -> Format.sprintf "QType(%s, %s)" (MyUtil.Format.call_with_output_string (fun ff -> PShow_string_list.show vs ff ())) (f ts)
+          | Type.OType t -> Format.sprintf "OType(%s)" (MyUtil.Format.call_with_output_string (fun ff -> PShow_oType.show t ff ()))
+          | Type.QType(vs, ts) -> Format.sprintf "QType(%s, %s)" (MyUtil.Format.call_with_output_string (fun ff -> PShow_string_list.show vs ff ())) (f ts)
         in
         Format.fprintf fmt "%s" (f s)
 end
@@ -63,7 +63,7 @@ module Arbitrary_expr = struct
       then
         Arbitrary_string.arbitrary >>= fun s ->
             oneof[
-              ret_gen (Typing.E_Constant s);
+              (* ret_gen (Typing.E_Constant s); FIXME *)
               ret_gen (Typing.E_Variable s)
               ]
       else
@@ -85,22 +85,22 @@ end
 module Arbitrary_string_list = Arbitrary_list(Arbitrary_string)
 
 module Arbitrary_oType = struct
-  type t = Typing.oType
+  type t = Type.oType
   let arbitrary =
     let rec arb_sub depth =
       if depth <= 0
       then
         Arbitrary_string.arbitrary >>= fun s ->
             oneof [
-              ret_gen (Typing.O_Constant s);
-              ret_gen (Typing.O_Variable s);
+              (* ret_gen (Typing.O_Constant s); FIXME*)
+              ret_gen (Type.O_Variable s);
               ]
       else
         arb_sub (depth - 1) >>= fun e1 ->
             arb_sub (depth - 1) >>= fun e2 ->
                 oneof[
                   arb_sub 0;
-                  ret_gen (Typing.O_Fun(e1, e2))
+                  ret_gen (Type.O_Fun(e1, e2))
                   ]
     in
     sized (fun i ->
@@ -108,19 +108,19 @@ module Arbitrary_oType = struct
 end
 
 module Arbitrary_typeScheme = struct
-  type t = Typing.typeScheme
+  type t = Type.typeScheme
   let arbitrary =
     let rec arb_sub depth =
       if depth <= 0
       then
         Arbitrary_oType.arbitrary >>= fun t ->
-            ret_gen (Typing.OType(t));
+            ret_gen (Type.OType(t));
       else
         Arbitrary_string_list.arbitrary >>= fun vs ->
             arb_sub (depth - 1) >>= fun qt ->
                 oneof[
                   arb_sub 0;
-                  ret_gen (Typing.QType(vs, qt))
+                  ret_gen (Type.QType(vs, qt))
                   ]
     in
     sized (fun i ->
@@ -179,18 +179,18 @@ val w : typeEnv -> expr -> substitution list * oType
 *)
 let prop_genTypeVars_duplication =
   fun n -> 
-    let vs = Typing.genTypeVars n in
+    let vs = Type.genTypeVars n in
     List.length vs == List.length (ExtList.List.unique vs)
 let () = Check_int_to_bool.verboseCheck prop_genTypeVars_duplication
     
 let prop_typeVars_duplication : 'a -> bool =
   fun xs ->
-      let vs = Typing.typeVars xs in
+      let vs = Type.typeVars xs in
       List.length vs == List.length (ExtList.List.unique vs)
 let () = Check_oType_to_bool.verboseCheck prop_typeVars_duplication
 
 let prop_freeTypeVars_duplication : 'a -> bool =
   fun xs ->
-      let vs = Typing.freeTypeVars xs in
+      let vs = Type.freeTypeVars xs in
       List.length vs == List.length (ExtList.List.unique vs)
 let () = Check_typeScheme_to_bool.verboseCheck prop_freeTypeVars_duplication
