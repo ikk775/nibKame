@@ -16,7 +16,7 @@ let nextToken stream =
 	  Buffer.add_char buff '\\';
 	  Buffer.add_char buff (Stream.next stm);
 	  in_string stm
-      | Some '"' | ->
+      | Some '"' ->
 	  Buffer.add_char buff (Stream.next stm);
 	  Buffer.contents buff
       | Some c ->
@@ -61,8 +61,11 @@ type te =
   | L of te list
   | E
 
+(*
+  かっこのネストを対応するリストへ読み込み
+*)
 let rec make_te stm =
-    match nextToken stm with
+  match nextToken stm with
       | "(" -> L (make_list stm)
       | ")" -> E
       | str -> D (str)
@@ -72,26 +75,10 @@ and make_list stm =
     | L a -> (L a) :: make_list stm
     | E -> []
 
-(* 
-let char_list_of_string str =
-  let len = String.length str in
-  let rec iter c =
-    if c < len then str.[c] :: iter (c + 1)
-    else [] in
-    iter 0
-
-let string_of_char_list list =
-  let len = List.length list in
-  let str = String.create len in
-  let rec iter c = function
-    | x :: xs -> String.set str c x; iter (c + 1) xs
-    | [] -> str
-  in
-    iter 0 list
-
- Using ExtString.String.explode and implode
+(*
+  文字列リテラル(文字配列)のエスケープ文字の変換
+  第1引数には [] を渡すこと
 *)
-
 let rec unescape l = function
   | '\\' :: c :: tail ->
       (match c with
