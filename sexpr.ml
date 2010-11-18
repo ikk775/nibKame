@@ -16,7 +16,7 @@ let nextToken stream =
 	  Buffer.add_char buff '\\';
 	  Buffer.add_char buff (Stream.next stm);
 	  in_string stm
-      | Some '"' | Some '\'' ->
+      | Some '"' | ->
 	  Buffer.add_char buff (Stream.next stm);
 	  Buffer.contents buff
       | Some c ->
@@ -48,7 +48,7 @@ let nextToken stream =
 	     | ' ' | '\t' | '\n' ->
 		 Stream.junk stm;
 		 iter stm
-	     | '"' | '\'' ->
+	     | '"' ->
 		 Buffer.add_char buff (Stream.next stm);
 		 in_string stm
 	     | _ -> str stm)
@@ -116,10 +116,25 @@ let rec build_tree = function
       let l = ExtString.String.explode a in
 	(match List.hd l with     
 	   | '"' -> Sstring (ExtString.String.implode (List.rev (List.tl (unescape [] (List.tl l)))))
-	   | '\'' ->
-	        (match unescape [] (List.tl l) with
-		  | '\'' :: c :: [] -> Schar c
-		  | _ ->  invalid_arg "that char was too long")
+	   | '#' ->
+	        (match List.tl l with
+		  | '\\' :: c :: [] -> Schar c
+		  | '\\' :: tail ->
+		      if List.hd tail = 'x' then
+			Schar (char_of_int (int_of_string (ExtString.String.implode ('0' ::  tail))))
+		      else
+			(match ExtString.String.implode (List.map Char.lowercase tail) with
+			   | "space" -> Schar ' '
+			   | "newline" | "nl" | "lf"  -> Schar '\n'
+			   | "return" | "cr" -> Schar '\r'
+			   | "tab" | "ht" -> Schar '\t'
+			   | "page" -> Schar '\012'
+			   | "escape" | "esc" -> Schar '\028'
+			   | "delete" | "del" -> Schar '\127'
+			   | "null" -> Schar '\000'
+			   | "backspace" | "bs" -> Schar '\b'
+			   | _ -> invalid_arg "unrconized char lietral")
+		  | _ -> Sident a)
 	   | c when isdigit c -> 
 	       (try Sint (int_of_string a) with
 		 | Failure _  -> (try Sfloat (float_of_string a) with
