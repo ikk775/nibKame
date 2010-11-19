@@ -93,6 +93,30 @@ let rec unescape l = function
   | c :: tail -> unescape (c :: l) tail
   | [] -> l
 
+let charname_to_char = function
+  | "space" -> ' '
+  | "newline" | "nl" | "lf"  -> '\n'
+  | "return" | "cr" -> '\r'
+  | "tab" | "ht" -> '\t'
+  | "page" -> '\012'
+  | "escape" | "esc" -> '\028'
+  | "delete" | "del" -> '\127'
+  | "null" -> '\000'
+  | "backspace" | "bs" -> '\b'
+  | _ -> invalid_arg "unrconized char name"
+
+let char_to_charname = function
+  | ' ' -> "space"
+  | '\n' -> "newline"
+  | '\r' -> "return"
+  | '\t' -> "tab"
+  | '\012' -> "page"
+  | '\028' -> "escape"
+  | '\127' -> "delete"
+  | '\000' -> "null"
+  | '\b' -> "backspace"
+  | c -> ExtString.String.implode [c]
+
 let isdigit = function
   | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-'
       -> true
@@ -148,17 +172,16 @@ let rec eq_Sexpr x y =
 let rec write fmtr  = function
   | Sstring s -> Format.fprintf fmtr "%S" s
   | Sident s -> Format.fprintf fmtr "%s" s
-  | Schar c -> Format.fprintf fmtr "%C" c
+  | Schar c -> Format.fprintf fmtr "#\\%s" (char_to_charname c)
   | Sint i -> Format.fprintf fmtr "%s" (string_of_int i)
   | Sfloat f -> Format.fprintf fmtr "%.30f"  f
   | Sexpr l ->
       Format.fprintf fmtr "@[(";
-      (try
-      write fmtr (List.hd l);
-      List.iter (fun e -> Format.fprintf fmtr "@ "; write fmtr e) (List.tl l)
-      with
-        | Failure "hd" -> ()
-        | Failure "tl" -> ());
+      (match l with
+        | [] -> ()
+        | e :: es ->
+          write fmtr e;
+		  List.iter (fun e -> Format.fprintf fmtr "@ "; write fmtr e) es);
       Format.fprintf fmtr ")@]@,"
 
 let to_string x =
