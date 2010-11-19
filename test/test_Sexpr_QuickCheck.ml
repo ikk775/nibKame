@@ -37,16 +37,16 @@ module Arbitrary_Sexpr(Symbol:ARBITRARY_STRING) = struct
       if depth <= 0
       then
         Arbitrary_string.arbitrary >>= fun str ->
-            Symbol.arbitrary >>= fun sym ->
-                Arbitrary_int.arbitrary >>= fun i ->
-                    Arbitrary_ascii_char.arbitrary >>= fun c ->
-                        Arbitrary_float.arbitrary >>= fun f ->
-                            oneof[
-                              ret_gen (Sexpr.Sstring str);
-                              ret_gen (Sexpr.Sident sym);
-                              ret_gen (Sexpr.Sint i);
-                              ret_gen (Sexpr.Schar c);
-                              ret_gen (Sexpr.Sfloat f);
+        Symbol.arbitrary >>= fun sym ->
+        Arbitrary_int.arbitrary >>= fun i ->
+        Arbitrary_ascii_char.arbitrary >>= fun c ->
+        Arbitrary_float.arbitrary >>= fun f ->
+          oneof[
+            ret_gen (Sexpr.Sstring str);
+            ret_gen (Sexpr.Sident sym);
+            ret_gen (Sexpr.Sint i);
+            ret_gen (Sexpr.Schar c);
+            ret_gen (Sexpr.Sfloat f);
                               ]
       else
         let arb_list = sized choose_int0 >>= vector (arb_sub (depth - 1))

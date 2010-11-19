@@ -1,5 +1,12 @@
 open QuickCheck
 
+module PShow_string = struct
+  type t = string
+  let show : t -> pretty_str =
+    fun s fmt () ->
+        Format.fprintf fmt "%S" s
+end
+
 module PShow_pair(Fst: PSHOW)(Snd: PSHOW) = struct
   type t = Fst.t * Snd.t
   let show : t -> pretty_str =
