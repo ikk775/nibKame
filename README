@@ -1,2 +1,8 @@
-  nibkame - a thin programming language like ML
+  nibKame - a thin programming language like ML
+
+
+
+Dependence:
+  - ./*.ml : ExtLib
+  - ./test/*.ml : ExtLib, ocaml-quickcheck(https://github.com/alanfalloon/ocaml-quickcheck)
 
