@@ -9,5 +9,6 @@ type t =
 
 val read: char Stream.t -> t
 val write: Format.formatter -> t -> unit
-val eq_Sexpr: t -> t -> bool
+val equal: t -> t -> bool
 val to_string: t -> string
+val from_string: string -> t

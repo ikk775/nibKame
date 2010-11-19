@@ -64,3 +64,5 @@ module Testable_int_to_bool =
   (PShow_int)
   (Testable_bool) ;;
 module Check_int_to_bool = Check(Testable_int_to_bool)
+
+let logsized f = sized f >>= (lift_gen (fun i -> (truncate (log (float_of_int i)))))

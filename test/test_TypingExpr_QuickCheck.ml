@@ -41,7 +41,7 @@ module Arbitrary_expr = struct
         arb_sub (depth - 1) >>= fun e1 ->
         arb_sub (depth - 1) >>= fun e2 ->
         TestTypingType.Arbitrary_oType.arbitrary >>= fun ot -> 
-        sized choose_int0 >>= vector (arb_sub (depth - 1)) >>= fun es -> 
+        logsized choose_int0 >>= lift_gen (fun i -> i + 1) >>= vector (arb_sub (depth - 1)) >>= fun es ->
           oneof[
             arb_sub 0;
             ret_gen (TypingExpr.E_Fun(s, e));
@@ -61,6 +61,12 @@ end
 module Arbitrary_string_list = Arbitrary_list(Arbitrary_string)
 
 (* Testables instances *)
+module Testable_expr_to_bool =
+  Testable_fun
+  (Arbitrary_expr)
+  (PShow_expr)
+  (Testable_bool) ;;
+module Check_fun_expr_to_bool = Check(Testable_expr_to_bool)
 
 (* Tests *)
 

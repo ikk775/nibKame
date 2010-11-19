@@ -112,7 +112,7 @@ let prop_read_write : 'a -> bool =
                     (fun fmtr ->
                           (Sexpr.write fmtr x))))
         in
-        gen_prop_equality Std.dump Sexpr.eq_Sexpr x y
+        gen_prop_equality Std.dump Sexpr.equal x y
       with
       | Stream.Error s ->
           (Format.printf "Exception: Stream.Error %S@\n@?" s;

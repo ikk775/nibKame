@@ -24,7 +24,7 @@ let rec equal x y =
     | Tuple(ts1), Tuple(ts2) -> List.for_all2 equal ts1 ts2
     | List(t1), List(t2) -> equal t1 t2
     | Array(t1), Array(t2) -> equal t1 t2
-    | Variant(id1), Variant(id2) -> id1 == id2
+    | Variant(id1), Variant(id2) -> id1 = id2
     | Var(rot1), Var(rot2) -> 
       (match !rot1, !rot2 with
         | None, None -> true
