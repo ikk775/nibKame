@@ -11,3 +11,4 @@ _build/
 .paths
 .settings
 .project
+quickCheck.ml

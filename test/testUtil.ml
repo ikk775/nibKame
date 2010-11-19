@@ -1,5 +1,12 @@
 open QuickCheck
 
+module PShow_string = struct
+  type t = string
+  let show : t -> pretty_str =
+    fun s fmt () ->
+        Format.fprintf fmt "%S" s
+end
+
 module PShow_pair(Fst: PSHOW)(Snd: PSHOW) = struct
   type t = Fst.t * Snd.t
   let show : t -> pretty_str =
@@ -7,6 +14,13 @@ module PShow_pair(Fst: PSHOW)(Snd: PSHOW) = struct
       let x, y = p in
       let a1, a2 = Fst.show x, Snd.show y in
         Format.fprintf fmt "(%a, %a)" a1 () a2 ()
+end
+
+module PShow_Sexpr = struct
+  type t = Sexpr.t
+  let show : t -> pretty_str =
+    fun s fmt () ->
+        Sexpr.write fmt s
 end
 
 module type ARBITRARY_CHAR_LIST = sig
@@ -44,3 +58,9 @@ let gen_prop_equality to_string eq x y =
 
 module Implies_bool = Implies(Testable_bool)
 
+module Testable_int_to_bool =
+  Testable_fun
+  (Arbitrary_int)
+  (PShow_int)
+  (Testable_bool) ;;
+module Check_int_to_bool = Check(Testable_int_to_bool)

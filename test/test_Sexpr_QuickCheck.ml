@@ -5,19 +5,6 @@ open TestUtil
 let sexprSpecialLetters = [' ';'(';')';'\'';'\"';'#';'`';'\\']
 
 (* PShow instances *)
-module PShow_string = struct
-  type t = string
-  let show : t -> pretty_str =
-    fun s fmt () ->
-        Format.fprintf fmt "%s" s
-end
-module PShow_Sexpr = struct
-  type t = Sexpr.t
-  let show : t -> pretty_str =
-    fun s fmt () ->
-        Sexpr.write fmt s
-end
-
 (* Arbitrary instances *)
 module Arbitrary_short_symbol_string = struct
   type t = string
@@ -43,14 +30,6 @@ module Arbitrary_symbol_string = struct
              lift_gen ExtString.String.implode
 end
 
-type t =
-  | Sstring of string
-  | Sident of string
-  | Sint of int
-  | Sfloat of float
-  | Schar of char
-  | Sexpr of t list
-
 module Arbitrary_Sexpr(Symbol:ARBITRARY_STRING) = struct
   type t = Sexpr.t
   let arbitrary =
@@ -58,16 +37,16 @@ module Arbitrary_Sexpr(Symbol:ARBITRARY_STRING) = struct
       if depth <= 0
       then
         Arbitrary_string.arbitrary >>= fun str ->
-            Symbol.arbitrary >>= fun sym ->
-                Arbitrary_int.arbitrary >>= fun i ->
-                    Arbitrary_ascii_char.arbitrary >>= fun c ->
-                        Arbitrary_float.arbitrary >>= fun f ->
-                            oneof[
-                              ret_gen (Sexpr.Sstring str);
-                              ret_gen (Sexpr.Sident sym);
-                              ret_gen (Sexpr.Sint i);
-                              ret_gen (Sexpr.Schar c);
-                              ret_gen (Sexpr.Sfloat f);
+        Symbol.arbitrary >>= fun sym ->
+        Arbitrary_int.arbitrary >>= fun i ->
+        Arbitrary_ascii_char.arbitrary >>= fun c ->
+        Arbitrary_float.arbitrary >>= fun f ->
+          oneof[
+            ret_gen (Sexpr.Sstring str);
+            ret_gen (Sexpr.Sident sym);
+            ret_gen (Sexpr.Sint i);
+            ret_gen (Sexpr.Schar c);
+            ret_gen (Sexpr.Sfloat f);
                               ]
       else
         let arb_list = sized choose_int0 >>= vector (arb_sub (depth - 1))
