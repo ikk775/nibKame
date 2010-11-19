@@ -9,6 +9,13 @@ module PShow_pair(Fst: PSHOW)(Snd: PSHOW) = struct
         Format.fprintf fmt "(%a, %a)" a1 () a2 ()
 end
 
+module PShow_Sexpr = struct
+  type t = Sexpr.t
+  let show : t -> pretty_str =
+    fun s fmt () ->
+        Sexpr.write fmt s
+end
+
 module type ARBITRARY_CHAR_LIST = sig
   type t = char list
   val arbitrary : t gen

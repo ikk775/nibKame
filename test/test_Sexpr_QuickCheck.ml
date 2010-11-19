@@ -5,19 +5,6 @@ open TestUtil
 let sexprSpecialLetters = [' ';'(';')';'\'';'\"';'#';'`';'\\']
 
 (* PShow instances *)
-module PShow_string = struct
-  type t = string
-  let show : t -> pretty_str =
-    fun s fmt () ->
-        Format.fprintf fmt "%s" s
-end
-module PShow_Sexpr = struct
-  type t = Sexpr.t
-  let show : t -> pretty_str =
-    fun s fmt () ->
-        Sexpr.write fmt s
-end
-
 (* Arbitrary instances *)
 module Arbitrary_short_symbol_string = struct
   type t = string
@@ -42,14 +29,6 @@ module Arbitrary_symbol_string = struct
            ret_gen(c :: cs))) >>=
              lift_gen ExtString.String.implode
 end
-
-type t =
-  | Sstring of string
-  | Sident of string
-  | Sint of int
-  | Sfloat of float
-  | Schar of char
-  | Sexpr of t list
 
 module Arbitrary_Sexpr(Symbol:ARBITRARY_STRING) = struct
   type t = Sexpr.t
