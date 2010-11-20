@@ -67,12 +67,12 @@ let rec w (env:typeEnv) expr =
       let s4 = unify t1 (O_Constant Type.Bool) in
       let s5 = unify t2 t3 in
       let t = substitute s5 t2 in
-      compositeSubsts [s5;s4;s3;s2;s1], t, E_Type(E_If(E_Type(e1',t1),E_Type(e2',t2),E_Type(e3',t3)),t)
+      compositeSubsts [s5;s4;s3;s2;s1], t, E_Type(E_If(e1', e2', e3'),t)
     | E_Let(v, e1, e2)  -> 
       let s1, t1, e1' = w env e1 in
       let s1env = substituteEnv s1 env in
       let s2, t2, e2' = w (addEnv s1env v (clos s1env (OType t1))) e2 in
-      composite s2 s1, t2, E_Type(E_Let(v, e1', E_Declare(v, t1, e2')), t2)
+      composite s2 s1, t2, E_Let(v, e1', E_Declare(v, t1, e2'))
     | E_Fix(f, E_Fun(x, e)) -> 
       let b = genTypeVar () in
       let s1, t1, e' = w (addEnv env f (OType b)) (E_Fun(x, e)) in
