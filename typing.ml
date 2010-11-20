@@ -12,7 +12,7 @@ let rec w (env:typeEnv) expr =
       let newTypeVars = genTypeVars (List.length freeTypeVarsTs) in
       let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
       let t = substitute subst (removeQuantifier ts) in
-      [], t, E_Type(expr, t)
+      subst, t, E_Type(expr, t)
     | E_Fun(v, expr) -> 
       let b = genTypeVar () in
       let s1, t1, expr' = w (addEnv env v (OType b)) expr in
