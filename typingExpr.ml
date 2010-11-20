@@ -66,6 +66,14 @@ let getExprVarName = function
   | E_Variable v -> v
   | _ -> invalid_arg "expected type E_Variable"
 
+let rec getExprType = function
+  | E_Type (_, t) -> t
+  | E_Let (_, _, e) -> getExprType e
+  | E_If (_, _, e) -> getExprType e
+  | E_Declare (_, _, e) -> getExprType e
+  | E_Fun (_, e) -> getExprType e
+  | _ -> invalid_arg "expected type-infered expr"
+
 let rec substituteExpr ss expr =
   let subst = substituteExpr ss in
   match expr with
@@ -162,7 +170,6 @@ let rec expr_from_syntax = function
   | Syntax.Array es -> 
     E_Vector(List.map expr_from_syntax es)
   | _ -> invalid_arg "unexpected Syntax"
-
 
 let rec to_sexpr = function
   | E_Constant e -> Sexpr.Sexpr [Sexpr.Sident "e:constant"; Syntax.lit_to_sexpr e]
