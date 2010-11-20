@@ -176,7 +176,7 @@ let rec write fmtr  = function
   | Sint i -> Format.fprintf fmtr "%s" (string_of_int i)
   | Sfloat f -> Format.fprintf fmtr "%.30f"  f
   | Sexpr l ->
-      Format.fprintf fmtr "@[(";
+      Format.fprintf fmtr "@[<hov 2>(";
       (match l with
         | [] -> ()
         | e :: es ->
