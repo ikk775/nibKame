@@ -11,7 +11,7 @@ type result =
   | R_Apply of result * result
   | R_Tuple of result list * TypingType.oType
   | R_Vector of result list * TypingType.oType
-  | R_If of result * result * result * TypingType.oType
+  | R_If of result * result * result
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
 
@@ -25,7 +25,7 @@ let rec substituteResultType ss expr =
     | R_Apply(e1, e2) -> R_Apply(subst e1, subst e2)
     | R_Tuple(es, t) -> R_Tuple(List.map subst es, tsubst t)
     | R_Vector(es, t) -> R_Vector(List.map subst es, tsubst t)
-    | R_If(e1, e2, e3, t) -> R_If(subst e1, subst e2, subst e3, tsubst t)
+    | R_If(e1, e2, e3) -> R_If(subst e1, subst e2, subst e3)
     | R_Let((v, t), e1, e2) -> R_Let((v, tsubst t), subst e1, subst e2)
     | R_Fix((f, t), e, t') -> R_Fix((f, tsubst t), subst e, tsubst t')
 
@@ -100,7 +100,7 @@ let rec w (env:typeEnv) expr =
       let s4 = unify t1 (O_Constant Type.Bool) in
       let s5 = unify t2 t3 in
       let t = substitute s5 t2 in
-      compositeSubsts [s5;s4;s3;s2;s1], t, R_If(e1', e2', e3',t)
+      compositeSubsts [s5;s4;s3;s2;s1], t, R_If(e1', e2', e3')
     | E_Let(v, e1, e2)  -> 
       let s1, t1, e1' = w env e1 in
       let s1env = substituteEnv s1 env in
@@ -119,3 +119,24 @@ let typing env expr =
   let ss, t, expr' = w env expr in
   t, substituteResultType ss expr'
   
+let rec result_to_sexpr = function
+  | R_Constant (l, t) -> Sexpr.Sexpr [Sexpr.Sident "r:constant"; Syntax.lit_to_sexpr l; TypingType.oType_to_sexpr t]
+  | R_Variable (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
+  | R_Fun((v, t), e) -> 
+    let rec fun_flatten vs = function
+      | R_Fun((v, t), e) ->  fun_flatten (R_Variable(v, t) :: vs) e
+      | e -> (List.rev vs), e
+    in
+    let vs, e' = fun_flatten [] e in
+    Sexpr.Sexpr [Sexpr.Sident "r:fun"; Sexpr.Sexpr(List.map result_to_sexpr vs); result_to_sexpr e']
+  | R_Apply(e1, e2) -> 
+    let rec apply_flatten = function
+      | R_Apply(e1, e2) ->  e1 :: apply_flatten e2
+      | e -> [e]
+    in
+    Sexpr.Sexpr (Sexpr.Sident "r:apply" ::  result_to_sexpr e1 :: List.map result_to_sexpr (apply_flatten e2))
+  | R_Tuple (es, t) -> Sexpr.Sexpr (Sexpr.Sident "r:tuple" :: TypingType.oType_to_sexpr t :: List.map result_to_sexpr es)
+  | R_Vector (es, t) -> Sexpr.Sexpr (Sexpr.Sident "r:vector" :: TypingType.oType_to_sexpr t :: List.map result_to_sexpr es)
+  | R_If (e1, e2, e3) -> Sexpr.Sexpr (Sexpr.Sident "r:if" :: List.map result_to_sexpr [e1; e2; e3])
+  | R_Let ((v, t), e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "r:let"; result_to_sexpr (R_Variable(v, t)); result_to_sexpr e1; result_to_sexpr e2]
+  | R_Fix ((v, t), e, t') -> Sexpr.Sexpr [Sexpr.Sident "r:fix"; result_to_sexpr (R_Variable(v, t)); result_to_sexpr e; oType_to_sexpr t']
