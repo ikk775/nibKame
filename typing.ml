@@ -119,6 +119,45 @@ let typing env expr =
   let ss, t, expr' = w env expr in
   t, substituteResultType ss expr'
   
+let rec result_of_sexpr = function
+  | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)
+  | Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; t] -> R_Variable (v, TypingType.oType_of_sexpr t)
+  | Sexpr.Sexpr [Sexpr.Sident "r:fun"; Sexpr.Sexpr vs; e] -> 
+    let fun_nest e' vs =
+      let rec fun_nest_sub = function
+        | [v] -> 
+          (match result_of_sexpr v with
+            | R_Variable(v, t) -> R_Fun((v, t), result_of_sexpr e')
+            | _ -> invalid_arg "unexpected token.")
+        | v :: vs ->
+          (match result_of_sexpr v with
+            | R_Variable(v, t) -> R_Fun((v, t), fun_nest_sub vs)
+            | _ -> invalid_arg "unexpected token.")
+        | _ -> invalid_arg "unexpected token."
+      in
+      fun_nest_sub vs
+    in
+    fun_nest e vs
+  | Sexpr.Sexpr (Sexpr.Sident "r:apply" :: e1 :: e2 :: es) -> 
+    let rec apply_nest = function
+      | e1 :: e2 :: []->  R_Apply(result_of_sexpr e1, result_of_sexpr e2)
+      | e :: es -> R_Apply(result_of_sexpr e, apply_nest es)
+      | _ -> invalid_arg "unexpected token."
+    in
+    apply_nest (e1 :: e2 :: es)
+  | Sexpr.Sexpr (Sexpr.Sident "r:tuple" :: t :: es) -> R_Tuple(List.map result_of_sexpr es, TypingType.oType_of_sexpr t)
+  | Sexpr.Sexpr (Sexpr.Sident "r:vector" :: t :: es) -> R_Vector(List.map result_of_sexpr es, TypingType.oType_of_sexpr t)
+  | Sexpr.Sexpr [Sexpr.Sident "r:if" ; e1 ; e2; e3] -> R_If(result_of_sexpr e1, result_of_sexpr e2, result_of_sexpr e3)
+  | Sexpr.Sexpr [Sexpr.Sident "r:let"; v; e1; e2] -> 
+    (match result_of_sexpr v with
+      | R_Variable(v, t) -> R_Let((v, t), result_of_sexpr e1, result_of_sexpr e2)
+      | _ -> invalid_arg "unexpected token.")
+  | Sexpr.Sexpr [Sexpr.Sident "r:fix"; v; e; t'] -> 
+    (match result_of_sexpr v with
+      | R_Variable(v, t) -> R_Fix((v, t), result_of_sexpr e, TypingType.oType_of_sexpr t')
+      | _ -> invalid_arg "unexpected token.")
+  | _ -> invalid_arg "unexpected token."
+
 let rec result_to_sexpr = function
   | R_Constant (l, t) -> Sexpr.Sexpr [Sexpr.Sident "r:constant"; Syntax.lit_to_sexpr l; TypingType.oType_to_sexpr t]
   | R_Variable (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
@@ -127,7 +166,7 @@ let rec result_to_sexpr = function
       | R_Fun((v, t), e) ->  fun_flatten (R_Variable(v, t) :: vs) e
       | e -> (List.rev vs), e
     in
-    let vs, e' = fun_flatten [] e in
+    let vs, e' = fun_flatten [R_Variable(v, t)] e in
     Sexpr.Sexpr [Sexpr.Sident "r:fun"; Sexpr.Sexpr(List.map result_to_sexpr vs); result_to_sexpr e']
   | R_Apply(e1, e2) -> 
     let rec apply_flatten = function
