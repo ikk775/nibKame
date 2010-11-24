@@ -224,6 +224,6 @@ let rec of_sexpr = function
     in
     apply_nest (e1 :: e2 :: es)
   | Sexpr.Sexpr [Sexpr.Sident "e:type"; e; t] -> E_Type(of_sexpr e, TypingType.oType_of_sexpr t)
-  | Sexpr.Sexpr [Sexpr.Sident "e:declare"; v; t; e] -> E_Declare(getExprVarName(of_sexpr e), TypingType.oType_of_sexpr t, of_sexpr e)
+  | Sexpr.Sexpr [Sexpr.Sident "e:declare"; v; t; e] -> E_Declare(getExprVarName(of_sexpr v), TypingType.oType_of_sexpr t, of_sexpr e)
   | _ -> invalid_arg "unexpected token."
  
