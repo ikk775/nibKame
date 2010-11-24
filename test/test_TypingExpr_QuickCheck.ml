@@ -67,6 +67,3 @@ module Testable_expr_to_bool =
   (PShow_expr)
   (Testable_bool) ;;
 module Check_fun_expr_to_bool = Check(Testable_expr_to_bool)
-
-(* Tests *)
-
