@@ -105,7 +105,7 @@ let rec unescape l = function
 	 | '\'' -> unescape ('\'' :: l) tail
 	 | '"' -> unescape ('"' :: l) tail
 	 | '\\' -> unescape ('\\' :: l) tail
-	 | _ -> invalid_arg "unreconized escape sequence")
+	 | _ as c -> invalid_arg (Format.sprintf "unreconized escape sequence %c" c))
   | c :: tail -> unescape (c :: l) tail
   | [] -> l
 
