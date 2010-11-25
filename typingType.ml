@@ -28,7 +28,7 @@ let genTypeVarNum = ref 0
 
 let genTypeVar () =
   genTypeVarNum := !genTypeVarNum + 1;
-  O_Variable (Format.sprintf "#<type-variable:%d>" !genTypeVarNum)
+  O_Variable (Format.sprintf "$ot:%d" !genTypeVarNum)
 
 let rec genTypeVars n =
   if n > 0

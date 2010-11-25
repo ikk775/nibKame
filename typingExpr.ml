@@ -34,7 +34,7 @@ let genExprVarNum = ref 0
 
 let genExprVar () =
   genExprVarNum := !genExprVarNum + 1;
-  E_Variable (Format.sprintf "#<expr-variable:%d>" !genExprVarNum)
+  E_Variable (Format.sprintf "$e:%d" !genExprVarNum)
 
 let rec genExprVars n =
   if n > 0
