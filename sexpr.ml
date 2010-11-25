@@ -38,6 +38,18 @@ let nextToken stream =
 		 Buffer.add_char buff ch;
 		 str stm)
       | None -> Buffer.contents buff in
+  let rec in_char stm =
+    try
+      match Stream.peek stm with
+	| Some '\\' -> 
+	    Stream.junk stm;
+	    Buffer.add_char buff '\\';
+	    Buffer.add_char buff (Stream.next stm);
+	    str stm
+	| Some _ -> str stm
+	| None -> str stm
+    with | Stream.Failure -> str stm
+  in 
   let rec iter stm =
     match Stream.peek stream with
       | Some ch ->
@@ -51,7 +63,11 @@ let nextToken stream =
 	     | '"' ->
 		 Buffer.add_char buff (Stream.next stm);
 		 in_string stm
-	     | _ -> str stm)
+	     | '#' -> 
+		 Stream.junk stm;
+		 Buffer.add_char buff '#';
+		 in_char stm
+	    | _ -> str stm)
       | None -> raise End_of_file
   in
     iter stream
