@@ -16,3 +16,6 @@ open Test_TypingExpr
 
 let () = print_endline "Typing"
 open Test_Typing
+
+let () = print_endline "Typing"
+open Test_KNormal
