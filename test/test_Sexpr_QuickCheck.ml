@@ -2,7 +2,7 @@ open QuickCheck
 
 open TestUtil
 
-let sexprSpecialLetters = [' ';'(';')';'\'';'"';'#';'`';'\\']
+let sexprSpecialLetters = [' ';'(';')';'|';'{';'}';'[';']';'\'';'"';'#';'`';'\\']
 
 (* PShow instances *)
 (* Arbitrary instances *)
