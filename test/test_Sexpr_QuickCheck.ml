@@ -27,7 +27,10 @@ module Arbitrary_symbol_string = struct
       vector gen_tl_letter >>= (fun cs ->
          gen_hd_letter >>= (fun c ->
            ret_gen(c :: cs))) >>=
-             lift_gen ExtString.String.implode
+             lift_gen ExtString.String.implode >>= (fun s -> 
+              match Sexpr.from_string s with
+                | Sexpr.Sident id -> ret_gen s
+                | _ -> ret_gen ("@" ^ s))
 end
 
 module Arbitrary_Sexpr(Symbol:ARBITRARY_STRING) = struct
@@ -49,7 +52,7 @@ module Arbitrary_Sexpr(Symbol:ARBITRARY_STRING) = struct
             ret_gen (Sexpr.Sfloat f);
                               ]
       else
-        let arb_list = sized choose_int0 >>= vector (arb_sub (depth - 1))
+        let arb_list = logsized choose_int0 >>= vector (arb_sub (depth - 1))
         in
         arb_list >>= fun e ->
             oneof[
