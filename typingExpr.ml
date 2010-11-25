@@ -54,7 +54,7 @@ let getConstantType = function
         (try
           List.assoc f !extExprEnv
         with
-          | Not_found _ -> raise (ExtFun_not_found f)))
+          | Not_found -> raise (ExtFun_not_found f)))
   | _ -> invalid_arg "expected type E_Constant"
 
 let getVariableType env expr =

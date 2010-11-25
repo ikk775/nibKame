@@ -115,7 +115,7 @@ let char_to_charname = function
   | '\127' -> "delete"
   | '\000' -> "null"
   | '\b' -> "backspace"
-  | c -> ExtString.String.implode [c]
+  | c -> MyUtil.String.implode [c]
 
 let isdigit = function
   | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-'
@@ -124,17 +124,17 @@ let isdigit = function
 
 let rec build_tree = function
   | D a ->
-      let l = ExtString.String.explode a in
+      let l = MyUtil.String.explode a in
 	(match List.hd l with     
-	   | '"' -> Sstring (ExtString.String.implode (List.rev (List.tl (unescape [] (List.tl l)))))
+	   | '"' -> Sstring (MyUtil.String.implode (List.rev (List.tl (unescape [] (List.tl l)))))
 	   | '#' ->
 	        (match List.tl l with
 		  | '\\' :: c :: [] -> Schar c
 		  | '\\' :: tail ->
 		      if List.hd tail = 'x' then
-			Schar (char_of_int (int_of_string (ExtString.String.implode ('0' ::  tail))))
+			Schar (char_of_int (int_of_string (MyUtil.String.implode ('0' ::  tail))))
 		      else
-			(match ExtString.String.implode (List.map Char.lowercase tail) with
+			(match MyUtil.String.implode (List.map Char.lowercase tail) with
 			   | "space" -> Schar ' '
 			   | "newline" | "nl" | "lf"  -> Schar '\n'
 			   | "return" | "cr" -> Schar '\r'

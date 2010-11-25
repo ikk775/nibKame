@@ -1,6 +1,9 @@
 type typeVar = Id.t
 type typeConst = Id.t
 type exprVar = Id.t
+
+module TypeVarSet = Set.Make(String)
+
 type oType =
   | O_Constant of Type.t
   | O_Variable of typeVar
@@ -40,13 +43,16 @@ let rec removeQuantifier = function
   | OType ot -> ot
   | QType(_, ts) -> removeQuantifier ts
 
-let rec typeVars  = function
-  | O_Constant _ -> []
-  | O_Variable tv -> [tv]
-  | O_Tuple(ts) -> ExtList.List.unique(List.concat(List.map typeVars ts))
-  | O_Vector(t) -> typeVars t
-  | O_Variant(t1, t2) -> ExtList.List.unique(List.append (typeVars t1) (typeVars t2))
-  | O_Fun(t1, t2) -> ExtList.List.unique(List.append (typeVars t1) (typeVars t2))
+let typeVars ot =
+  let rec typeVars_sub = function
+    | O_Constant _ -> TypeVarSet.empty
+    | O_Variable tv -> TypeVarSet.singleton tv
+    | O_Tuple(ts) -> List.fold_left TypeVarSet.union TypeVarSet.empty (List.map typeVars_sub ts)
+    | O_Vector(t) -> typeVars_sub t
+    | O_Variant(t1, t2) -> TypeVarSet.union (typeVars_sub t1) (typeVars_sub t2)
+    | O_Fun(t1, t2) -> TypeVarSet.union (typeVars_sub t1) (typeVars_sub t2)
+  in
+  TypeVarSet.elements (typeVars_sub ot)
 
 let occur tv t =
   List.mem tv (typeVars t)
@@ -56,7 +62,7 @@ let rec freeTypeVars = function
   | QType(qv, ts) -> List.filter (fun x -> not (List.mem x qv)) (freeTypeVars ts)
 
 let rec freeTypeVarsEnv = function
-  | TypeEnv l -> ExtList.List.unique (List.fold_left (fun a b -> List.append a (freeTypeVars (snd b))) [] l)
+  | TypeEnv l -> TypeVarSet.elements (List.fold_right TypeVarSet.add (List.fold_left (fun a b -> List.append a (freeTypeVars (snd b))) [] l) TypeVarSet.empty)
 
 let rec targetVars = function
   | [] -> []
