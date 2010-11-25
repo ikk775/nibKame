@@ -41,6 +41,9 @@ let rec genVars n =
   then genVar () :: genVars (n - 1)
   else []
 
+let vt_to_sexpr = function
+  | v, t -> Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t]
+
 let rec to_sexpr = function
   | Unit -> Sexpr.Sident "k:unit"
   | Int i -> Sexpr.Sint i
@@ -61,18 +64,15 @@ let rec to_sexpr = function
   | IfLsEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-ls-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
   | IfGt (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
   | IfGtEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
-  | Let ((v, t), e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:let"; Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t]; to_sexpr e1; to_sexpr e2]
+  | Let (vt, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:let"; vt_to_sexpr vt; to_sexpr e1; to_sexpr e2]
   | Var v -> Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v]
   | LetRec (fd, e) -> Sexpr.Sexpr [Sexpr.Sident "k:letrec"; fundef_to_sexpr fd; to_sexpr e]
   | App (v, vs) -> Sexpr.Sexpr (Sexpr.Sident "k:apply" :: Sexpr.Sident v :: List.map (fun x -> Sexpr.Sident x) vs)
   | Tuple vs -> Sexpr.Sexpr (Sexpr.Sident "k:tuple" :: List.map (fun x -> Sexpr.Sident x) vs)
   | LetTuple (vts, v, e) ->
-    let f = function
-      | (v, t) -> Sexpr.Sexpr[Sexpr.Sident v; Type.to_sexpr t]
-    in
-    Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr (List.map f vts); Sexpr.Sident v; to_sexpr e]
+    Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr (List.map vt_to_sexpr vts); Sexpr.Sident v; to_sexpr e]
   | Get (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:get"; Sexpr.Sident v1; Sexpr.Sident v2]
   | Put (v1, v2, v3) -> Sexpr.Sexpr [Sexpr.Sident "k:put"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3]
   | ExtArray v -> Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v]
   | ExtFunApply (v, vs) -> Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sident v :: List.map (fun x -> Sexpr.Sident x) vs)
-and fundef_to_sexpr = failwith "undefined"
+and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt_to_sexpr x.name; Sexpr.Sexpr (List.map vt_to_sexpr x.args); to_sexpr x.body]
