@@ -165,8 +165,8 @@ let rec build_tree = function
 	   | c when isdigit c -> 
 	       (try Sint (int_of_string a) with
 		 | Failure _  -> (try Sfloat (float_of_string a) with
-		     | _ -> invalid_arg "invalid number 1")
-		 | _ -> invalid_arg "invalid number 2")
+		     | _ -> Sident a)
+		 | _ -> Sident a)
 	   | _ -> Sident a)
   | L a -> Sexpr (List.map build_tree a)
   | E -> Sexpr []
