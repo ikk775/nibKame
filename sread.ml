@@ -46,7 +46,7 @@ let rec pattern_of_list = function
 
 (*
   val change : Sexpr.t -> Syntax.t
-  �o���A���g�͕���p�ɂ���ē��삷�邱�Ƃ�O��Ƃ��Ă���.
+  バリアントは副作用によって動作することを前提としている.
 *)
 let rec change = function
   | Sstring s -> Syntax.Array (list_of_Char s)
