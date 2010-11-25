@@ -20,7 +20,9 @@ let prop_read_write : 'a -> bool =
       | End_of_file ->
           (Format.printf "Exception: End_of_file @\n@?";
             false)
-      | _ -> false
+      | _ as s -> (Format.printf "Exception: %s %s @\n@?" (Std.dump s) (Std.dump x);
+        (Sexpr.write Format.std_formatter x);
+            false)
 
 let () = Check_fun_Sexpr_ss_to_bool.quickCheck prop_read_write
 let () = Check_fun_Sexpr_to_bool.quickCheck prop_read_write

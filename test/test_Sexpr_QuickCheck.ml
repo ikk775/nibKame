@@ -2,14 +2,14 @@ open QuickCheck
 
 open TestUtil
 
-let sexprSpecialLetters = [' ';'(';')';'\'';'\"';'#';'`';'\\']
+let sexprSpecialLetters = [' ';'(';')';'\'';'"';'#';'`';'\\']
 
 (* PShow instances *)
 (* Arbitrary instances *)
 module Arbitrary_short_symbol_string = struct
   type t = string
   let arbitrary =
-    elements (MyUtil.List.setDiff (MyUtil.List.iota 0x20 0x7e) (List.append (MyUtil.List.iota 0x30 0x39) (List.map Char.code [' ';'(';')']))) >>= fun a ->
+    elements (MyUtil.List.setDiff (MyUtil.List.iota 0x20 0x7e) (List.append (MyUtil.List.iota 0x30 0x39) (List.map Char.code sexprSpecialLetters))) >>= fun a ->
         let str = String.create 1 in
         str.[0] <- Char.chr a;
         ret_gen str
