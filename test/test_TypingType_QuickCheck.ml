@@ -44,7 +44,7 @@ module Arbitrary_oType = struct
       else
         arb_sub (depth - 1) >>= fun e1 ->
         arb_sub (depth - 1) >>= fun e2 ->
-        sized choose_int0 >>= vector (arb_sub (depth - 1)) >>= fun es -> 
+        logsized choose_int0 >>= vector (arb_sub (depth - 1)) >>= fun es -> 
           oneof[
             arb_sub 0;
             ret_gen (TypingType.O_Tuple(es));
