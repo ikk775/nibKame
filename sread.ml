@@ -60,14 +60,26 @@ let rec change = function
   | Sfloat f -> Syntax.Literal (Syntax.Float f)
   | Schar c -> Syntax.Literal (Syntax.Char c)
   | Sexpr l ->
-      match l with
+      (match l with
 	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
-	    Syntax.Variant name (* Fixing ME !! *)
+            let variant : (Type.t option * int) Type.VariantMap.t ref = ref Type.VariantMap.empty in
+	    let x = ref 0 in
+	      List.iter (function
+			   | Sexpr [Sident i] ->
+			       variant := Type.VariantMap.add i (None !variant, !x);
+			       x := !x + 1
+			   | Sexpr [Sident i; typeexprs] ->
+			       variant := Type.VariantMap.add i (Some (Type.of_sexpr typeexprs) !variant), !x;
+			       kx := !x + 1
+			)
+		        constructors;
+	      Type.variants := Type.VariantMap.add name !variant !Type.variants;
+	      Syntax.Variant name (* Fixing ME !! *)
 
 	| Sident "list" :: tail -> Syntax.List (List.map change tail)
 	| Sident "tuple" :: tail -> Syntax.Tuple (List.map change tail)
 	| Sident "array" :: tail -> Syntax.Array (List.map change tail)
-
+      
 	| Sident "+" :: a :: b :: [] -> Syntax.Add (change a, change b)
 	| Sident "-" :: a :: b :: [] -> Syntax.Sub (change a, change b)
 	| Sident "*" :: a :: b :: [] -> Syntax.Mul (change a, change b)
@@ -76,7 +88,7 @@ let rec change = function
 	| Sident "-." :: a :: b :: [] -> Syntax.Fsub (change a, change b)
 	| Sident "*." :: a :: b :: [] -> Syntax.Fmul (change a, change b)
 	| Sident "/." :: a :: b :: [] -> Syntax.Fdiv (change a, change b)
-
+	    
 	| Sident "=" :: a :: b :: [] -> Syntax.Eq (change a, change b)
 	| Sident "<>" :: a :: b :: [] -> Syntax.NotEq (change a, change b)
 	| Sident "<=" :: a :: b :: [] -> Syntax.LsEq (change a, change b)
@@ -86,7 +98,7 @@ let rec change = function
 
 	| Sident "cons" :: a :: b :: [] -> Syntax.Cons (change a, change b)
 	| Sident ";" :: a :: b :: [] -> Syntax.Seq (change a, change b)
-
+	    
 	| Sident "&&" :: a :: b :: [] -> Syntax.And (change a, change b)
 	| Sident "||" :: a :: b :: [] -> Syntax.Or (change a, change b)
 
@@ -107,5 +119,6 @@ let rec change = function
 			change a)
 	| Sident "apply" :: a :: args ->
 	    Syntax.Apply (change a, List.map change args)
-
+	
 	| any -> invalid_arg "unexpected token."
+      )

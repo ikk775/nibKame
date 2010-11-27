@@ -76,3 +76,11 @@ let rec to_sexpr = function
     Sexpr.Sexpr (Sexpr.Sident "t:var" :: match !x with
       | None -> []
       | Some i -> [to_sexpr i])
+
+module VariantMap =
+  Map.Make (struct
+	      type t = Id.t
+	      let compare = compare
+	    end)
+
+let variants : ((t option * int) VariantMap.t) VariantMap.t ref = ref VariantMap.empty
