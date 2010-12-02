@@ -151,3 +151,14 @@ let rec freeVars_set = function
 
 let rec freeVars e = Id.Set.elements (freeVars_set e)
 
+let rec of_typingResult = function
+  | Typing.R_Constant (l, t) -> undefined
+  | Typing.R_Variable (v, t) -> undefined
+  | Typing.R_Fun((v, t), e) -> undefined
+  | Typing.R_Apply(e1, e2) -> undefined
+  | Typing.R_Tuple (es, t) -> undefined
+  | Typing.R_Vector (es, t) -> undefined
+  | Typing.R_If (e1, e2, e3) -> undefined
+  | Typing.R_Let ((v, t), e1, e2) -> undefined
+  | Typing.R_Fix ((v, t), e, t') -> undefined
+
