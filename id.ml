@@ -7,4 +7,4 @@ module Set = struct
   let of_list lis = List.fold_right Set_sub.add lis Set_sub.empty 
   end
 
-
+module Map = Map.Make(String)
