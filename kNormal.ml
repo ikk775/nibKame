@@ -1,8 +1,11 @@
 open MyUtil
 
+open MyUtil
+
 type t =
   | Unit
   | Int of int
+  | Char of char
   | Char of char
   | Float of float
   | Neg of Id.t
@@ -58,6 +61,7 @@ let rec to_sexpr = function
   | Int i -> Sexpr.Sint i
   | Float f -> Sexpr.Sfloat f
   | Char c -> Sexpr.Schar c
+  | Char c -> Sexpr.Schar c
   | Neg v -> Sexpr.Sexpr [Sexpr.Sident "k:neg"; Sexpr.Sident v]
   | Add (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:add"; Sexpr.Sident v1; Sexpr.Sident v2]
   | Sub (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:sub"; Sexpr.Sident v1; Sexpr.Sident v2]
@@ -93,6 +97,7 @@ let rec of_sexpr = function
   | Sexpr.Sident "k:unit" -> Unit
   | Sexpr.Sint i -> Int i
   | Sexpr.Sfloat f -> Float f
+  | Sexpr.Schar f -> Char f
   | Sexpr.Schar f -> Char f
   | Sexpr.Sexpr [Sexpr.Sident "k:neg"; Sexpr.Sident v] -> Neg (v)
   | Sexpr.Sexpr [Sexpr.Sident "k:add"; Sexpr.Sident v1; Sexpr.Sident v2] -> Add (v1, v2)
@@ -161,4 +166,28 @@ let rec of_typingResult = function
   | Typing.R_If (e1, e2, e3) -> undefined
   | Typing.R_Let ((v, t), e1, e2) -> undefined
   | Typing.R_Fix ((v, t), e, t') -> undefined
+
+
+let rec freeVars_set = function
+  | Unit | Int _ | Float _ | Char _ | ExtArray _ -> Id.Set.empty
+  | Neg(x) | FNeg(x) -> Id.Set.singleton x
+  | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) -> Id.Set.of_list [x; y]
+  | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) -> Id.Set.of_list [x; y]
+  | IfEq(x, y, e1, e2) | IfNotEq(x, y, e1, e2) | IfLsEq(x, y, e1, e2) | IfLs(x, y, e1, e2)
+  | IfGtEq(x, y, e1, e2) | IfGt(x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freeVars_set e1)) (freeVars_set e2)
+  | Let((x, _), e1, e2) -> Id.Set.union (freeVars_set e1) (Id.Set.diff (freeVars_set e2) (Id.Set.singleton x))
+  | Var(x) -> Id.Set.singleton x
+  | LetFun({name = (x, t); args = yts; body = e1}, e2) ->
+    Id.Set.diff (Id.Set.union (freeVars_set e2) (Id.Set.diff (freeVars_set e1) (Id.Set.of_list (List.map fst yts)))) (Id.Set.singleton x)
+  | Apply(x, ys) -> Id.Set.of_list (x :: ys)
+  | Tuple(xs) -> Id.Set.of_list xs
+  | LetTuple(xts, y, e) -> 
+    Id.Set.add y (Id.Set.diff (freeVars_set e) (Id.Set.of_list (List.map fst xts)))
+  | ExtFunApply(_, ys) -> Id.Set.of_list ys
+  | ArraySet(x, i, y) -> Id.Set.of_list [x; i; y]
+  | ArrayRef(x, i) -> Id.Set.of_list [x; i]
+  | Set(x, y) -> Id.Set.of_list [x; y]
+  | Ref x -> Id.Set.singleton x
+
+let rec freeVars e = Id.Set.elements (freeVars_set e)
 
