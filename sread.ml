@@ -62,18 +62,14 @@ let rec change = function
   | Sexpr l ->
       (match l with
 	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
-            let variant : (Type.t option * int) Type.VariantMap.t ref = ref Type.VariantMap.empty in
-	    let x = ref 0 in
+            let variant = Variant.empty_tags name in
 	      List.iter (function
 			   | Sexpr [Sident i] ->
-			       variant := Type.VariantMap.add i (None !variant, !x);
-			       x := !x + 1
+			       Variant.add_tag i None
 			   | Sexpr [Sident i; typeexprs] ->
-			       variant := Type.VariantMap.add i (Some (Type.of_sexpr typeexprs) !variant), !x;
-			       kx := !x + 1
-			)
+			       Variant.add_tag i Some (Type.of_sexpr typeexprs))
 		        constructors;
-	      Type.variants := Type.VariantMap.add name !variant !Type.variants;
+	      Variant.add_variant !variant;
 	      Syntax.Variant name (* Fixing ME !! *)
 
 	| Sident "list" :: tail -> Syntax.List (List.map change tail)

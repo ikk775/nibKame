@@ -77,10 +77,3 @@ let rec to_sexpr = function
       | None -> []
       | Some i -> [to_sexpr i])
 
-module VariantMap =
-  Map.Make (struct
-	      type t = Id.t
-	      let compare = compare
-	    end)
-
-let variants : ((t option * int) VariantMap.t) VariantMap.t ref = ref VariantMap.empty
