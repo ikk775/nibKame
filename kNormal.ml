@@ -154,8 +154,14 @@ let rec freeVars_set = function
 let rec freeVars e = Id.Set.elements (freeVars_set e)
 
 let rec of_typingResult = function
-  | Typing.R_Constant (l, t) -> undefined
-  | Typing.R_Variable (v, t) -> undefined
+  | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit
+  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> undefined
+  | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i
+  | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x
+  | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c
+  | Typing.R_Constant (Syntax.ExtFun f, TypingType.O_Constant Type.Float) -> undefined
+  | Typing.R_Constant (_, _) -> failwith "invalid constant type."
+  | Typing.R_Variable (v, t) -> Var v
   | Typing.R_Fun((v, t), e) -> undefined
   | Typing.R_Apply(e1, e2) -> undefined
   | Typing.R_Tuple (es, t) -> undefined
