@@ -1,3 +1,4 @@
+open MyUtil
 open TypingExpr
 open TypingType
 
@@ -179,3 +180,18 @@ let rec result_to_sexpr = function
   | R_If (e1, e2, e3) -> Sexpr.Sexpr (Sexpr.Sident "r:if" :: List.map result_to_sexpr [e1; e2; e3])
   | R_Let ((v, t), e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "r:let"; result_to_sexpr (R_Variable(v, t)); result_to_sexpr e1; result_to_sexpr e2]
   | R_Fix ((v, t), e, t') -> Sexpr.Sexpr [Sexpr.Sident "r:fix"; result_to_sexpr (R_Variable(v, t)); result_to_sexpr e; oType_to_sexpr t']
+
+let rec resultType = function
+  | R_Constant (l, t) -> t
+  | R_Variable (v, t) -> t
+  | R_Fun((v, t), e) -> TypingType.O_Fun (t, resultType e)
+  | R_Apply(e1, e2) ->
+    begin match resultType e1 with
+      | TypingType.O_Fun(ft, tt) -> tt
+      | _ -> invalid_arg ""
+    end
+  | R_Tuple (es, t) -> t
+  | R_Vector (es, t) -> t
+  | R_If (e1, e2, e3) -> resultType e2
+  | R_Let ((v, t), e1, e2) -> resultType e2
+  | R_Fix ((v, t), e, t') -> t
