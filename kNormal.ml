@@ -1,7 +1,5 @@
 open MyUtil
 
-open MyUtil
-
 type t =
   | Unit
   | Int of int
@@ -36,6 +34,9 @@ type t =
   | ExtArray of Id.t
   | ExtFunApply of Id.t * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
+
+type substitution =
+  | Substitution of Id.t * Id.t
 
 let genVarNum = ref 0
 
@@ -153,6 +154,41 @@ let rec freeVars_set = function
 
 let rec freeVars e = Id.Set.elements (freeVars_set e)
 
+let rec substitute_map sm = function
+  | Unit -> Unit
+  | Int i -> Int i
+  | Float f -> Float f
+  | Char c -> Char c
+  | Neg v -> undefined
+  | Add (v1, v2) -> undefined
+  | Sub (v1, v2) -> undefined
+  | Mul (v1, v2) -> undefined
+  | Div (v1, v2) -> undefined
+  | FNeg v -> undefined
+  | FAdd (v1, v2) -> undefined
+  | FSub (v1, v2) -> undefined
+  | FMul (v1, v2) -> undefined
+  | FDiv (v1, v2) -> undefined
+  | IfEq (v1, v2, e1, e2) -> undefined
+  | IfNotEq (v1, v2, e1, e2) -> undefined
+  | IfLs (v1, v2, e1, e2) -> undefined
+  | IfLsEq (v1, v2, e1, e2) -> undefined
+  | IfGt (v1, v2, e1, e2) -> undefined
+  | IfGtEq (v1, v2, e1, e2) -> undefined
+  | Let (vt, e1, e2) -> undefined
+  | Var v -> undefined
+  | LetFun (fd, e) -> undefined
+  | Apply (v, vs) -> undefined
+  | Tuple vs -> undefined
+  | LetTuple (vts, v, e) -> undefined
+  | Ref (v) -> undefined
+  | Set (v1, v2) -> undefined
+  | ArrayRef (v1, v2) -> undefined
+  | ArraySet (v1, v2, v3) -> undefined
+  | ExtArray v -> undefined
+  | ExtFunApply (v, vs) -> undefined
+and fundef_to_sexpr x = undefined
+
 let rec of_typingResult = function
   | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit
   | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> undefined
@@ -163,7 +199,7 @@ let rec of_typingResult = function
   | Typing.R_Constant (_, _) -> failwith "invalid constant type."
   | Typing.R_Variable (v, t) -> Var v
   | Typing.R_Fun((v, t), e) -> undefined
-  | Typing.R_Apply(e1, e2) -> undefined
+  | Typing.R_Apply(e1, e2) -> Let ((genVar, Typing.resultType e1) of_typingResult e1, of_typingResult e2)
   | Typing.R_Tuple (es, t) -> undefined
   | Typing.R_Vector (es, t) -> undefined
   | Typing.R_If (e1, e2, e3) -> undefined
