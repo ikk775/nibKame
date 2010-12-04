@@ -66,9 +66,7 @@ let rec w (env:typeEnv) expr =
       in
       let w_results = w_sub env es [] [] [] in
       let ss, ts, e's = w_results in
-      let ts' = List.rev ts in
       let e's' = List.rev e's in
-(*      let e's'' = List.map2 (fun e' t -> E_Type(e',t)) e's' ts' in *)
       let t = O_Tuple(ts) in
       compositeSubsts ss, t, R_Tuple(e's', t)
     | E_Vector(es) -> 
