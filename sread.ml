@@ -62,12 +62,13 @@ let rec change = function
   | Sexpr l ->
       (match l with
 	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
-            let variant = Variant.empty_tags name in
+      let variant = Variant.empty_tags name in
 	      List.iter (function
 			   | Sexpr [Sident i] ->
-			       Variant.add_tag i None
+			       Variant.add_tag variant i None
 			   | Sexpr [Sident i; typeexprs] ->
-			       Variant.add_tag i Some (Type.of_sexpr typeexprs))
+			       Variant.add_tag variant i (Some (Type.of_sexpr typeexprs))
+         | _ -> invalid_arg "unexpected token" )
 		        constructors;
 	      Variant.add_variant !variant;
 	      Syntax.Variant name (* Fixing ME !! *)
