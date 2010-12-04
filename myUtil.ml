@@ -51,4 +51,4 @@ module String = struct
 end
 
 exception Undefined
-let undefined = raise Undefined
+let rec undefined () = raise Undefined

@@ -40,9 +40,12 @@ type substitution =
 
 let genVarNum = ref 0
 
-let genVar () =
+let genVarName () =
   genVarNum := !genVarNum + 1;
-  Var (Format.sprintf "$k:%d" !genVarNum)
+  (Format.sprintf "$k:%d" !genVarNum)
+
+let genVar () =
+  Var (genVarName ())
 
 let rec genVars n =
   if n > 0
@@ -159,50 +162,50 @@ let rec substitute_map sm = function
   | Int i -> Int i
   | Float f -> Float f
   | Char c -> Char c
-  | Neg v -> undefined
-  | Add (v1, v2) -> undefined
-  | Sub (v1, v2) -> undefined
-  | Mul (v1, v2) -> undefined
-  | Div (v1, v2) -> undefined
-  | FNeg v -> undefined
-  | FAdd (v1, v2) -> undefined
-  | FSub (v1, v2) -> undefined
-  | FMul (v1, v2) -> undefined
-  | FDiv (v1, v2) -> undefined
-  | IfEq (v1, v2, e1, e2) -> undefined
-  | IfNotEq (v1, v2, e1, e2) -> undefined
-  | IfLs (v1, v2, e1, e2) -> undefined
-  | IfLsEq (v1, v2, e1, e2) -> undefined
-  | IfGt (v1, v2, e1, e2) -> undefined
-  | IfGtEq (v1, v2, e1, e2) -> undefined
-  | Let (vt, e1, e2) -> undefined
-  | Var v -> undefined
-  | LetFun (fd, e) -> undefined
-  | Apply (v, vs) -> undefined
-  | Tuple vs -> undefined
-  | LetTuple (vts, v, e) -> undefined
-  | Ref (v) -> undefined
-  | Set (v1, v2) -> undefined
-  | ArrayRef (v1, v2) -> undefined
-  | ArraySet (v1, v2, v3) -> undefined
-  | ExtArray v -> undefined
-  | ExtFunApply (v, vs) -> undefined
-and fundef_to_sexpr x = undefined
+  | Neg v -> (undefined ())
+  | Add (v1, v2) -> (undefined ())
+  | Sub (v1, v2) -> (undefined ())
+  | Mul (v1, v2) -> (undefined ())
+  | Div (v1, v2) -> (undefined ())
+  | FNeg v -> (undefined ())
+  | FAdd (v1, v2) -> (undefined ())
+  | FSub (v1, v2) -> (undefined ())
+  | FMul (v1, v2) -> (undefined ())
+  | FDiv (v1, v2) -> (undefined ())
+  | IfEq (v1, v2, e1, e2) -> (undefined ())
+  | IfNotEq (v1, v2, e1, e2) -> (undefined ())
+  | IfLs (v1, v2, e1, e2) -> (undefined ())
+  | IfLsEq (v1, v2, e1, e2) -> (undefined ())
+  | IfGt (v1, v2, e1, e2) -> (undefined ())
+  | IfGtEq (v1, v2, e1, e2) -> (undefined ())
+  | Let (vt, e1, e2) -> (undefined ())
+  | Var v -> (undefined ())
+  | LetFun (fd, e) -> (undefined ())
+  | Apply (v, vs) -> (undefined ())
+  | Tuple vs -> (undefined ())
+  | LetTuple (vts, v, e) -> (undefined ())
+  | Ref (v) -> (undefined ())
+  | Set (v1, v2) -> (undefined ())
+  | ArrayRef (v1, v2) -> (undefined ())
+  | ArraySet (v1, v2, v3) -> (undefined ())
+  | ExtArray v -> (undefined ())
+  | ExtFunApply (v, vs) -> (undefined ())
+and fundef_to_sexpr x = (undefined ())
 
 let rec of_typingResult = function
   | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit
-  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> undefined
+  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> (undefined ())
   | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i
   | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x
   | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c
-  | Typing.R_Constant (Syntax.ExtFun f, TypingType.O_Constant Type.Float) -> undefined
+  | Typing.R_Constant (Syntax.ExtFun f, TypingType.O_Constant Type.Float) -> (undefined ())
   | Typing.R_Constant (_, _) -> failwith "invalid constant type."
   | Typing.R_Variable (v, t) -> Var v
-  | Typing.R_Fun((v, t), e) -> undefined
-  | Typing.R_Apply(e1, e2) -> Let ((genVar, Typing.resultType e1) of_typingResult e1, of_typingResult e2)
-  | Typing.R_Tuple (es, t) -> undefined
-  | Typing.R_Vector (es, t) -> undefined
-  | Typing.R_If (e1, e2, e3) -> undefined
-  | Typing.R_Let ((v, t), e1, e2) -> undefined
-  | Typing.R_Fix ((v, t), e, t') -> undefined
+  | Typing.R_Fun((v, t), e) -> (undefined ())
+  | Typing.R_Apply(e1, e2) -> (undefined ())
+  | Typing.R_Tuple (es, t) -> (undefined ())
+  | Typing.R_Vector (es, t) -> (undefined ())
+  | Typing.R_If (e1, e2, e3) -> (undefined ())
+  | Typing.R_Let ((v, t), e1, e2) -> (undefined ())
+  | Typing.R_Fix ((v, t), e, t') -> (undefined ())
 
