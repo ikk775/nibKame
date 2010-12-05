@@ -159,6 +159,26 @@ let rec unify_u eqns substs =
 let unify: oType -> oType -> substitution list = fun t1 t2 -> 
   unify_u [(t1, t2)] []
 
+let oType_of_type : Type.t -> oType = fun x ->
+  let rec of_type = function
+    | Type.Unit as c -> O_Constant c
+    | Type.Bool as c -> O_Constant c
+    | Type.Int as c -> O_Constant c
+    | Type.Float as c -> O_Constant c
+    | Type.Char as c -> O_Constant c
+    | Type.Fun (ts , t') ->
+      begin match ts with
+        | [t] -> O_Fun(of_type t, of_type t')
+        | t :: ts' -> O_Fun(of_type t, of_type (Type.Fun (ts', t')))
+        | [] -> invalid_arg "Type.Fun needs one or more argument types."
+      end
+    | Type.Tuple ts -> O_Tuple (List.map of_type ts)
+    | Type.Array t -> O_Variant (of_type t, of_type (Type.Variant "array"))
+    | Type.List t -> O_Variant (of_type t, of_type (Type.Variant "list"))
+    | (Type.Variant x) as c -> O_Constant c
+    | Type.Var x -> O_Variable x
+  in
+  of_type x
 
 let rec oType_to_sexpr = function
   | O_Constant t -> Sexpr.Sexpr [Sexpr.Sident "ot:constant"; Type.to_sexpr t]
