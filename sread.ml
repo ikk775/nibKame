@@ -28,6 +28,23 @@ let list_of_pChar str =
   in
     iter 0
 
+let rec read_type = function
+  | Sident "unit" -> Type.Unit
+  | Sident "bool" -> Type.Bool
+  | Sident "int" -> Type.Int
+  | Sident "float" -> Type.Float
+  | Sident "char" -> Type.Char
+  | Sident var -> Type.Var var
+  | Sexpr l -> read_typelist l
+  | _ -> invalid_arg "unreconized type"
+and read_typelist = function
+  | Sident "tuple" :: tail -> Type.Tuple (List.map read_type tail)
+  | Sident "variant" :: Sident name :: tail -> Type.Variant name
+  | [Sident "list"; t] -> Type.List (read_type t)
+  | [Sident "array"; t] -> Type.Array (read_type t)
+  | [Sident "fun"; Sexpr l; t] -> Type.Fun (List.map read_type l, read_type t)
+  | _ -> invalid_arg "unreconized type"
+
 open Sexpr
 
 let rec pattern_of_list = function
