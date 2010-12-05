@@ -33,6 +33,7 @@ module Arbitrary_type = struct
           ret_gen (Type.Float);
           ret_gen (Type.Char);
           ret_gen (Type.Variant s);
+          ret_gen (Type.Var s)
           ]
       else
         Arbitrary_string.arbitrary >>= fun s ->
@@ -44,10 +45,6 @@ module Arbitrary_type = struct
           ret_gen (Type.Tuple (ts));
           ret_gen (Type.List (t));
           ret_gen (Type.Array (t));
-          oneof[
-            ret_gen (Type.Var (ref None));
-            ret_gen (Type.Var (ref (Some t)));
-            ];
           ]
     in
     sized (fun i ->

@@ -9,9 +9,13 @@ type t =
   | List of t
   | Array of t
   | Variant of Id.t
-  | Var of t option ref
+  | Var of Id.t
  
-let gentype () = Var(ref None)
+let gentypenum = ref 0
+
+let gentype () =
+  gentypenum := !gentypenum + 1;
+  Var (Format.sprintf "$t:%d" !gentypenum)
 
 let rec equal x y =
   match x, y with
@@ -25,11 +29,7 @@ let rec equal x y =
     | List(t1), List(t2) -> equal t1 t2
     | Array(t1), Array(t2) -> equal t1 t2
     | Variant(id1), Variant(id2) -> id1 = id2
-    | Var(rot1), Var(rot2) -> 
-      (match !rot1, !rot2 with
-        | None, None -> true
-        | Some t1, Some t2 when equal t1 t2 -> true
-        | _ -> false)
+    | Var(id1), Var(id2) -> id1 = id2
     | _ -> false
 
 let rec of_sexpr = function
@@ -48,11 +48,8 @@ let rec of_sexpr = function
     Array (of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "t:variant"; Sexpr.Sident t] -> 
     Variant t
-  | Sexpr.Sexpr (Sexpr.Sident "t:var" :: ts) -> 
-    (match ts with
-      | [] -> Var (ref None)
-      | [t] -> Var (ref (Some (of_sexpr t)))
-      | _ -> invalid_arg "unexpected Type.t")
+  | Sexpr.Sexpr [Sexpr.Sident "t:var"; Sexpr.Sident x] -> 
+    Var x
   | _ -> invalid_arg "unexpected Type.t" 
 
 
@@ -73,7 +70,5 @@ let rec to_sexpr = function
   | Variant t -> 
     Sexpr.Sexpr [Sexpr.Sident "t:variant";  Sexpr.Sident t]
   | Var x -> 
-    Sexpr.Sexpr (Sexpr.Sident "t:var" :: match !x with
-      | None -> []
-      | Some i -> [to_sexpr i])
+    Sexpr.Sexpr [Sexpr.Sident "t:var";  Sexpr.Sident x]
 
