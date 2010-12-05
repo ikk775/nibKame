@@ -1,6 +1,24 @@
 
 module M = Id.Map
-module S = Id.Set
+
+let rec uniq = function
+  | [] -> []
+  | x :: xs -> if List.mem x xs then uniq xs else x :: (uniq xs)
+
+module S = 
+  struct
+    type key = Id.t
+    type t = key list
+    let empty : t = []
+    let rec mem : t -> key -> bool = fun set t ->
+      match set with
+	| x :: xs -> x = t && mem xs t
+	| [] -> false
+    let add : key-> t -> t = fun t set ->
+      List.rev (uniq (List.rev (t :: set)))
+    let elements : t -> key list = fun set ->
+      set
+  end
 
 let empty = M.empty
 
@@ -27,10 +45,19 @@ let add_variant (variantname, num, vmap) =
   variants := M.add variantname vmap !variants;
   names := S.add variantname !names
 
+let for_all_tags f =
+  let tags = List.map (fun x-> M.find x !variants) (S.elements !names) in
+    f tags
+
+let is_defined id =
+  for_all_tags (fun tags ->
+		  List.fold_left (&) true (List.rev_map (M.mem id) tags))
+
 let data_of_tag tag =
-  let tags = List.map (fun x -> M.find x !variants) (S.elements !names) in
-  let [variant] = List.filter (M.mem tag) tags in
-    M.find tag variant
+  for_all_tags (fun tags ->
+		  match List.filter (M.mem tag) tags with
+		    | [] -> invalid_arg (Format.sprintf "undefined tag %s" tag)
+		    | variant :: _ -> M.find tag variant)
 
 let tag_to_variant tag =
   (data_of_tag tag).own_variant
