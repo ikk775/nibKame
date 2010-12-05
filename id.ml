@@ -1,12 +1,15 @@
 (* type t = string *)
 include String
 
+type Id.l = string
+
 module Set_sub = Set.Make(String)
 module Set = struct
   include Set_sub
   let of_list lis = List.fold_right Set_sub.add lis Set_sub.empty 
   end
 
+<<<<<<< HEAD
 module Map = Map.Make(String)
 
 type substitution = Substitution of t * t    
@@ -32,3 +35,4 @@ let rec compose (xs:substitution list) (ys:substitution list) =
 
 let composeSubsts sss =
   List.fold_right compose sss []
+
