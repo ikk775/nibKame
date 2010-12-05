@@ -86,10 +86,11 @@ let rec make_te stm =
       | ")" -> E
       | str -> D (str)
 and make_list stm =
-  match make_te stm with
+  try match make_te stm with
     | D a -> (D a) :: make_list stm
     | L a -> (L a) :: make_list stm
     | E -> []
+  with | End_of_file -> failwith "( mismatched."
 
 (*
   文字列リテラル(文字配列)のエスケープ文字の変換
