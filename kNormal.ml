@@ -31,6 +31,12 @@ type t =
   | Set of Id.t * Id.t
   | ArrayRef of Id.t * Id.t
   | ArraySet of Id.t * Id.t * Id.t
+  | Cons of Id.t * Id.t 
+  | Car of Id.t
+  | Cdr of Id.t
+  | FCons of Id.t * Id.t
+  | FCar of Id.t
+  | FCdr of Id.t
   | ExtArray of Id.t
   | ExtFunApply of Id.t * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
@@ -91,6 +97,12 @@ let rec to_sexpr = function
   | Set (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:set"; Sexpr.Sident v1; Sexpr.Sident v2]
   | ArrayRef (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:array-ref"; Sexpr.Sident v1; Sexpr.Sident v2]
   | ArraySet (v1, v2, v3) -> Sexpr.Sexpr [Sexpr.Sident "k:array-set"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3]
+  | Cons (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:cons"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | Car (v) -> Sexpr.Sexpr [Sexpr.Sident "k:car"; Sexpr.Sident v]
+  | Cdr (v) -> Sexpr.Sexpr [Sexpr.Sident "k:cdr"; Sexpr.Sident v]
+  | FCons (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:cons"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | FCar (v) -> Sexpr.Sexpr [Sexpr.Sident "k:car"; Sexpr.Sident v]
+  | FCdr (v) -> Sexpr.Sexpr [Sexpr.Sident "k:cdr"; Sexpr.Sident v]
   | ExtArray v -> Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v]
   | ExtFunApply (v, vs) -> Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sident v :: List.map (fun x -> Sexpr.Sident x) vs)
 and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt_to_sexpr x.name; Sexpr.Sexpr (List.map vt_to_sexpr x.args); to_sexpr x.body]
@@ -124,6 +136,12 @@ let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr vts; Sexpr.Sident v; e] -> LetTuple (List.map vt_of_sexpr vts, v, of_sexpr e)
   | Sexpr.Sexpr [Sexpr.Sident "k:ref"; Sexpr.Sident v] -> Ref(v)
   | Sexpr.Sexpr [Sexpr.Sident "k:set"; Sexpr.Sident v1; Sexpr.Sident v2] -> Set(v1, v2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:cons"; Sexpr.Sident v1; Sexpr.Sident v2] -> Cons(v1, v2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:car"; Sexpr.Sident v] -> Car(v)
+  | Sexpr.Sexpr [Sexpr.Sident "k:cdr"; Sexpr.Sident v] -> Cdr(v)
+  | Sexpr.Sexpr [Sexpr.Sident "k:fcons"; Sexpr.Sident v1; Sexpr.Sident v2] -> FCons(v1, v2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:fcar"; Sexpr.Sident v] -> FCar(v)
+  | Sexpr.Sexpr [Sexpr.Sident "k:fcdr"; Sexpr.Sident v] -> FCdr(v)
   | Sexpr.Sexpr [Sexpr.Sident "k:array-ref"; Sexpr.Sident v1; Sexpr.Sident v2] -> ArrayRef(v1, v2)
   | Sexpr.Sexpr [Sexpr.Sident "k:array-set"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3] -> ArraySet(v1, v2, v3)
   | Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v] -> ExtArray v
@@ -154,6 +172,8 @@ let rec freeVars_set = function
   | ArrayRef(x, i) -> Id.Set.of_list [x; i]
   | Set(x, y) -> Id.Set.of_list [x; y]
   | Ref x -> Id.Set.singleton x
+  | Car(x) | Cdr(x) | FCar(x) | FCdr(x) -> Id.Set.singleton x
+  | Cons(x, y) | FCons(x, y) -> Id.Set.of_list [x; y]
 
 let rec freeVars e = Id.Set.elements (freeVars_set e)
 
@@ -190,6 +210,12 @@ let rec substitute_map sm = function
   | ArraySet (v1, v2, v3) -> (undefined ())
   | ExtArray v -> (undefined ())
   | ExtFunApply (v, vs) -> (undefined ())
+  | Cons(v1, v2) -> (undefined ())
+  | Car(v) -> (undefined ())
+  | Cdr(v) -> (undefined ())
+  | FCons(v1, v2) -> (undefined ())
+  | FCar(v) -> (undefined ())
+  | FCdr(v) -> (undefined ())
 and fundef_to_sexpr x = (undefined ())
 
 let rec of_typingResult = function
