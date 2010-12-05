@@ -1,4 +1,6 @@
 (* type t = string *)
+type l = L of string (* label *)
+
 include String
 
 type Id.l = string
@@ -9,7 +11,6 @@ module Set = struct
   let of_list lis = List.fold_right Set_sub.add lis Set_sub.empty 
   end
 
-<<<<<<< HEAD
 module Map = Map.Make(String)
 
 type substitution = Substitution of t * t    
