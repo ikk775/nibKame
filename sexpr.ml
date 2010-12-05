@@ -7,6 +7,16 @@ type t =
   | Schar of char
   | Sexpr of t list
 
+let rec skipBrank stm =
+  match Stream.peek stm with
+    | Some ' '
+    | Some '\t'
+    | Some '\n' ->
+      Stream.junk stm;
+      skipBrank stm
+    | Some _ -> ()
+    | None -> ()
+
 let nextToken stream =
   let buff = Buffer.create 50 in
   let rec in_string stm =
@@ -172,7 +182,10 @@ let rec build_tree = function
   | E -> Sexpr []
 
 let read stream =
-  build_tree (make_te stream)
+  skipBrank stream;
+  match Stream.peek stream with
+    | Some _ -> build_tree (make_te stream)
+    | None -> raise Stream.Failure
 
 let rec equal x y =
   match x, y with
