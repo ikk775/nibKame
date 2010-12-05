@@ -19,5 +19,5 @@ let read_sexprs : char Stream.t -> Sexpr.t list = fun stm ->
 let read : char Stream.t -> Syntax.t list = fun stm -> 
   List.map Sread.change (read_sexprs stm)
 
-let modulize : Syntax.t list -> Module.t =
+let modulize : TypingExpr.exprEnv -> Syntax.t list -> Module.t = fun teenv es -> 
   undefined ()
