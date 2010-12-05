@@ -6,7 +6,7 @@ let empty = M.empty
 
 
 type tag =
-    { datatype : Type.t option; tag_number : int; own_variant : Id.t}
+    { tag_number : int; own_variant : Id.t}
 type tags = Id.t * int * tag M.t
 
 let variants : (tag M.t) M.t ref = ref M.empty
@@ -17,10 +17,10 @@ let empty_tags : Id.t -> tags ref =
   fun variantname ->
     ref (variantname, 0, empty)
 
-let add_tag : tags ref -> Id.t -> Type.t option -> unit =
-  fun x tag d_Type ->
+let add_tag : tags ref -> Id.t -> unit =
+  fun x tag ->
     let (vname, num, vmap) = !x in
-      x := vname, num + 1, M.add tag {datatype = d_Type; tag_number = num; own_variant = vname} vmap
+      x := vname, num + 1, M.add tag {tag_number = num; own_variant = vname} vmap
 
 
 let add_variant (variantname, num, vmap) =
@@ -39,4 +39,4 @@ let tag_to_number tag =
   (data_of_tag tag).tag_number
 
 let tag_to_datatype tag =
-  (data_of_tag tag).datatype
+  MyUtil.undefined ()
