@@ -34,5 +34,8 @@ and exp =
   | ApplyCls of Id.t * Id.t list * Id.t list
   | ApplyDir of Id.l * Id.t list * Id.t list
 
-  | Push of Id.t
-  | Pop of Id.t
+  | Save of Id.t * Id.t
+  | Pop of Id.t * Id.t
+
+type fundef = { name: Id.l; args: Id.t list; fargs: Id.t list; body: t; ret: Type.t }
+(* type block = Prog of (Id.l * float) list * fundef list * t *)
