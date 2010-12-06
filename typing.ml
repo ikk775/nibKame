@@ -16,6 +16,23 @@ type result =
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
 
+let rec bindedVars : result -> (Id.t * TypingType.oType) list = function
+  | R_Constant (l, t) -> []
+  | R_Variable (v, t) -> []
+  | R_Fun((v, t), e) -> (v, t) :: bindedVars e
+  | R_Apply(e1, e2) -> List.append (bindedVars e1) (bindedVars e2)
+  | R_Tuple (es, t) -> List.concat (List.map bindedVars es)
+  | R_Vector (es, t) -> List.concat (List.map bindedVars es)
+  | R_If (e1, e2, e3) -> List.concat (List.map bindedVars [e1; e2; e3])
+  | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map bindedVars [e1; e2])
+  | R_Fix ((v, t), e, t') -> (v, t) :: bindedVars e
+
+let rec resultFreeTypeVars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
+  List.concat (List.map (function x, t -> TypingType.freeTypeVars (TypingType.OType t)) vts)
+
+let rec valueRestrict : result -> TypingType.oType -> TypingType.typeScheme = fun r t -> 
+  TypingType.QType (ExtList.List.unique (resultFreeTypeVars (bindedVars r)), TypingType.OType t)
+
 let rec substituteResultType ss expr =
   let subst = substituteResultType ss in
   let tsubst = TypingType.substitute ss in
@@ -116,7 +133,8 @@ let rec w (env:typeEnv) expr =
 
 let typing env expr =
   let ss, t, expr' = w env expr in
-  t, substituteResultType ss expr'
+  let expr'' = substituteResultType ss expr' in
+  valueRestrict expr'' t, expr''
   
 let rec result_of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)
