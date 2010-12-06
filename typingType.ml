@@ -43,6 +43,10 @@ let rec removeQuantifier = function
   | OType ot -> ot
   | QType(_, ts) -> removeQuantifier ts
 
+let rec bindedVars = function
+  | OType t -> []
+  | QType(qv, ts) -> ExtList.List.unique (List.append qv (bindedVars ts))
+
 let typeVars ot =
   let rec typeVars_sub = function
     | O_Constant _ -> TypeVarSet.empty
@@ -60,6 +64,9 @@ let occur tv t =
 let rec freeTypeVars = function
   | OType t -> typeVars t
   | QType(qv, ts) -> List.filter (fun x -> not (List.mem x qv)) (freeTypeVars ts)
+
+let rec normalizeTypeScheme ts =
+  QType(bindedVars ts, OType (removeQuantifier ts))
 
 let rec freeTypeVarsEnv = function
   | TypeEnv l -> TypeVarSet.elements (List.fold_right TypeVarSet.add (List.fold_left (fun a b -> List.append a (freeTypeVars (snd b))) [] l) TypeVarSet.empty)
