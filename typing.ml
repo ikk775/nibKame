@@ -31,7 +31,13 @@ let rec resultFreeTypeVars : (Id.t * TypingType.oType) list -> Id.t list = fun v
   List.concat (List.map (function x, t -> TypingType.freeTypeVars (TypingType.OType t)) vts)
 
 let rec valueRestrict : result -> TypingType.oType -> TypingType.typeScheme = fun r t -> 
-  TypingType.QType (ExtList.List.unique (resultFreeTypeVars (bindedVars r)), TypingType.OType t)
+  let rec f = function
+    | R_Fun ((v, t), r) -> t :: f r
+    | _ -> []
+  in
+  let ots = f r in
+  let rec ftv = ExtList.List.unique (List.concat (List.map (fun ot -> TypingType.freeTypeVars (TypingType.OType ot)) ots)) in
+  TypingType.QType (ftv, TypingType.OType t)
 
 let rec substituteResultType ss expr =
   let subst = substituteResultType ss in
