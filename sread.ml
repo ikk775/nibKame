@@ -28,6 +28,8 @@ let list_of_pChar str =
   in
     iter 0
 
+open Sexpr
+
 let rec read_type = function
   | Sident "unit" -> Type.Unit
   | Sident "bool" -> Type.Bool
@@ -44,8 +46,6 @@ and read_typelist = function
   | [Sident "array"; t] -> Type.Array (read_type t)
   | [Sident "fun"; Sexpr l; t] -> Type.Fun (List.map read_type l, read_type t)
   | _ -> invalid_arg "unreconized type"
-
-open Sexpr
 
 let rec pattern_of_list = function
   | Sstring s -> Syntax.P_Array (list_of_pChar s)
