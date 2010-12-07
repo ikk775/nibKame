@@ -7,6 +7,16 @@ type t =
   | Schar of char
   | Sexpr of t list
 
+let rec skipBrank stm =
+  match Stream.peek stm with
+    | Some ' '
+    | Some '\t'
+    | Some '\n' ->
+      Stream.junk stm;
+      skipBrank stm
+    | Some _ -> ()
+    | None -> ()
+
 let nextToken stream =
   let buff = Buffer.create 50 in
   let rec in_string stm =
@@ -86,10 +96,11 @@ let rec make_te stm =
       | ")" -> E
       | str -> D (str)
 and make_list stm =
-  match make_te stm with
+  try match make_te stm with
     | D a -> (D a) :: make_list stm
     | L a -> (L a) :: make_list stm
     | E -> []
+  with | End_of_file -> failwith "( mismatched."
 
 (*
   文字列リテラル(文字配列)のエスケープ文字の変換
@@ -150,17 +161,7 @@ let rec build_tree = function
 		      if List.hd tail = 'x' then
 			Schar (char_of_int (int_of_string (MyUtil.String.implode ('0' ::  tail))))
 		      else
-			(match MyUtil.String.implode (List.map Char.lowercase tail) with
-			   | "space" -> Schar ' '
-			   | "newline" | "nl" | "lf"  -> Schar '\n'
-			   | "return" | "cr" -> Schar '\r'
-			   | "tab" | "ht" -> Schar '\t'
-			   | "page" -> Schar '\012'
-			   | "escape" | "esc" -> Schar '\028'
-			   | "delete" | "del" -> Schar '\127'
-			   | "null" -> Schar '\000'
-			   | "backspace" | "bs" -> Schar '\b'
-			   | _ -> invalid_arg "unrconized char lietral")
+			Schar (charname_to_char (MyUtil.String.implode (List.map Char.lowercase tail)))
 		  | _ -> Sident a)
 	   | c when isdigit c -> 
 	       (try Sint (int_of_string a) with
@@ -172,7 +173,10 @@ let rec build_tree = function
   | E -> Sexpr []
 
 let read stream =
-  build_tree (make_te stream)
+  skipBrank stream;
+  match Stream.peek stream with
+    | Some _ -> build_tree (make_te stream)
+    | None -> raise Stream.Failure
 
 let rec equal x y =
   match x, y with
