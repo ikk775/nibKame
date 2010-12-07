@@ -45,6 +45,7 @@ module Arbitrary_type = struct
           ret_gen (Type.Tuple (ts));
           ret_gen (Type.List (t));
           ret_gen (Type.Array (t));
+          ret_gen (Type.Ref (t));
           ]
     in
     sized (fun i ->

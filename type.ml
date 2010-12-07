@@ -8,6 +8,7 @@ type t =
   | Tuple of t list
   | List of t
   | Array of t
+  | Ref of t
   | Variant of Id.t
   | Var of Id.t
  
@@ -28,6 +29,7 @@ let rec equal x y =
     | Tuple(ts1), Tuple(ts2) -> List.for_all2 equal ts1 ts2
     | List(t1), List(t2) -> equal t1 t2
     | Array(t1), Array(t2) -> equal t1 t2
+    | Ref(t1), Ref(t2) -> equal t1 t2
     | Variant(id1), Variant(id2) -> id1 = id2
     | Var(id1), Var(id2) -> id1 = id2
     | _ -> false
@@ -46,6 +48,8 @@ let rec of_sexpr = function
     List (of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "t:array";  t] -> 
     Array (of_sexpr t)
+  | Sexpr.Sexpr [Sexpr.Sident "t:ref";  t] -> 
+    Ref (of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "t:variant"; Sexpr.Sident t] -> 
     Variant t
   | Sexpr.Sexpr [Sexpr.Sident "t:var"; Sexpr.Sident x] -> 
@@ -67,6 +71,8 @@ let rec to_sexpr = function
     Sexpr.Sexpr [Sexpr.Sident "t:list";  to_sexpr t]
   | Array t -> 
     Sexpr.Sexpr [Sexpr.Sident "t:array";  to_sexpr t]
+  | Ref t -> 
+    Sexpr.Sexpr [Sexpr.Sident "t:ref";  to_sexpr t]
   | Variant t -> 
     Sexpr.Sexpr [Sexpr.Sident "t:variant";  Sexpr.Sident t]
   | Var x -> 
