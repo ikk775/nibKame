@@ -111,7 +111,9 @@ let rec change = function
 	    Syntax.TopLetRec ((name, Type.gentype()), change a)
 	| Sident "fun" :: Sexpr l :: a :: [] ->
 	    Syntax.Fun (List.map 
-			  (fun x -> let Sident a = x in a, Type.gentype())
+			  (function
+          | Sident a -> a, Type.gentype()
+          | _ -> invalid_arg "unexpected token")
 			  l,
 			change a)
 	| Sident "apply" :: a :: args ->
