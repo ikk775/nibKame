@@ -23,16 +23,52 @@ type t = {
 
 let empty:t = {eim = {s_Type = []; s_Expr = []}; iem = []; defs = []}
 
+let elt_name : elt -> Id.t = function
+  | Type (x, _)
+  | Expr (x, _) -> x
+
 let defs : t -> elt list = fun m ->
   let es = m.defs in
   List.rev es
+
+let defs_type : t -> elt list = fun m -> 
+  List.filter (function Type _ -> true | _ -> false) (defs m)
+
+let defs_expr : t -> elt list = fun m -> 
+  List.filter (function Expr _ -> true | _ -> false) (defs m)
 
 let def_tail : t -> elt -> t = fun m def -> 
   {m with defs = def :: defs m}
  
 let def_head : t -> elt -> t = fun m def -> 
   {m with defs = List.append (defs m) [def]}
- 
+
+let rec subst : substitutions -> t -> t = fun ss m ->
+  let typedefs = defs_type m in
+  let typedefns = List.map elt_name typedefs in
+  let exprdefs = defs_expr m in 
+  let exprdefns = List.map elt_name exprdefs in
+  match ss.s_Type, ss.s_Expr with
+    | [], [] -> m
+    | tss, [] ->
+      let rec substElt = function
+        | Type (tv, (qtvs, t)) ->  
+          let t' = TypingType.substitute tss t in
+          let ftvs = TypingType.freeTypeVars (TypingType.OType t') in
+          let qtvs' = MyUtil.List.setDiff ftvs typedefns in
+          Type (tv, (qtvs', t'))
+        | Expr (ev, (qtvs, et, e)) -> 
+          let e' = Typing.substituteResultType tss e in
+          let oet = TypingType.substitute tss (TypingType.removeQuantifier et) in
+          let et' = Typing.valueRestrict e' oet in
+          let qtvs' = MyUtil.List.setDiff (TypingType.bindedVars et') typedefns in
+          let et'' = TypingType.QType (qtvs', TypingType.OType (TypingType.removeQuantifier et')) in
+          Expr (ev, (qtvs', et'', e'))
+      in
+      subst {ss with s_Type = []} {m with defs = List.map substElt m.defs}
+    | tss, ess -> 
+      undefined ()
+  
 let add : elt -> t -> t = fun e m -> 
   match e with
     | Type (tname, (tvs, t)) ->
