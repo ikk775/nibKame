@@ -53,6 +53,19 @@ let rec substituteResultType ss expr =
     | R_Let((v, t), e1, e2) -> R_Let((v, tsubst t), subst e1, subst e2)
     | R_Fix((f, t), e, t') -> R_Fix((f, tsubst t), subst e, tsubst t')
 
+let rec result_of_expr expr =
+  let of_expr = result_of_expr in
+  match expr with
+    | R_Variable (v ,t) -> E_Variable (v)
+    | R_Constant (v ,t) -> E_Constant (v)
+    | R_Fun((v, t), e) -> E_Fun(v, of_expr e)
+    | R_Apply(e1, e2) -> E_Apply(of_expr e1, of_expr e2)
+    | R_Tuple(es, t) -> E_Tuple(List.map of_expr es)
+    | R_Vector(es, t) -> E_Vector(List.map of_expr es)
+    | R_If(e1, e2, e3) -> E_If(of_expr e1, of_expr e2, of_expr e3)
+    | R_Let((v, t), e1, e2) -> E_Let(v, of_expr e1, of_expr e2)
+    | R_Fix((f, t), e, t') -> E_Fix(f, of_expr e)
+
 let rec w (env:typeEnv) expr =
   match expr with
     | E_Constant c ->
