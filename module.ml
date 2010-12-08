@@ -66,8 +66,18 @@ let rec subst : substitutions -> t -> t = fun ss m ->
           Expr (ev, (qtvs', et'', e'))
       in
       subst {ss with s_Type = []} {m with defs = List.map substElt m.defs}
-    | tss, ess -> 
-      undefined ()
+    | _, ess -> 
+      let rec substElt = function
+        | Type _ as t-> t
+        | Expr (ev, (qtvs, et, e)) -> 
+          let e' : Typing.result = undefined () in
+          let oet = TypingType.removeQuantifier et in
+          let et' = Typing.valueRestrict e' oet in
+          let qtvs' = MyUtil.List.setDiff (TypingType.bindedVars et') typedefns in
+          let et'' = TypingType.QType (qtvs', TypingType.OType (TypingType.removeQuantifier et')) in
+          Expr (ev, (qtvs', et'', e'))
+      in
+      subst {ss with s_Expr = []} {m with defs = List.map substElt m.defs}
   
 let add : elt -> t -> t = fun e m -> 
   match e with
