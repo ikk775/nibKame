@@ -42,3 +42,11 @@ and fundef = {
   args : (Id.t * Type.t) list;
   formal_fv : (Id.t * Type.t) list;
   body : t }
+
+type topvar = {
+  name : Id.t * Type.t;
+  body : t
+}
+
+let topfuns : fundef list ref = ref []
+let topvars : topvar list ref = ref []
