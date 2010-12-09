@@ -32,6 +32,10 @@ module List = struct
     let ary = Array.of_list a in
     Array.shuffle ary;
     Array.to_list ary
+
+  let rec unique = function
+    | [] -> []
+    | x :: xs -> x :: setDiff (unique xs) [x]
 end
 
 module String = struct
