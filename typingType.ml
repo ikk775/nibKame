@@ -46,7 +46,7 @@ let rec removeQuantifier = function
 
 let rec bindedVars = function
   | OType t -> []
-  | QType(qv, ts) -> ExtList.List.unique (List.append qv (bindedVars ts))
+  | QType(qv, ts) -> MyUtil.List.unique (List.append qv (bindedVars ts))
 
 let typeVars ot =
   let rec typeVars_sub = function
