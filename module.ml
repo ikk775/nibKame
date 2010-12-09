@@ -138,3 +138,12 @@ let addExpr = fun m ->
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
       
+ let exprFreeVars = function
+  | { defs = ds } -> 
+    let rec f = function
+      | [] -> []
+      | Type _ :: ds -> f ds
+      | Expr (x, (qtvs, t, r)) :: ds -> Typing.freeVars r :: f ds
+    in
+    f ds
+
