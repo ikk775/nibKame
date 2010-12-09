@@ -1,3 +1,4 @@
+open MyUtil
 type exprVar = Id.t
 type exprConst = Id.t
 
@@ -17,10 +18,9 @@ type expr =
 type t = expr
 
 type exprEnv =
-  | ExprEnv of (Id.t * TypingType.oType) list
+  | ExprEnv of (Id.t * TypingType.typeScheme) list
 
-type substitution =
-  | Substitution of exprVar * expr
+type substitution = exprVar * expr
 
 let extExprEnv = ref []
 
@@ -41,6 +41,21 @@ let rec genExprVars n =
   then genExprVar () :: genExprVars (n - 1)
   else []
 
+let substituteEnv ss env =
+  match env with
+    | ExprEnv envList -> ExprEnv (List.map (function ftw, tts -> ftw, TypingType.substituteTs ss tts) envList)
+
+let addEnv = function ExprEnv envList -> fun ev ts -> 
+  ExprEnv((ev, ts) :: List.remove_assoc ev envList)
+
+let rec freeTypeVarsEnv = function
+  | ExprEnv l ->
+    List.unique (List.concat (List.map (fun x -> TypingType.freeTypeVars (snd x)) l))
+
+let clos env ts =
+  let freeVars = MyUtil.List.setDiff (TypingType.freeTypeVars ts) (freeTypeVarsEnv env) in
+  TypingType.QType(freeVars, ts)
+
 exception ExtFun_not_found of string
 let getConstantType = function
   | E_Constant c ->
@@ -59,7 +74,7 @@ let getConstantType = function
 
 let getVariableType env expr =
   match env, expr with
-    | TypingType.TypeEnv envList, E_Variable v -> List.assoc v envList
+    | ExprEnv envList, E_Variable v -> List.assoc v envList
     | _ -> invalid_arg "expected type E_Variable"
 
 let getExprVarName = function

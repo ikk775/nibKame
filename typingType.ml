@@ -11,6 +11,7 @@ type oType =
   | O_Vector of oType
   | O_Variant of oType * oType
   | O_Fun of oType * oType
+  | O_Ref of oType
 
 type typeScheme =
   | OType of oType
@@ -43,6 +44,10 @@ let rec removeQuantifier = function
   | OType ot -> ot
   | QType(_, ts) -> removeQuantifier ts
 
+let rec bindedVars = function
+  | OType t -> []
+  | QType(qv, ts) -> MyUtil.List.unique (List.append qv (bindedVars ts))
+
 let typeVars ot =
   let rec typeVars_sub = function
     | O_Constant _ -> TypeVarSet.empty
@@ -51,6 +56,7 @@ let typeVars ot =
     | O_Vector(t) -> typeVars_sub t
     | O_Variant(t1, t2) -> TypeVarSet.union (typeVars_sub t1) (typeVars_sub t2)
     | O_Fun(t1, t2) -> TypeVarSet.union (typeVars_sub t1) (typeVars_sub t2)
+    | O_Ref(t) -> typeVars_sub t
   in
   TypeVarSet.elements (typeVars_sub ot)
 
@@ -61,12 +67,24 @@ let rec freeTypeVars = function
   | OType t -> typeVars t
   | QType(qv, ts) -> List.filter (fun x -> not (List.mem x qv)) (freeTypeVars ts)
 
+let rec normalizeTypeScheme ts =
+  QType(bindedVars ts, OType (removeQuantifier ts))
+
 let rec freeTypeVarsEnv = function
   | TypeEnv l -> TypeVarSet.elements (List.fold_right TypeVarSet.add (List.fold_left (fun a b -> List.append a (freeTypeVars (snd b))) [] l) TypeVarSet.empty)
 
-let rec targetVars = function
+let rec domain = function
   | [] -> []
-  | Substitution(ftv, _) :: ss -> O_Variable(ftv) :: targetVars ss
+  | Substitution(ftv, _) :: ss -> ftv :: domain ss
+
+let rec targetVars ss =
+  List.map (fun x -> O_Variable(x)) (domain ss)
+
+let domainRestrict ss dom =
+  List.filter (function Substitution(ftv, _) as s -> List.mem ftv dom) ss
+
+let domainDiff ss dom =
+  domainRestrict ss (MyUtil.List.setDiff (domain ss) dom)
 
 let rec substitute ss tv =
   match ss, tv with 
@@ -79,6 +97,7 @@ let rec substitute ss tv =
     | ss, O_Vector t -> O_Vector(substitute ss t)
     | ss, O_Variant (ftv, ttv) -> O_Variant(substitute ss ftv, substitute ss ttv)
     | ss, O_Fun (ftv, ttv) -> O_Fun(substitute ss ftv, substitute ss ttv)
+    | ss, O_Ref t -> O_Ref(substitute ss t)
 
 let rec composite (xs:substitution list) (ys:substitution list) =
   let subst_tot x ys = (List.map (fun y -> match y with Substitution(ftv, tot) -> Substitution (ftv ,substitute [x] tot)) ys) in
@@ -144,6 +163,8 @@ let rec unify_u eqns substs =
     | (s, t) :: eqns' when s = t -> unify_u eqns' substs
     | (O_Fun(t1, e1) , O_Fun(t2, e2)):: eqns' -> unify_u ((t1, t2) :: (e1, e2) :: eqns') substs
     | (O_Variant(t1, e1) , O_Variant(t2, e2)):: eqns' -> unify_u ((t1, t2) :: (e1, e2) :: eqns') substs
+    | (O_Vector(t1) , O_Vector(t2)):: eqns' -> unify_u ((t1, t2) :: eqns') substs
+    | (O_Ref(t1) , O_Ref(t2)):: eqns' -> unify_u ((t1, t2) :: eqns') substs
     | (O_Constant c1, O_Constant c2) :: eqns' -> raise (Unification_Failure(eqns, substs))
     | (t, O_Variable v) :: eqns' when (match t with O_Variable _ -> false | _ -> true) -> 
       unify_u ((O_Variable v, t) :: eqns') substs
@@ -177,6 +198,7 @@ let oType_of_type : Type.t -> oType = fun x ->
     | Type.List t -> O_Variant (of_type t, of_type (Type.Variant "list"))
     | (Type.Variant x) as c -> O_Constant c
     | Type.Var x -> O_Variable x
+    | Type.Ref t -> O_Ref (of_type t)
   in
   of_type x
 
@@ -197,6 +219,7 @@ let rec oType_to_sexpr = function
       | t -> [t]
     in
     Sexpr.Sexpr (Sexpr.Sident "ot:fun" ::  oType_to_sexpr t1 :: List.map oType_to_sexpr (fun_flatten t2))
+  | O_Ref(t) -> Sexpr.Sexpr [Sexpr.Sident "ot:ref"; oType_to_sexpr t]
 
 let rec oType_of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "ot:constant"; t] -> O_Constant (Type.of_sexpr t)
@@ -217,6 +240,7 @@ let rec oType_of_sexpr = function
       | _ -> invalid_arg "unexpected token."
     in
     fun_nest (t1 :: t2 :: ts)
+  | Sexpr.Sexpr [Sexpr.Sident "ot:ref"; t] -> O_Ref (oType_of_sexpr t)
   | _ -> invalid_arg "unexpected token."
 
 let rec typeScheme_to_sexpr = function

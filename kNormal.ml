@@ -29,6 +29,7 @@ type t =
   | LetTuple of (Id.t * Type.t) list * Id.t * t
   | Ref of Id.t
   | Set of Id.t * Id.t
+  | ArrayAlloc of Type.t * Id.t
   | ArrayRef of Id.t * Id.t
   | ArraySet of Id.t * Id.t * Id.t
   | Cons of Id.t * Id.t 
