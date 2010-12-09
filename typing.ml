@@ -27,6 +27,17 @@ let rec bindedVars : result -> (Id.t * TypingType.oType) list = function
   | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map bindedVars [e1; e2])
   | R_Fix ((v, t), e, t') -> (v, t) :: bindedVars e
 
+let rec freeVars : result -> (Id.t * TypingType.oType) list = function
+  | R_Constant (l, t) -> []
+  | R_Variable (v, t) -> [(v, t)]
+  | R_Fun((v, t), e) -> List.remove_assoc v (freeVars e)
+  | R_Apply(e1, e2) -> List.unique (List.append (freeVars e1) (freeVars e2))
+  | R_Tuple (es, t) -> List.unique (List.concat (List.map freeVars es))
+  | R_Vector (es, t) -> List.unique (List.concat (List.map freeVars es))
+  | R_If (e1, e2, e3) -> List.unique (List.concat (List.map freeVars [e1; e2; e3]))
+  | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freeVars [e1; e2]))) 
+  | R_Fix ((v, t), e, t') -> List.remove_assoc v (freeVars e)
+
 let rec resultFreeTypeVars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
   List.concat (List.map (function x, t -> TypingType.freeTypeVars (TypingType.OType t)) vts)
 
@@ -53,41 +64,41 @@ let rec substituteResultType ss expr =
     | R_Let((v, t), e1, e2) -> R_Let((v, tsubst t), subst e1, subst e2)
     | R_Fix((f, t), e, t') -> R_Fix((f, tsubst t), subst e, tsubst t')
 
-let rec result_of_expr expr =
-  let of_expr = result_of_expr in
+let rec result_to_expr expr =
+  let to_expr = result_to_expr in
   match expr with
     | R_Variable (v ,t) -> E_Variable (v)
     | R_Constant (v ,t) -> E_Constant (v)
-    | R_Fun((v, t), e) -> E_Fun(v, of_expr e)
-    | R_Apply(e1, e2) -> E_Apply(of_expr e1, of_expr e2)
-    | R_Tuple(es, t) -> E_Tuple(List.map of_expr es)
-    | R_Vector(es, t) -> E_Vector(List.map of_expr es)
-    | R_If(e1, e2, e3) -> E_If(of_expr e1, of_expr e2, of_expr e3)
-    | R_Let((v, t), e1, e2) -> E_Let(v, of_expr e1, of_expr e2)
-    | R_Fix((f, t), e, t') -> E_Fix(f, of_expr e)
+    | R_Fun((v, t), e) -> E_Fun(v, to_expr e)
+    | R_Apply(e1, e2) -> E_Apply(to_expr e1, to_expr e2)
+    | R_Tuple(es, t) -> E_Tuple(List.map to_expr es)
+    | R_Vector(es, t) -> E_Vector(List.map to_expr es)
+    | R_If(e1, e2, e3) -> E_If(to_expr e1, to_expr e2, to_expr e3)
+    | R_Let((v, t), e1, e2) -> E_Let(v, to_expr e1, to_expr e2)
+    | R_Fix((f, t), e, t') -> E_Fix(f, to_expr e)
 
-let rec w (env:typeEnv) expr =
+let rec w env expr =
   match expr with
     | E_Constant c ->
       let t = getConstantType (E_Constant c) in
       [], t, R_Constant(c, t)
     | E_Variable v ->
       let ts = getVariableType env (E_Variable v) in
-      let freeTypeVarsTs = freeTypeVars ts in
+      let freeTypeVarsTs = TypingType.freeTypeVars ts in
       let newTypeVars = genTypeVars (List.length freeTypeVarsTs) in
       let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
       let t = substitute subst (removeQuantifier ts) in
       subst, t, R_Variable(v, t)
     | E_Fun(v, expr) -> 
       let b = genTypeVar () in
-      let s1, t1, expr' = w (addEnv env v (OType b)) expr in
+      let s1, t1, expr' = w (TypingExpr.addEnv env v (OType b)) expr in
       let bt = substitute s1 b in
       let t2 = O_Fun(bt, t1) in
       s1, t2, R_Fun((v, bt), expr')
     | E_Apply(e1, e2) -> 
       let b = genTypeVar () in
       let s1, t1, e1' = w env e1 in
-      let s2, t2, e2' = w (substituteEnv s1 env) e2 in
+      let s2, t2, e2' = w (TypingExpr.substituteEnv s1 env) e2 in
       let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
       let t = substitute s3 b in
       composite s3 (composite s2 s1), t, R_Apply(e1', e2')
@@ -97,7 +108,7 @@ let rec w (env:typeEnv) expr =
           | [] -> ss, ts, e's
           | e :: es' -> 
             let s, t, e' = w env e in
-            let env' = (substituteEnv s env) in
+            let env' = (TypingExpr.substituteEnv s env) in
             w_sub env' es' (s :: ss) (t :: ts) (e' :: e's)
       in
       let w_results = w_sub env es [] [] [] in
@@ -120,7 +131,7 @@ let rec w (env:typeEnv) expr =
         | t2 :: ts ->
           let t2' = substitute ss t2 in
           let ss' = unify t1 t2' in
-          u_sub (substituteEnv ss' env) (composite ss' ss) (substitute ss' t2') ts)
+          u_sub (TypingExpr.substituteEnv ss' env) (composite ss' ss) (substitute ss' t2') ts)
       in
       let b = genTypeVar () in
       let env', ss', t' = u_sub env ss b ts in
@@ -128,9 +139,9 @@ let rec w (env:typeEnv) expr =
       ss', t'', R_Vector(e'', t'')
     | E_If(e1, e2, e3)  -> 
       let s1, t1, e1' = w env e1 in
-      let env' = (substituteEnv s1 env) in
+      let env' = (TypingExpr.substituteEnv s1 env) in
       let s2, t2, e2' = w env' e2 in
-      let env'' = (substituteEnv s2 env') in
+      let env'' = (TypingExpr.substituteEnv s2 env') in
       let s3, t3, e3' = w env'' e3 in
       let s4 = unify t1 (O_Constant Type.Bool) in
       let s5 = unify t2 t3 in
@@ -138,17 +149,22 @@ let rec w (env:typeEnv) expr =
       compositeSubsts [s5;s4;s3;s2;s1], t, R_If(e1', e2', e3')
     | E_Let(v, e1, e2)  -> 
       let s1, t1, e1' = w env e1 in
-      let s1env = substituteEnv s1 env in
-      let s2, t2, e2' = w (addEnv s1env v (clos s1env (OType t1))) e2 in
+      let s1env = TypingExpr.substituteEnv s1 env in
+      let s2, t2, e2' = w (TypingExpr.addEnv s1env v (TypingExpr.clos s1env (OType t1))) e2 in
       composite s2 s1, t2, R_Let((v, t1), e1', e2')
     | E_Fix(f, E_Fun(x, e)) -> 
       let b = genTypeVar () in
-      let s1, t1, e' = w (addEnv env f (OType b)) (E_Fun(x, e)) in
+      let s1, t1, e' = w (TypingExpr.addEnv env f (OType b)) (E_Fun(x, e)) in
       let s2 = unify (substitute s1 b) t1 in
       let t2 = substitute s2 t1 in
       let bt = substitute s2 b in
       composite s2 s1, t2, R_Fix((f, bt), e', t2)
     | _ -> invalid_arg "Invalid expr."
+
+let typing_with_subst env expr =
+  let ss, t, expr' = w env expr in
+  let expr'' = substituteResultType ss expr' in
+  valueRestrict expr'' t, expr'', ss
 
 let typing env expr =
   let ss, t, expr' = w env expr in
