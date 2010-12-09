@@ -73,9 +73,18 @@ let rec normalizeTypeScheme ts =
 let rec freeTypeVarsEnv = function
   | TypeEnv l -> TypeVarSet.elements (List.fold_right TypeVarSet.add (List.fold_left (fun a b -> List.append a (freeTypeVars (snd b))) [] l) TypeVarSet.empty)
 
-let rec targetVars = function
+let rec domain = function
   | [] -> []
-  | Substitution(ftv, _) :: ss -> O_Variable(ftv) :: targetVars ss
+  | Substitution(ftv, _) :: ss -> ftv :: domain ss
+
+let rec targetVars ss =
+  List.map (fun x -> O_Variable(x)) (domain ss)
+
+let domainRestrict ss dom =
+  List.filter (function Substitution(ftv, _) as s -> List.mem ftv dom) ss
+
+let domainDiff ss dom =
+  domainRestrict ss (MyUtil.List.setDiff (domain ss) dom)
 
 let rec substitute ss tv =
   match ss, tv with 
