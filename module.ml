@@ -37,11 +37,30 @@ let defs_type : t -> elt list = fun m ->
 let defs_expr : t -> elt list = fun m -> 
   List.filter (function Expr _ -> true | _ -> false) (defs m)
 
-let def_tail : t -> elt -> t = fun m def -> 
+let def_expr = fun m x -> 
+  match List.find (function Expr (x', _) when x = x -> true | _ -> false) (defs_expr m) with
+    | Expr (name, cont) -> name, cont
+    | _ -> failwith ""
+  
+let def_type = fun m x -> 
+  match List.find (function Type (x', _) when x = x -> true | _ -> false) (defs_type m) with
+    | Type (name, cont) -> name, cont
+    | _ -> failwith ""
+
+let add_def_tail : t -> elt -> t = fun m def -> 
   {m with defs = def :: defs m}
  
-let def_head : t -> elt -> t = fun m def -> 
+let add_def_head : t -> elt -> t = fun m def -> 
   {m with defs = List.append (defs m) [def]}
+
+let exprEnv : t -> TypingExpr.exprEnv = fun m -> 
+	let f = function
+    | Expr (x, (qtvs, ts, r)) -> 
+		  x, TypingType.OType (TypingType.removeQuantifier ts)
+    | Type _ -> 
+	    invalid_arg "Expr requied."
+  in
+  TypingExpr.ExprEnv (List.map f (defs_expr m))
 
 let rec subst : substitutions -> t -> t = fun ss m ->
   let typedefs = defs_type m in
@@ -69,19 +88,15 @@ let rec subst : substitutions -> t -> t = fun ss m ->
     | _, ess -> 
       let rec substElt = function
         | Type _ as t-> t
-        | Expr (ev, (qtvs, et, e)) -> 
-          let e' : Typing.result = undefined () in
-          let oet = TypingType.removeQuantifier et in
-          let et' = Typing.valueRestrict e' oet in
-          let qtvs' = MyUtil.List.setDiff (TypingType.bindedVars et') typedefns in
-          let et'' = TypingType.QType (qtvs', TypingType.OType (TypingType.removeQuantifier et')) in
-          Expr (ev, (qtvs', et'', e'))
+        | Expr (ev, (qtvs, et, r)) -> 
+          let e = Typing.result_to_expr r in
+					undefined ()
       in
       subst {ss with s_Expr = []} {m with defs = List.map substElt m.defs}
   
-let add : elt -> t -> t = fun e m -> 
-  match e with
-    | Type (tname, (tvs, t)) ->
+let addType = fun m -> 
+  function
+    | tname, (tvs, t) ->
       let eim, iem, es = m.eim, m.iem, m.defs in
       let b = TypingType.genTypeVar () in
       let bn = TypingType.getOTypeVariableName b in
@@ -93,5 +108,34 @@ let add : elt -> t -> t = fun e m ->
       let t' = TypingType.substitute eim''.s_Type t in
       let substtoname tvn = TypingType.getOTypeVariableName (TypingType.substitute eim''.s_Type (TypingType.O_Variable tvn)) in
       {m with eim = eim'; iem = iem'; defs = (Type (bn, (List.map substtoname tvs , t')) :: es)}
-   |  Expr (ename, (tvs, rt, es)) ->
-      undefined ()
+
+(* top-level let 相当 *)
+let addExpr = fun m -> 
+  function
+    | ename, e -> 
+      let eim, iem, es = m.eim, m.iem, m.defs in
+      let e' = TypingExpr.substituteExpr eim.s_Expr e in
+      let t, r = Typing.typing (exprEnv m) e' in
+      let fvs = Typing.freeVars r in
+      let rec f m = function
+        | [] -> m
+        | (fv, ot) :: fvs -> (* 後で、TypingType.substituteTsを使ったコードに書き直す *)
+          let _, (qtvs', t', r') = def_expr m fv in
+          let ot' = TypingType.removeQuantifier t' in
+          let ss = TypingType.unify ot ot' in
+          let ss' = TypingType.domainDiff ss qtvs' in
+          let t'' = TypingType.QType(qtvs', TypingType.OType (TypingType.substitute ss' ot')) in
+          let g = function
+            | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r'))
+            | _ as x -> x
+          in
+          f {m with defs = List.map g m.defs} fvs
+      in
+      let m' = f m fvs in
+      let b = TypingExpr.genExprVar () in
+      let bn = TypingExpr.getExprVarName b in
+      let eim' = {eim with s_Expr = (ename, b) :: eim.s_Expr} in
+      let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
+      {m' with eim = eim'; iem = iem'} 
+      
+      
