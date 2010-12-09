@@ -1,3 +1,4 @@
+open MyUtil
 type exprVar = Id.t
 type exprConst = Id.t
 

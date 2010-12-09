@@ -36,7 +36,7 @@ let rec valueRestrict : result -> TypingType.oType -> TypingType.typeScheme = fu
     | _ -> []
   in
   let ots = f r in
-  let rec ftv = ExtList.List.unique (List.concat (List.map (fun ot -> TypingType.freeTypeVars (TypingType.OType ot)) ots)) in
+  let rec ftv = MyUtil.List.unique (List.concat (List.map (fun ot -> TypingType.freeTypeVars (TypingType.OType ot)) ots)) in
   TypingType.QType (ftv, TypingType.OType t)
 
 let rec substituteResultType ss expr =
