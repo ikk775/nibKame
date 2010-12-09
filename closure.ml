@@ -38,14 +38,14 @@ type t =
   | FCdr of Id.t
   | ExtArray of Id.l
 and fundef = {
-  name : Id.t * Type.t;
+  fun_name : Id.l * Type.t;
   args : (Id.t * Type.t) list;
   formal_fv : (Id.t * Type.t) list;
   body : t }
 
 type topvar = {
-  name : Id.t * Type.t;
-  body : t
+  var_name : Id.t * Type.t;
+  expr : t
 }
 
 let topfuns : fundef list ref = ref []
