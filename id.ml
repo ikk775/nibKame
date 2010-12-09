@@ -1,9 +1,7 @@
 (* type t = string *)
-type l = L of string (* label *)
-
 include String
 
-type Id.l = string
+type l = L of t (* label *)
 
 module Set_sub = Set.Make(String)
 module Set = struct
