@@ -17,13 +17,13 @@ let of_module : Module.t -> t = fun m ->
   List.fold_right add (Module.exprFreeVars m) empty
  
 let expand (*: Module.t -> t -> t*) = fun m u -> 
-  let f = fun v ts -> 
+  let f = function v, ts -> 
       let g t = 
         let _, (qtvs', t', _) = (Module.def_expr m v) in
         TypingType.domainRestrict (TypingType.unify t (TypingType.removeQuantifier t')) qtvs'
       in
       List.map g ts
   in
-  let sssm = Id.Map.mapi f u
+  let sssm = List.map f u
   in
   sssm
