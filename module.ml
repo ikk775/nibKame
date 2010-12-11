@@ -143,8 +143,9 @@ let addExpr = fun m ->
           Debug.dbgprint "free-variable-removed subst:";
           Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
           let t'' = TypingType.QType(qtvs', TypingType.OType (TypingType.substitute ss' ot')) in
+          let r'' = Typing.substituteResultType ss' r' in
           let g = function
-            | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r'))
+            | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r''))
             | _ as x -> x
           in
           f {m with defs = List.map g m.defs} fvs
