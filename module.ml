@@ -40,12 +40,12 @@ let defs_expr : t -> elt list = fun m ->
   List.filter (function Expr _ -> true | _ -> false) (defs m)
 
 let def_expr = fun m x -> 
-  match List.find (function Expr (x', _) when x = x -> true | _ -> false) (defs_expr m) with
+  match List.find (function Expr (x', _) when x' = x -> true | _ -> false) (defs_expr m) with
     | Expr (name, cont) -> name, cont
     | _ -> failwith ""
   
 let def_type = fun m x -> 
-  match List.find (function Type (x', _) when x = x -> true | _ -> false) (defs_type m) with
+  match List.find (function Type (x', _) when x' = x -> true | _ -> false) (defs_type m) with
     | Type (name, cont) -> name, cont
     | _ -> failwith ""
 
