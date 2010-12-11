@@ -115,17 +115,33 @@ let addType = fun m ->
 let addExpr = fun m -> 
   function
     | ename, e -> 
+      Debug.dbgprint "called addExpr";
+      Debug.dbgprint (Format.sprintf "input: %s" ename);
+      Debug.dbgprintsexpr (TypingExpr.to_sexpr e);
       let eim, iem, es = m.eim, m.iem, m.defs in
       let e' = TypingExpr.substituteExpr eim.s_Expr e in
       let t, r = Typing.typing (exprEnv m) e' in
+      Debug.dbgprint "typed input expr";
+      Debug.dbgprint "type:";
+      Debug.dbgprintsexpr (TypingType.typeScheme_to_sexpr t);
+      Debug.dbgprint "result:";
+      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
       let fvs = Typing.freeVars r in
+      Debug.dbgprint "free variables:";
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
       let rec f m = function
         | [] -> m
         | (fv, ot) :: fvs -> (* 後で、TypingType.substituteTsを使ったコードに書き直す *)
+          Debug.dbgprint (Format.sprintf "backpatching %s" fv);
           let _, (qtvs', t', r') = def_expr m fv in
           let ot' = TypingType.removeQuantifier t' in
+          Debug.dbgprintsexpr (TypingType.oType_to_sexpr ot');
           let ss = TypingType.unify ot ot' in
+          Debug.dbgprint "subst:";
+          Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
           let ss' = TypingType.domainDiff ss qtvs' in
+          Debug.dbgprint "free-variable-removed subst:";
+          Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
           let t'' = TypingType.QType(qtvs', TypingType.OType (TypingType.substitute ss' ot')) in
           let g = function
             | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r'))
