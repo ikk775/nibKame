@@ -23,6 +23,8 @@ type t = {
 
 let empty:t = {eim = {s_Type = []; s_Expr = []}; iem = []; defs = []}
 
+let emptysubst: substitutions = {s_Type = []; s_Expr = []}
+
 let elt_name : elt -> Id.t = function
   | Type (x, _)
   | Expr (x, _) -> x
@@ -145,5 +147,19 @@ let addExpr = fun m ->
       | Type _ :: ds -> f ds
       | Expr (x, (qtvs, t, r)) :: ds -> Typing.freeVars r :: f ds
     in
-    f ds
+    List.concat (f ds)
+
+ let typeFreeVars = function
+  | { defs = ds } -> 
+    let rec f = function
+      | [] -> []
+      | Type (x, (qtvs, t)) :: ds -> TypingType.freeTypeVars (TypingType.QType (qtvs, TypingType.OType t))  :: f ds
+      | Expr (x, (qtvs, t, r)) :: ds -> qtvs :: f ds
+    in
+    List.concat (f ds)
+
+let coerceFreeTypeVars :TypingType.oType -> t -> t = fun ot m ->
+  let ftvs = typeFreeVars m in
+  let ss = List.map (fun x -> TypingType.Substitution (x, ot)) ftvs in
+  subst {emptysubst with s_Type = ss} m
 
