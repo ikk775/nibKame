@@ -136,7 +136,7 @@ let addExpr = fun m ->
       let m' = f m fvs in
       let b = TypingExpr.genExprVar () in
       let bn = TypingExpr.getExprVarName b in
-      let eim' = {eim with s_Expr = (ename, b) :: eim.s_Expr} in
+      let eim' = {eim with s_Expr = (ename, b) :: List.remove_assoc ename eim.s_Expr} in
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
       
