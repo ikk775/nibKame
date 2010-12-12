@@ -3,6 +3,18 @@ type id_or_imm = V of Id.t | C of int
 type cmp_op =
   | Eq | NotEq | LsEq | Ls | Gt | GtEq
 
+type literal =
+  | Int_l of int | Char_l of char | Pointer_l of Id.l
+
+type ty =
+  | Int | Float | Char | Pointer of Type.t
+
+let to_ty = function
+  | Type.Int -> Int
+  | Type.Float -> Float
+  | Type.Char -> Char
+  | _ as t -> Pointer t
+
 type t =
   | Ans of exp
   | Let of (Id.t * Type.t) * exp * t
