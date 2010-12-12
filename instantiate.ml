@@ -34,3 +34,9 @@ let usage : Module.t -> t -> using = fun m u ->
   let sssm = List.map (List.filter ((<>) [])) (List.map f u) in
   let envm = List.concat (List.concat sssm) in
   List.fold_right (function TypingType.Substitution(tv, t) -> fun um -> add (tv, t) um) envm empty 
+
+let usage_expand : using -> using = fun um -> 
+  undefined ()
+
+let usage_filter : using -> using = fun um -> 
+  undefined ()
