@@ -61,7 +61,7 @@ let add_def_head : t -> elt -> t = fun m def ->
 let exprEnv : t -> TypingExpr.exprEnv = fun m -> 
 	let f = function
     | Expr (x, (qtvs, ts, r)) -> 
-		  x, TypingType.OType (TypingType.removeQuantifier ts)
+		  x, TypingType.QType (qtvs, TypingType.OType (TypingType.removeQuantifier ts))
     | Type _ -> 
 	    invalid_arg "Expr requied."
   in
