@@ -18,7 +18,7 @@ let of_module : Module.t -> t = fun m ->
   List.fold_right add (Module.exprFreeVars m) um
  
 let usage : Module.t -> t -> using = fun m u -> 
-  Debug.dbgprint "called Module.expand";
+  Debug.dbgprint "called Module.usage";
   let f = function v, ts -> 
       Debug.dbgprint (Format.sprintf "expand about %s" v);
       Debug.dbgprintsexpr (Sexpr.Sexpr (List.map TypingType.oType_to_sexpr ts));
