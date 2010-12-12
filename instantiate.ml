@@ -27,7 +27,7 @@ let usage : Module.t -> t -> using = fun m u ->
       let g t = 
         let ss = TypingType.unify t (TypingType.removeQuantifier t') in
         Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
-        TypingType.domainRestrict ss qtvs'
+        List.append (TypingType.domainRestrict ss qtvs') (List.filter (function TypingType.Substitution (_, TypingType.O_Variable x) when List.mem x qtvs' -> true | _ -> false) ss)
       in
       List.map g ts
   in
