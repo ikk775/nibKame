@@ -14,7 +14,8 @@ let add : (Id.t * TypingType.oType) -> t -> t = fun vt um ->
       else  (v, [t]) :: um
 
 let of_module : Module.t -> t = fun m -> 
-  List.fold_right add (Module.exprFreeVars m) empty
+  let um = List.fold_right add (List.map (function x, ts -> x, TypingType.removeQuantifier ts) (Module.def_exprTypes m)) empty in
+  List.fold_right add (Module.exprFreeVars m) um
  
 let expand (*: Module.t -> t -> t*) = fun m u -> 
   let f = function v, ts -> 
