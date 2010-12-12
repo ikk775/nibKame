@@ -7,7 +7,13 @@ module Set = struct
   let of_list lis = List.fold_right Set_sub.add lis Set_sub.empty 
   end
 
-module Map = Map.Make(String)
+module Map_sub = Map.Make(String)
+module Map = struct
+  include Map_sub
+  let of_assoc map = 
+    let l = ref [] in
+    Map_sub.iter (fun k c -> l := (k, c) :: !l) map
+  end
 
 type substitution = Substitution of t * t    
 

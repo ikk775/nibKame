@@ -23,6 +23,8 @@ type t = {
 
 let empty:t = {eim = {s_Type = []; s_Expr = []}; iem = []; defs = []}
 
+let emptysubst: substitutions = {s_Type = []; s_Expr = []}
+
 let elt_name : elt -> Id.t = function
   | Type (x, _)
   | Expr (x, _) -> x
@@ -37,13 +39,16 @@ let defs_type : t -> elt list = fun m ->
 let defs_expr : t -> elt list = fun m -> 
   List.filter (function Expr _ -> true | _ -> false) (defs m)
 
+let def_exprTypes = fun m -> 
+  List.map (function Expr (x,(qtvs, t, r)) -> x, t) (defs_expr m)
+
 let def_expr = fun m x -> 
-  match List.find (function Expr (x', _) when x = x -> true | _ -> false) (defs_expr m) with
+  match List.find (function Expr (x', _) when x' = x -> true | _ -> false) (defs_expr m) with
     | Expr (name, cont) -> name, cont
     | _ -> failwith ""
   
 let def_type = fun m x -> 
-  match List.find (function Type (x', _) when x = x -> true | _ -> false) (defs_type m) with
+  match List.find (function Type (x', _) when x' = x -> true | _ -> false) (defs_type m) with
     | Type (name, cont) -> name, cont
     | _ -> failwith ""
 
@@ -56,7 +61,7 @@ let add_def_head : t -> elt -> t = fun m def ->
 let exprEnv : t -> TypingExpr.exprEnv = fun m -> 
 	let f = function
     | Expr (x, (qtvs, ts, r)) -> 
-		  x, TypingType.OType (TypingType.removeQuantifier ts)
+		  x, TypingType.QType (qtvs, TypingType.OType (TypingType.removeQuantifier ts))
     | Type _ -> 
 	    invalid_arg "Expr requied."
   in
@@ -113,20 +118,37 @@ let addType = fun m ->
 let addExpr = fun m -> 
   function
     | ename, e -> 
+      Debug.dbgprint "called addExpr";
+      Debug.dbgprint (Format.sprintf "input: %s" ename);
+      Debug.dbgprintsexpr (TypingExpr.to_sexpr e);
       let eim, iem, es = m.eim, m.iem, m.defs in
       let e' = TypingExpr.substituteExpr eim.s_Expr e in
       let t, r = Typing.typing (exprEnv m) e' in
+      Debug.dbgprint "typed input expr";
+      Debug.dbgprint "type:";
+      Debug.dbgprintsexpr (TypingType.typeScheme_to_sexpr t);
+      Debug.dbgprint "result:";
+      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
       let fvs = Typing.freeVars r in
+      Debug.dbgprint "free variables:";
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
       let rec f m = function
         | [] -> m
         | (fv, ot) :: fvs -> (* 後で、TypingType.substituteTsを使ったコードに書き直す *)
+          Debug.dbgprint (Format.sprintf "backpatching %s" fv);
           let _, (qtvs', t', r') = def_expr m fv in
           let ot' = TypingType.removeQuantifier t' in
+          Debug.dbgprintsexpr (TypingType.oType_to_sexpr ot');
           let ss = TypingType.unify ot ot' in
+          Debug.dbgprint "subst:";
+          Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
           let ss' = TypingType.domainDiff ss qtvs' in
+          Debug.dbgprint "free-variable-removed subst:";
+          Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
           let t'' = TypingType.QType(qtvs', TypingType.OType (TypingType.substitute ss' ot')) in
+          let r'' = Typing.substituteResultType ss' r' in
           let g = function
-            | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r'))
+            | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r''))
             | _ as x -> x
           in
           f {m with defs = List.map g m.defs} fvs
@@ -134,8 +156,30 @@ let addExpr = fun m ->
       let m' = f m fvs in
       let b = TypingExpr.genExprVar () in
       let bn = TypingExpr.getExprVarName b in
-      let eim' = {eim with s_Expr = (ename, b) :: eim.s_Expr} in
+      let eim' = {eim with s_Expr = (ename, b) :: List.remove_assoc ename eim.s_Expr} in
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
-      {m' with eim = eim'; iem = iem'} 
+      {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
       
-      
+ let exprFreeVars = function
+  | { defs = ds } -> 
+    let rec f = function
+      | [] -> []
+      | Type _ :: ds -> f ds
+      | Expr (x, (qtvs, t, r)) :: ds -> Typing.freeVars r :: f ds
+    in
+    List.concat (f ds)
+
+ let typeFreeVars = function
+  | { defs = ds } -> 
+    let rec f = function
+      | [] -> []
+      | Type (x, (qtvs, t)) :: ds -> TypingType.freeTypeVars (TypingType.QType (qtvs, TypingType.OType t))  :: f ds
+      | Expr (x, (qtvs, t, r)) :: ds -> qtvs :: f ds
+    in
+    List.concat (f ds)
+
+let coerceFreeTypeVars :TypingType.oType -> t -> t = fun ot m ->
+  let ftvs = typeFreeVars m in
+  let ss = List.map (fun x -> TypingType.Substitution (x, ot)) ftvs in
+  subst {emptysubst with s_Type = ss} m
+
