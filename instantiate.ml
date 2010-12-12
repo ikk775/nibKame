@@ -17,14 +17,20 @@ let of_module : Module.t -> t = fun m ->
   let um = List.fold_right add (List.map (function x, ts -> x, TypingType.removeQuantifier ts) (Module.def_exprTypes m)) empty in
   List.fold_right add (Module.exprFreeVars m) um
  
-let expand (*: Module.t -> t -> t*) = fun m u -> 
+let usage : Module.t -> t -> using = fun m u -> 
+  Debug.dbgprint "called Module.expand";
   let f = function v, ts -> 
+      Debug.dbgprint (Format.sprintf "expand about %s" v);
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map TypingType.oType_to_sexpr ts));
+      let _, (qtvs', t', _) = (Module.def_expr m v) in
+      Debug.dbgprintsexpr (Sexpr.Sexpr [Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'); TypingType.typeScheme_to_sexpr t']);
       let g t = 
-        let _, (qtvs', t', _) = (Module.def_expr m v) in
-        TypingType.domainRestrict (TypingType.unify t (TypingType.removeQuantifier t')) qtvs'
+        let ss = TypingType.unify t (TypingType.removeQuantifier t') in
+        Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
+        TypingType.domainRestrict ss qtvs'
       in
       List.map g ts
   in
-  let sssm = List.map f u
-  in
-  sssm
+  let sssm = List.map (List.filter ((<>) [])) (List.map f u) in
+  let envm = List.concat (List.concat sssm) in
+  List.fold_right (function TypingType.Substitution(tv, t) -> fun um -> add (tv, t) um) envm empty 
