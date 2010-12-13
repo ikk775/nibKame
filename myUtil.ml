@@ -36,6 +36,13 @@ module List = struct
   let rec unique = function
     | [] -> []
     | x :: xs -> x :: setDiff (unique xs) [x]
+
+  let rec select = function
+    | [] -> []
+    | [xs] -> List.map (fun x -> [x]) xs
+    | xs :: xss ->
+      let tl = select xss in
+      List.concat (List.map (fun y -> List.map (fun x -> x :: y) xs) tl)
 end
 
 module String = struct

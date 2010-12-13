@@ -35,8 +35,34 @@ let usage : Module.t -> t -> using = fun m u ->
   let envm = List.concat (List.concat sssm) in
   List.fold_right (function TypingType.Substitution(tv, t) -> fun um -> add (tv, t) um) envm empty 
 
+let usage_isvalid : using -> bool = fun um -> 
+  true
+
+let usage_expand_prototype : using -> using = fun um -> 
+  Debug.dbgprint "called Module.usage_expand_prototype";
+  let e tv =
+    let rec f tv =
+      Debug.dbgprint (Format.sprintf "exploding about %s" tv);
+      let us = List.assoc tv um in
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun t -> TypingType.oType_to_sexpr t) us));
+      let rec g t = 
+        Debug.dbgprint (Format.sprintf "proving about %s" tv);
+        let ftvs = TypingType.typeVars t in
+        Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun tv -> Sexpr.Sident tv) ftvs));
+        let us' = List.select (List.map f ftvs) in
+        Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun s -> Sexpr.Sexpr (List.map (fun t -> TypingType.oType_to_sexpr t) s)) us'));
+        let rslt = List.map (fun u -> TypingType.substitute (List.map2 (fun tv' t' -> TypingType.Substitution (tv', t')) ftvs u) t) us' in
+        Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun t -> TypingType.oType_to_sexpr t) rslt));
+        rslt
+      in
+      List.concat (List.map (fun t -> if TypingType.typeVars t <> [] then g t else [t]) us)
+    in
+  tv, f tv
+  in
+  List.map e (List.map (function tv, t -> tv) um)
+
 let usage_expand : using -> using = fun um -> 
-  undefined ()
+  usage_expand_prototype um
 
 let usage_filter : using -> using = fun um -> 
   undefined ()
