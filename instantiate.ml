@@ -20,13 +20,9 @@ let of_module : Module.t -> ev_usage = fun m ->
 let usage : Module.t -> ev_usage -> tv_usage = fun m eum -> 
   Debug.dbgprint "called Module.usage";
   let f = function v, ts -> 
-      Debug.dbgprint (Format.sprintf "expand about %s" v);
-      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map TypingType.oType_to_sexpr ts));
       let _, (qtvs', t', _) = (Module.def_expr m v) in
-      Debug.dbgprintsexpr (Sexpr.Sexpr [Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'); TypingType.typeScheme_to_sexpr t']);
       let g t = 
         let ss = TypingType.unify t (TypingType.removeQuantifier t') in
-        Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
         List.append (TypingType.domainRestrict ss qtvs') (List.filter (function TypingType.Substitution (_, TypingType.O_Variable x) when List.mem x qtvs' -> true | _ -> false) ss)
       in
       List.map g ts
@@ -42,17 +38,11 @@ let usage_expand_prototype : tv_usage -> tv_usage = fun tum ->
   Debug.dbgprint "called Module.usage_expand_prototype";
   let e tv =
     let rec f tv =
-      Debug.dbgprint (Format.sprintf "exploding about %s" tv);
       let us = List.assoc tv tum in
-      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun t -> TypingType.oType_to_sexpr t) us));
       let rec g t = 
-        Debug.dbgprint (Format.sprintf "proving about %s" tv);
         let ftvs = TypingType.typeVars t in
-        Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun tv -> Sexpr.Sident tv) ftvs));
         let us' = List.select (List.map f ftvs) in
-        Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun s -> Sexpr.Sexpr (List.map (fun t -> TypingType.oType_to_sexpr t) s)) us'));
         let rslt = List.map (fun u -> TypingType.substitute (List.map2 (fun tv' t' -> TypingType.Substitution (tv', t')) ftvs u) t) us' in
-        Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun t -> TypingType.oType_to_sexpr t) rslt));
         rslt
       in
       List.concat (List.map (fun t -> if TypingType.typeVars t <> [] then g t else [t]) us)
