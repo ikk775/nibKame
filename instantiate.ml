@@ -1,4 +1,13 @@
 open MyUtil
+   
+type elt = Id.t * (Id.t list * TypingType.typeScheme * Typing.result)
+
+type intToExtMap = Id.substitution list
+
+type t = {
+  iem: intToExtMap;
+  defs: elt list
+}
 
 type ev_usage = (Id.t *TypingType.oType list) list
 
