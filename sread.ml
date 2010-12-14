@@ -78,6 +78,7 @@ let rec change = function
   | Schar c -> Syntax.Literal (Syntax.Char c)
   | Sexpr l ->
       (match l with
+(*
 	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
       let variant = Variant.empty_tags name in
 	      List.iter (function
@@ -89,7 +90,7 @@ let rec change = function
 		        constructors;
 	      Variant.add_variant !variant;
 	      Syntax.Variant name (* Fixing ME !! *)
-
+*)
 	| Sident "list" :: tail -> Syntax.List (List.map change tail)
 	| Sident "tuple" :: tail -> Syntax.Tuple (List.map change tail)
 	| Sident "array" :: tail -> Syntax.Array (List.map change tail)
