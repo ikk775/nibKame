@@ -1,7 +1,19 @@
 # see: http://www.ocaml.info/home/ocaml_sources.html#toc16
 
 # put here the names of your source files (in the right order)
-SOURCES = myUtil.ml id.ml variant.ml sexpr.ml type.ml syntax.ml sread.ml typingType.ml typingExpr.ml typing.ml kNormal.ml module.ml
+SOURCES = 
+SOURCES +=myUtil.ml
+SOURCES +=id.ml
+SOURCES +=sexpr.ml
+SOURCES +=type.ml
+SOURCES +=variant.ml
+SOURCES +=syntax.ml
+SOURCES +=sread.ml
+SOURCES +=typingType.ml
+SOURCES +=typingExpr.ml
+SOURCES +=typing.ml
+SOURCES +=kNormal.ml
+SOURCES +=module.ml
 
 # the name of the resulting executable
 RESULT  = executable.exe
