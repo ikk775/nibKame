@@ -66,3 +66,9 @@ let usage_expand : tv_usage -> tv_usage = fun tum ->
 let usage_filter : tv_usage -> tv_usage = fun tum -> 
   tum
 
+let expand : Module.t -> tv_usage -> t = fun m tum ->
+  undefined ()
+
+let instantiate : Module.t -> t = fun m -> 
+  undefined ()
+
