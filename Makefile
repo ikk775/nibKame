@@ -5,6 +5,7 @@ SOURCES =
 SOURCES +=myUtil.ml
 SOURCES +=id.ml
 SOURCES +=sexpr.ml
+SOURCES +=debug.ml
 SOURCES +=type.ml
 SOURCES +=variant.ml
 SOURCES +=syntax.ml
