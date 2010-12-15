@@ -9,6 +9,11 @@ type literal =
 type ty =
   | Int | Float | Char | Pointer of Type.t
 
+type mem_op =
+  | Direct of Id.t
+  | Plus_offset of Id.t * id_or_imm
+  | Scaled_offset of Id.t * id_or_imm * int
+
 let to_ty = function
   | Type.Int -> Int
   | Type.Float -> Float
@@ -17,9 +22,10 @@ let to_ty = function
 
 type t =
   | Ans of exp
-  | Let of (Id.t * Type.t) * exp * t
+  | Let of (Id.t * ty) * exp * t
 and exp =
   | Nop
+  | Set of literal
   | SetL of Id.l (* ラベルにストア *)
   | Mov of id_or_imm
   | Neg of Id.t
@@ -29,8 +35,8 @@ and exp =
   | Div of Id.t * id_or_imm (* cdq and idiv *)
   | SLL of Id.t * id_or_imm
   | SLR of Id.t * id_or_imm
-  | Ld of Id.t * id_or_imm
-  | St of Id.t * Id.t * id_or_imm
+  | Ld of Id.t * mem_op (* load to *)
+  | St of Id.t * Id.t * mem_op (* store *)
   | FMov of Id.t
   | FNeg of Id.t
   | FAdd of Id.t * Id.t
@@ -40,11 +46,11 @@ and exp =
   | FLd of Id.t * id_or_imm
   | FSt of Id.t * Id.t * id_or_imm
 
-  | Comp of cmp_op * Type.t * Id.t * id_or_imm
+  | Comp of cmp_op * ty * Id.t * id_or_imm
   | If of t * t * t
 
-  | ApplyCls of Id.t * Id.t list * Id.t list
-  | ApplyDir of Id.l * Id.t list * Id.t list
+  | ApplyCls of Id.t * Id.t list
+  | ApplyDir of Id.l * Id.t list
 
   | ArrayRef of Id.t * Id.t
   | ArraySet of Id.t * Id.t * Id.t
@@ -56,37 +62,127 @@ and exp =
   | FCar of Id.t
   | FCdr of Id.t
 
+  | TupleAlloc of (Id.t * ty) list
+  | ArrayAlloc of ty * Id.t
+
   | Save of Id.t * Id.t
   | Pop of Id.t * Id.t
 
-type fundef = { name: Id.l; args: (Id.t * Type.t) list; body: t; ret: Type.t }
+type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 
-let float_litearl_list : (float * Id.l) list ref = ref []
+let float_literal_list : (float * Id.l) list ref = ref []
 
 let tuple_size types =
   List.fold_left
     (fun s -> function 
-       | Type.Float -> s + 8
+       | Float -> s + 8
        | _ -> s + 4)
     4
     types
 
 let array_size len = function
-  | Type.Float -> 4 + 8 * len
-  | Type.Char -> 4 + 1 * len
+  | Float -> 4 + 8 * len
+  | Char -> 4 + 1 * len
   | _ -> 4 + 4 * len
 
-module M = Id.Map
+module M = 
+  struct
+    include Id.Map
+    let add_twin (key, x) map =
+      add key x map
+  end
 
 let counter = ref 0
 let genid () =
   incr counter;
   Printf.sprintf "fv%d" !counter
+let counter1 = ref 0
+let temp () =
+  incr counter1;
+  Printf.sprintf "tmp%d" !counter1
 
 let add_list xys env = List.fold_left (fun env (x, y) -> M.add x y env) env xys
 let add_list2 xs ys env = List.fold_left2 (fun env x y -> M.add x y env) env xs ys
 
+let add_float_table f =
+  try
+    snd (List.find (fun (f',_) -> f = f') !float_literal_list)
+  with Not_found ->
+    let label = temp () in float_literal_list := (f, Id.L(label)) :: !float_literal_list;
+      Id.L(label)
+
+let comp_cmp_op = function
+  | Closure.Eq -> Eq
+  | Closure.NotEq -> NotEq
+  | Closure.Ls -> Ls
+  | Closure.LsEq -> LsEq
+  | Closure.Gt -> Gt
+  | Closure.GtEq -> GtEq
+
+(*
+  e1 の値を e1 の最後で束縛し, e2 を後ろへ
+*)
+let rec let_concat e1 var e2 =
+  match e1 with
+    | Ans i -> Let (var, i, e2)
+    | Let (v, e, t) ->
+	Let (v, e, let_concat t var e2)
+
+let var_with_type env (x : Id.t) =
+  x, M.find x env
+
 let rec compile_exp env = function
+  | Closure.Unit -> Ans(Nop)
+  | Closure.Int i -> Ans(Set(Int i))
+  | Closure.Char c -> Ans(Set(Char c))
+  | Closure.Float f -> let l = add_float_table f in Ans(SetL(l))
+  | Closure.Neg l -> Ans(Neg(l))
+  | Closure.Add (a, b) -> Ans(Add(a, V b))
+  | Closure.Sub (a, b) -> Ans(Sub(a, V b))
+  | Closure.Mul (a, b) -> Ans(Mul(a, V b))
+  | Closure.Div (a, b) -> Ans(Div(a, V b))
+  | Closure.FAdd (a, b) -> Ans(FAdd(a, b))
+  | Closure.FSub (a, b) -> Ans(FSub(a, b))
+  | Closure.FMul (a, b) -> Ans(FMul(a, b))
+  | Closure.FDiv (a, b) -> Ans(FDiv(a, b))
+
+  | Closure.If (cp, a, b, t, f) ->
+      let compare = Ans (Comp (comp_cmp_op cp, M.find a env, a, V b)) in
+	Ans (If (compare, compile_exp env t, compile_exp env f))
+  | Closure.Let ((var, t), e1, e2) ->
+      let e1' = compile_exp env e1 in
+      let e2' = compile_exp (M.add var t env) e2 in
+	let_concat e1' (var, t) e2'
+
+  | Closure.Var x ->
+      begin match M.find x env with
+	| Type.Unit -> Ans(Nop)
+	| Type.Float -> Ans(FMov x)
+	| _ -> Ans(Mov (V x))
+      end
+  | Closure.MakeCls (dst, {Closure.entry = label, Closure.actual_fv = fv}, e) -> 
+      let t = temp () in (* クロージャ変数を作成して束縛 *)
+	Let ((t, (snd dst)), 
+	     Ans (Let (dst, AllocTuple((label, Type.Unit) :: List.map (var_with_type env) fv), compile_exp (M.add_twin dst env)  e)))
+  | Closure.ApplyCls (cls, vars) -> Ans (ApplyCls (cls, vars))
+  | Closure.ApplyDir (label, vars) -> Ans (ApplyDir (label, vars))
+  | Closure.Tuple vars -> Ans(TupleAlloc(List.map (var_with_type env) vars))
+  | Closure.LetTuple (dsts, tuple, e) ->
+      let tuple_store list var dst e =
+	let rec iter = function
+	  | (v, t) :: tl when v = var -> []
+	  | (v, t) :: tl -> t :: iter tl
+	  | [] -> failure (Format.sprintf "not found in tuple, %s" var)
+	in
+	let offset = ((tuple_size (iter list)) - 4 in
+	let tmp = temp () in
+	  Let ((tmp, Pointer of (snd (List.find (fun x -> (fst x) = var)))), Add(tuple, C offset), Let (dst, Set)
+      let env' = List.map (var_with_type env) dsts in
+      let e' = compile_exp env' e in
+	List.fold_right (fun dst next ->
+			   let var, ty = dst in
+			     Let (dst, Ans(
+
   | _ -> (MyUtil.undefined ())
 
 (*
@@ -101,9 +197,9 @@ let compile_fun { Closure.fun_name = (Id.L(label), t);
     match List.map snd free_vars with
       | [] -> 
 	  let e = compile_exp env exp in
-	    { name = Id.L(label); args = (genid (),(Type.Tuple [Type.Unit])) :: args; body = e; ret = t2 }
+	    { name = Id.L(label); args = (genid (), Pointer (Type.Tuple [Type.Unit])) :: args; body = e; ret = t2 }
       | fvs ->
-	  let fv = (genid (), Type.Tuple (Type.Unit :: fvs)) in
+	  let fv = (genid (), Pointer (Type.Tuple (Type.Unit :: fvs))) in
 	  let e = compile_exp (M.add (fst fv) (snd fv) env) exp in
 	    { name = Id.L(label); args = fv :: args; body = e; ret = t2 }
     
