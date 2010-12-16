@@ -25,8 +25,12 @@ module List = struct
     then []
     else s :: iota ~step (s + step) e
   
-  let rec mem ?(eq = (=)) a xs = 
-    List.for_all (fun x -> eq a x) xs
+  let rec mem ?(eq = (=)) a = function
+    | [] -> false
+    | x :: xs ->
+      if eq a x
+      then true
+      else mem ~eq:eq a xs
     
   let rec setDiff ?(eq = (=)) xs ys =
     List.filter (fun x -> not (mem ~eq:eq x ys)) xs
