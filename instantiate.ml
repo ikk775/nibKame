@@ -1,6 +1,6 @@
 open MyUtil
    
-type elt = Id.t * (Id.t list * TypingType.typeScheme * Typing.result)
+type elt = Id.t * (Type.mType list * Typing.result)
 
 type intToExtMap = Id.substitution list
 
@@ -12,6 +12,8 @@ type t = {
 type ev_usage = (Id.t *TypingType.oType list) list
 
 type tv_usage = (Id.t * TypingType.oType list) list
+
+type tv_cusage = (Id.t * Type.mType list) list
 
 let empty = []
 
@@ -64,10 +66,19 @@ let usage_expand : tv_usage -> tv_usage = fun tum ->
   usage_expand_prototype tum
 
 let usage_filter : tv_usage -> tv_usage = fun tum -> 
-  tum
+  List.map (function x, ts -> x, List.unique ~eq:(fun x y -> TypingType.oType_to_mType x = TypingType.oType_to_mType x) ts) tum
 
-let expand : Module.t -> tv_usage -> t = fun m tum ->
-  undefined ()
+let expand (*: Module.t -> tv_usage -> t*) = fun m tum ->
+  let f = function x, (qtvs, t, e) -> 
+    let t' = TypingType.removeQuantifier t in
+    let us = if List.mem_assoc x tum then List.assoc x tum else [] in
+    let g u =
+      let ss = TypingType.unify t' u in
+      List.append (TypingType.domainRestrict ss qtvs) (List.filter (function TypingType.Substitution (_, TypingType.O_Variable x) when List.mem x qtvs -> true | _ -> false) ss)
+    in
+    List.map g us
+  in
+  List.map f (Module.defs_expr_cont m)
 
 let instantiate : Module.t -> t = fun m -> 
   undefined ()
