@@ -28,6 +28,7 @@ module Arbitrary_string = Arbitrary_list_to_string(Arbitrary_short_char_list)
 module Arbitrary_string_list = Arbitrary_list(Arbitrary_string)
 module Arbitrary_string_'_string = Arbitrary_pair(Arbitrary_string)(Arbitrary_string)
 module Arbitrary_string_list_'_string_list = Arbitrary_pair(Arbitrary_string_list)(Arbitrary_string_list)
+module Arbitrary_string_list_'_string = Arbitrary_pair(Arbitrary_string_list)(Arbitrary_string)
 
 module Testable_string_to_bool =
   Testable_fun
@@ -71,3 +72,9 @@ module Testable_fun_string_list_'_string_list_to_property =
   (Testable_property) ;;
 module Check_fun_string_list_'_string_list_to_property = Check(Testable_fun_string_list_'_string_list_to_property)
 
+module Testable_fun_string_list_'_string_to_bool =
+  Testable_fun
+  (Arbitrary_string_list_'_string)
+  (PShow_string_list_'_string)
+  (Testable_bool) ;;
+module Check_fun_string_list_'_string_to_bool = Check(Testable_fun_string_list_'_string_to_bool)
