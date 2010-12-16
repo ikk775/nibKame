@@ -15,6 +15,7 @@ SOURCES +=typingExpr.ml
 SOURCES +=typing.ml
 SOURCES +=kNormal.ml
 SOURCES +=module.ml
+SOURCES +=instantiate.ml
 
 # the name of the resulting executable
 RESULT  = executable.exe
