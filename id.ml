@@ -1,6 +1,8 @@
 (* type t = string *)
 include String
 
+type l = L of t (* label *)
+
 module Set_sub = Set.Make(String)
 module Set = struct
   include Set_sub
@@ -38,3 +40,4 @@ let rec compose (xs:substitution list) (ys:substitution list) =
 
 let composeSubsts sss =
   List.fold_right compose sss []
+
