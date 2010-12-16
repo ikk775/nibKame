@@ -10,6 +10,7 @@ end
 module PShow_char_list = PShow_list(PShow_char) ;;
 module PShow_string_list = PShow_list(PShow_string) ;;
 module PShow_string_'_string = PShow_pair(PShow_string)(PShow_string) ;;
+module PShow_string_list_'_string = PShow_pair(PShow_string_list)(PShow_string) ;;
 module PShow_string_list_'_string_list = PShow_pair(PShow_string_list)(PShow_string_list) ;;
 
 module Arbitrary_char_list = Arbitrary_list(Arbitrary_ascii_char)

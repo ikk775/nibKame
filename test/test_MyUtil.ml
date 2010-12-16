@@ -67,7 +67,7 @@ let prop_mem_mem : 'a -> bool = function xs, x ->
   gen_prop_equality Std.dump (=) (MyUtil.List.mem x xs) (List.mem x xs)
 
 let prop_mem_memq : 'a -> bool = function xs, x -> 
-  gen_prop_equality Std.dump (=) (MyUtil.List.mem ~eq=(==) x xs) (List.memq x xs)
+  gen_prop_equality Std.dump (=) (MyUtil.List.mem ~eq:(==) x xs) (List.memq x xs)
 
 let () = Check_fun_string_list_'_string_to_bool.quickCheck prop_mem_mem
 let () = Check_fun_string_list_'_string_to_bool.quickCheck prop_mem_memq
