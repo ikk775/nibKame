@@ -182,7 +182,7 @@ let addExpr = fun m ->
     let rec f = function
       | [] -> []
       | Type (x, (qtvs, t)) :: ds -> TypingType.freeTypeVars (TypingType.QType (qtvs, TypingType.OType t))  :: f ds
-      | Expr (x, (qtvs, t, r)) :: ds -> qtvs :: f ds
+      | Expr (x, (qtvs, t, r)) :: ds -> List.setDiff (Typing.typeVars r) qtvs :: f ds
     in
     List.concat (f ds)
 
