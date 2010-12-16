@@ -140,12 +140,12 @@ let addExpr = fun m ->
       Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
       let rec f m = function
         | [] -> m
-        | (fv, ot) :: fvs -> (* 後で、TypingType.substituteTsを使ったコードに書き直す *)
+        | (fv, ot) :: fvs -> 
           Debug.dbgprint (Format.sprintf "backpatching %s" fv);
           let _, (qtvs', t', r') = def_expr m fv in
           let ot' = TypingType.removeQuantifier t' in
           Debug.dbgprintsexpr (TypingType.oType_to_sexpr ot');
-          let ss = TypingType.unify ot ot' in
+          let ss = TypingType.renew ot' ot in
           Debug.dbgprint "subst:";
           Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
           let ss' = TypingType.domainDiff ss qtvs' in
@@ -153,13 +153,8 @@ let addExpr = fun m ->
           Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'));
           Debug.dbgprint "free-variable-removed subst:";
           Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
-          let t'' = TypingType.QType(qtvs', TypingType.OType (TypingType.substitute ss' ot')) in
-          let r'' = Typing.substituteResultType ss' r' in
-          let g = function
-            | Expr (n, t) when n = fv -> Expr (fv, (qtvs', t'', r''))
-            | _ as x -> x
-          in
-          f {m with defs = List.map g m.defs} fvs
+          let m' = subst {s_Type = ss'; s_Expr = []} m in
+          f m' fvs
       in
       let m' = f m fvs in
       let b = TypingExpr.genExprVar () in
