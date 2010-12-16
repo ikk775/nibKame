@@ -180,6 +180,16 @@ let rec unify_u eqns substs =
 let unify: oType -> oType -> substitution list = fun t1 t2 -> 
   unify_u [(t1, t2)] []
 
+let renew : oType -> oType -> substitution list = fun older newer -> 
+  let ss = unify older newer in
+  let otvs = typeVars older in
+  let f = function
+    | Substitution (t1, O_Variable t2) when List.mem t1 otvs -> Substitution (t1, O_Variable t2)
+    | Substitution (t1, O_Variable t2) when List.mem t2 otvs -> Substitution (t2, O_Variable t1)
+    | _ as a -> a
+  in
+  domainRestrict (List.map f ss) otvs
+
 let oType_of_type : Type.t -> oType = fun x ->
   let rec of_type = function
     | Type.Unit as c -> O_Constant c
