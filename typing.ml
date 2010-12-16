@@ -38,6 +38,21 @@ let rec freeVars : result -> (Id.t * TypingType.oType) list = function
   | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freeVars [e1; e2]))) 
   | R_Fix ((v, t), e, t') -> List.remove_assoc v (freeVars e)
 
+let rec typeVars : result -> Id.t list = fun r -> 
+  let ftv t = TypingType.freeTypeVars (TypingType.OType t) in
+  let rec g = function
+    | R_Constant (l, t) -> []
+    | R_Variable (v, t) -> [ftv t]
+    | R_Fun((v, t), e) -> List.unique (ftv t :: g e)
+    | R_Apply(e1, e2) -> List.unique (List.append (g e1) (g e2))
+    | R_Tuple (es, t) -> List.unique (List.concat (List.map g es))
+    | R_Vector (es, t) -> List.unique (List.concat (List.map g es))
+    | R_If (e1, e2, e3) -> List.unique (List.concat (List.map g [e1; e2; e3]))
+    | R_Let ((v, t), e1, e2) -> List.unique (ftv t :: (List.concat (List.map g [e1; e2]))) 
+    | R_Fix ((v, t), e, t') -> List.unique (ftv t :: g e)
+  in
+  List.concat (g r)
+
 let rec resultFreeTypeVars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
   List.concat (List.map (function x, t -> TypingType.freeTypeVars (TypingType.OType t)) vts)
 
