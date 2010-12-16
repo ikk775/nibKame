@@ -28,17 +28,17 @@ module List = struct
   let rec mem ?(eq = (=)) a xs = 
     List.for_all (fun x -> eq a x) xs
     
-  let rec setDiff xs ys =
-    List.filter (fun x -> not (List.mem x ys)) xs
+  let rec setDiff ?(eq = (=)) xs ys =
+    List.filter (fun x -> not (mem ~eq:eq x ys)) xs
 
   let shuffle a =
     let ary = Array.of_list a in
     Array.shuffle ary;
     Array.to_list ary
 
-  let rec unique = function
+  let rec unique ?(eq = (=)) = function
     | [] -> []
-    | x :: xs -> x :: setDiff (unique xs) [x]
+    | x :: xs -> x :: setDiff ~eq:eq (unique xs) [x]
 
   let rec select = function
     | [] -> []
