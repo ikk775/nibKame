@@ -39,8 +39,14 @@ let defs_type : t -> elt list = fun m ->
 let defs_expr : t -> elt list = fun m -> 
   List.filter (function Expr _ -> true | _ -> false) (defs m)
 
+let defs_type_cont = fun m -> 
+  List.map (function Type (name, cont) -> name, cont | _ -> failwith "something went wrong!") (defs_type m)
+
+let defs_expr_cont = fun m -> 
+  List.map (function Expr (name, cont) -> name, cont | _ -> failwith "something went wrong!") (defs_expr m)
+
 let def_exprTypes = fun m -> 
-  List.map (function Expr (x,(qtvs, t, r)) -> x, t) (defs_expr m)
+  List.map (function Expr (x,(qtvs, t, r)) -> x, t | _ -> failwith "something went wrong!") (defs_expr m)
 
 let def_expr = fun m x -> 
   match List.find (function Expr (x', _) when x' = x -> true | _ -> false) (defs_expr m) with
