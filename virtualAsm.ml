@@ -8,20 +8,23 @@ type literal =
 
 type ty =
   | Int | Float | Char | Pointer of Type.t
+  | Fun
 
 type mem_op =
   | Direct of Id.t
   | Plus_offset of Id.t * id_or_imm
-  | Scaled_offset of Id.t * id_or_imm * int
+  | Scaled_offset of Id.t * Id.t * int
 
 let to_ty = function
   | Type.Int -> Int
   | Type.Float -> Float
   | Type.Char -> Char
+  | Type.Fun _ -> Fun
   | _ as t -> Pointer t
 
 type t =
   | Ans of exp
+  | Seq of t * t
   | Let of (Id.t * ty) * exp * t
 and exp =
   | Nop
@@ -35,16 +38,19 @@ and exp =
   | Div of Id.t * id_or_imm (* cdq and idiv *)
   | SLL of Id.t * id_or_imm
   | SLR of Id.t * id_or_imm
-  | Ld of Id.t * mem_op (* load to *)
-  | St of Id.t * Id.t * mem_op (* store *)
+  | Ld of mem_op (* load to *)
+  | St of Id.t * mem_op (* store *)
   | FMov of Id.t
   | FNeg of Id.t
   | FAdd of Id.t * Id.t
   | FSub of Id.t * Id.t
   | FMul of Id.t * Id.t
   | FDiv of Id.t * Id.t
-  | FLd of Id.t * id_or_imm
-  | FSt of Id.t * Id.t * id_or_imm
+  | FLd of mem_op
+  | FSt of Id.t * mem_op
+
+  | BLd of mem_op
+  | BSt of Id.t * mem_op
 
   | Comp of cmp_op * ty * Id.t * id_or_imm
   | If of t * t * t
@@ -57,8 +63,7 @@ and exp =
 
   | Cons of Id.t * Id.t
   | Car of Id.t
-  | Cdr of Id.t
-  | FCons of Id.t * Id.t
+  | Cdr of Id.t  | FCons of Id.t * Id.t
   | FCar of Id.t
   | FCdr of Id.t
 
@@ -125,17 +130,22 @@ let comp_cmp_op = function
 let rec let_concat e1 var e2 =
   match e1 with
     | Ans i -> Let (var, i, e2)
+    | Seq (t1, t2) -> Seq (t1, let_concat t2 var e2)
     | Let (v, e, t) ->
 	Let (v, e, let_concat t var e2)
 
 let var_with_type env (x : Id.t) =
   x, M.find x env
 
+let to_ty_with_var (v, t)  =
+  v, to_ty t
+
 let rec compile_exp env = function
   | Closure.Unit -> Ans(Nop)
-  | Closure.Int i -> Ans(Set(Int i))
-  | Closure.Char c -> Ans(Set(Char c))
+  | Closure.Int i -> Ans(Set(Int_l i))
+  | Closure.Char c -> Ans(Set(Char_l c))
   | Closure.Float f -> let l = add_float_table f in Ans(SetL(l))
+  | Closure.Seq (t1, t2) -> Seq (compile_exp env t1, compile_exp env t2)
   | Closure.Neg l -> Ans(Neg(l))
   | Closure.Add (a, b) -> Ans(Add(a, V b))
   | Closure.Sub (a, b) -> Ans(Sub(a, V b))
@@ -145,45 +155,78 @@ let rec compile_exp env = function
   | Closure.FSub (a, b) -> Ans(FSub(a, b))
   | Closure.FMul (a, b) -> Ans(FMul(a, b))
   | Closure.FDiv (a, b) -> Ans(FDiv(a, b))
+  
+  | Closure.FNeg a -> Ans(FNeg a)
 
   | Closure.If (cp, a, b, t, f) ->
       let compare = Ans (Comp (comp_cmp_op cp, M.find a env, a, V b)) in
 	Ans (If (compare, compile_exp env t, compile_exp env f))
   | Closure.Let ((var, t), e1, e2) ->
       let e1' = compile_exp env e1 in
-      let e2' = compile_exp (M.add var t env) e2 in
-	let_concat e1' (var, t) e2'
+      let e2' = compile_exp (M.add var (to_ty t) env) e2 in
+	let_concat e1' (var, (to_ty t)) e2'
 
   | Closure.Var x ->
       begin match M.find x env with
-	| Type.Unit -> Ans(Nop)
-	| Type.Float -> Ans(FMov x)
+	| Float -> Ans(FMov x)
 	| _ -> Ans(Mov (V x))
       end
-  | Closure.MakeCls (dst, {Closure.entry = label, Closure.actual_fv = fv}, e) -> 
-      let t = temp () in (* クロージャ変数を作成して束縛 *)
-	Let ((t, (snd dst)), 
-	     Ans (Let (dst, AllocTuple((label, Type.Unit) :: List.map (var_with_type env) fv), compile_exp (M.add_twin dst env)  e)))
+  | Closure.MakeCls (dst, {Closure.entry = label; Closure.actual_fv = fv}, e) -> 
+      let t = temp () in 
+      let tuple = TupleAlloc((t, Int) :: List.map (var_with_type env) fv) in
+	Let ((t, Int), Set (Pointer_l label),
+	     Ans tuple)
   | Closure.ApplyCls (cls, vars) -> Ans (ApplyCls (cls, vars))
   | Closure.ApplyDir (label, vars) -> Ans (ApplyDir (label, vars))
   | Closure.Tuple vars -> Ans(TupleAlloc(List.map (var_with_type env) vars))
   | Closure.LetTuple (dsts, tuple, e) ->
       let tuple_store list var dst e =
-	let rec iter = function
+	let rec iter = function 
 	  | (v, t) :: tl when v = var -> []
 	  | (v, t) :: tl -> t :: iter tl
-	  | [] -> failure (Format.sprintf "not found in tuple, %s" var)
+	  | [] -> failwith (Format.sprintf "not found in tuple, %s" var)
 	in
-	let offset = ((tuple_size (iter list)) - 4 in
-	let tmp = temp () in
-	  Let ((tmp, Pointer of (snd (List.find (fun x -> (fst x) = var)))), Add(tuple, C offset), Let (dst, Set)
-      let env' = List.map (var_with_type env) dsts in
+	let offset = (tuple_size (iter list)) - 4 in
+	  Let (dst, Ld (Plus_offset(tuple, C offset)), e)
+      in
+      let dsts' = List.map to_ty_with_var dsts in
+      let env' = add_list dsts' env in
       let e' = compile_exp env' e in
-	List.fold_right (fun dst next ->
-			   let var, ty = dst in
-			     Let (dst, Ans(
+	List.fold_right (fun c e -> tuple_store dsts' (fst c) c e) dsts' e'
 
-  | _ -> (MyUtil.undefined ())
+  | Closure.Ref t -> Ans (Ld (Direct t))
+  | Closure.Set (t, u) -> 
+      begin match M.find t env with 
+	| Float -> Ans (FSt (t, Direct u))
+	| _ -> Ans (St (t, Direct u))
+      end
+
+  | Closure.ArrayAlloc (typ, num) -> Ans (ArrayAlloc (to_ty typ, num))
+  | Closure.ArrayRef (ary, num) ->
+      begin match M.find ary env with
+	| Pointer (Type.Array typ) ->
+	    begin match typ with
+	      | Type.Float -> Ans (FLd (Scaled_offset (ary, num, 8)))
+	      | Type.Char -> Ans (BLd (Plus_offset (ary, V num)))
+	      | _ -> Ans (Ld (Scaled_offset (ary, num, 4)))
+	    end
+	| _ -> failwith (Format.sprintf "%s is not an array." ary)
+      end
+  | Closure.ArraySet (ary, num, data) ->
+      begin match M.find data env with
+	| Float -> Ans (FSt (data, Scaled_offset (ary, num, 8)))
+	| Char -> Ans (BSt (data, Plus_offset (ary, V num)))
+	| _ -> Ans (St (data, Scaled_offset (ary, num, 4)))
+      end
+
+  | Closure.Cons (hd, tl) -> Ans (Cons (hd, tl))
+  | Closure.Car t -> Ans (Car t)
+  | Closure.Cdr t -> Ans (Cdr t)
+  | Closure.FCons (hd, tl) -> Ans (FCons (hd, tl))
+  | Closure.FCar t -> Ans (FCar t)
+  | Closure.FCdr t -> Ans (FCdr t)
+
+  | Closure.ExtArray l -> Ans (Set (Pointer_l l))
 
 (*
   自由変数は関数へのポインタと一緒にしたタプルとして渡される 
@@ -192,16 +235,16 @@ let rec compile_exp env = function
 let compile_fun { Closure.fun_name = (Id.L(label), t);
 		  Closure.args = args; Closure.formal_fv = free_vars;
 		  Closure.body = exp} =
-  let env = M.add label t (add_list args (add_list free_vars M.empty)) in
+  let env = M.add label (to_ty t) (add_list (List.map to_ty_with_var args) (add_list (List.map to_ty_with_var free_vars) M.empty)) in
   let Type.Fun (_,t2) = t in
     match List.map snd free_vars with
       | [] -> 
 	  let e = compile_exp env exp in
-	    { name = Id.L(label); args = (genid (), Pointer (Type.Tuple [Type.Unit])) :: args; body = e; ret = t2 }
+	    { name = Id.L(label); args = (genid (), Pointer (Type.Tuple [Type.Unit])) :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
       | fvs ->
 	  let fv = (genid (), Pointer (Type.Tuple (Type.Unit :: fvs))) in
 	  let e = compile_exp (M.add (fst fv) (snd fv) env) exp in
-	    { name = Id.L(label); args = fv :: args; body = e; ret = t2 }
+	    { name = Id.L(label); args = fv :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
     
 
 let g topfun =
