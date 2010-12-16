@@ -220,6 +220,9 @@ let oType_to_type : oType -> Type.t = fun x ->
   in
   to_type x
 
+let oType_to_mType : oType -> Type.mType = fun x ->
+  Type.to_mt (oType_to_type x)
+
 let rec oType_to_sexpr = function
   | O_Constant t -> Sexpr.Sexpr [Sexpr.Sident "ot:constant"; Type.to_sexpr t]
   | O_Variable t -> Sexpr.Sexpr [Sexpr.Sident "ot:var"; Sexpr.Sident t]
