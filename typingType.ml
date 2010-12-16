@@ -202,6 +202,24 @@ let oType_of_type : Type.t -> oType = fun x ->
   in
   of_type x
 
+let oType_to_type : oType -> Type.t = fun x ->
+  let rec to_type = function
+    | O_Constant Type.Unit -> Type.Unit
+    | O_Constant Type.Bool -> Type.Bool
+    | O_Constant Type.Int -> Type.Int
+    | O_Constant Type.Char -> Type.Char
+    | O_Constant Type.Float -> Type.Float
+    | O_Fun (t1 , t2) -> Type.Fun ([to_type t1], to_type t2)
+    | O_Tuple (ts) -> Type.Tuple (List.map to_type ts)
+    | O_Variant (t, O_Constant (Type.Variant "array")) -> Type.Array(to_type t)
+    | O_Variant (t, O_Constant (Type.Variant "list")) -> Type.List (to_type t)
+    | O_Constant (Type.Variant x) -> Type.Variant x
+    | O_Variable x -> Type.Var x
+    | O_Ref t -> Type.Ref (to_type t)
+    | _ -> invalid_arg ""
+  in
+  to_type x
+
 let rec oType_to_sexpr = function
   | O_Constant t -> Sexpr.Sexpr [Sexpr.Sident "ot:constant"; Type.to_sexpr t]
   | O_Variable t -> Sexpr.Sexpr [Sexpr.Sident "ot:var"; Sexpr.Sident t]
