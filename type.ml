@@ -12,11 +12,37 @@ type t =
   | Variant of Id.t
   | Var of Id.t
  
+type mType =
+  | C_Unit
+  | C_Int
+  | C_Float
+  | C_Char
+  | C_Tuple
+  | C_Array
+  | C_Variant
+
+let rec to_mt = function
+  | Unit -> C_Unit
+  | Bool -> C_Variant
+  | Int -> C_Int
+  | Float -> C_Float
+  | Char -> C_Char
+  | Fun _ -> C_Tuple
+  | Tuple _ -> C_Tuple
+  | List _ -> C_Tuple
+  | Array _ -> C_Array
+  | Ref _ -> C_Array
+  | Variant _ -> C_Variant
+  | Var _ -> invalid_arg "Var is not expected."
+
 let gentypenum = ref 0
 
 let gentype () =
   gentypenum := !gentypenum + 1;
   Var (Format.sprintf "$t:%d" !gentypenum)
+
+let rec mt_equal x y =
+  to_mt x = to_mt y
 
 let rec equal x y =
   match x, y with
