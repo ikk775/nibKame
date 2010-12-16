@@ -78,19 +78,18 @@ let rec change = function
   | Schar c -> Syntax.Literal (Syntax.Char c)
   | Sexpr l ->
       (match l with
-(*
 	| Sident "type" :: Sident name :: Sexpr types :: constructors ->
-      let variant = Variant.empty_tags name in
+	    let variant = Variant.empty_tags name in
 	      List.iter (function
 			   | Sexpr [Sident i] ->
-			       Variant.add_tag variant i None
+			       Variant.add_tag variant i
 			   | Sexpr [Sident i; typeexprs] ->
-			       Variant.add_tag variant i (Some (Type.of_sexpr typeexprs))
+			       Variant.add_tag variant i
          | _ -> invalid_arg "unexpected token" )
 		        constructors;
 	      Variant.add_variant !variant;
 	      Syntax.Variant name (* Fixing ME !! *)
-*)
+
 	| Sident "list" :: tail -> Syntax.List (List.map change tail)
 	| Sident "tuple" :: tail -> Syntax.Tuple (List.map change tail)
 	| Sident "array" :: tail -> Syntax.Array (List.map change tail)
