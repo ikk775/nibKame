@@ -149,6 +149,8 @@ let addExpr = fun m ->
           Debug.dbgprint "subst:";
           Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
           let ss' = TypingType.domainDiff ss qtvs' in
+          Debug.dbgprint "free variables:";
+          Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'));
           Debug.dbgprint "free-variable-removed subst:";
           Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
           let t'' = TypingType.QType(qtvs', TypingType.OType (TypingType.substitute ss' ot')) in
