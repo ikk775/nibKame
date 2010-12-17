@@ -55,6 +55,16 @@ let rec typeVars : result -> Id.t list = fun r ->
   in
   List.concat (g r)
 
+let genVarNum = ref 0
+
+let genVar t =
+  genVarNum := !genVarNum + 1;
+  R_Variable (Format.sprintf "$r:%d" !genVarNum, t)
+
+let varName = function
+  | R_Variable (v, t) -> v
+  | _ -> invalid_arg "R_Variable expected."
+
 let rec resultFreeTypeVars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
   List.concat (List.map (function x, t -> TypingType.freeTypeVars (TypingType.OType t)) vts)
 
