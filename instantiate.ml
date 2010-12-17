@@ -68,18 +68,27 @@ let usage_expand : tv_usage -> tv_usage = fun tum ->
 let usage_filter : tv_usage -> tv_usage = fun tum -> 
   List.map (function x, ts -> x, List.unique ~eq:(fun x y -> TypingType.oType_to_mType x = TypingType.oType_to_mType x) ts) tum
 
-let expand (*: Module.t -> tv_usage -> t*) = fun m tum ->
+let expand : Module.t -> tv_usage -> t = fun m tum ->
+  Debug.dbgprint "called Module.expand";
+  let assoc t tum = if List.mem_assoc t tum then List.assoc t tum else [] in
   let f = function x, (qtvs, t, e) -> 
+    Debug.dbgprint (Format.sprintf "expand %s" x);
     let t' = TypingType.removeQuantifier t in
-    let us = if List.mem_assoc x tum then List.assoc x tum else [] in
-    let g u =
-      let ss = TypingType.unify t' u in
-      List.append (TypingType.domainRestrict ss qtvs) (List.filter (function TypingType.Substitution (_, TypingType.O_Variable x) when List.mem x qtvs -> true | _ -> false) ss)
+    Debug.dbgprintsexpr (TypingType.oType_to_sexpr t');
+    let g uc =
+      let ss = List.map2 (fun f t -> TypingType.Substitution (f, t)) qtvs uc in
+      let t'' = TypingType.substitute ss t' in
+      let e' = Typing.substituteResultType ss e in
+      x, t'', e'
     in
-    List.map g us
+    List.map g (List.select (List.map (fun x -> assoc x tum) qtvs))
   in
-  List.map f (Module.defs_expr_cont m)
+  let uis = List.concat (List.map f (Module.defs_expr_cont m)) in
+  List.fold_left Module.addExprInstance m uis
 
 let instantiate : Module.t -> t = fun m -> 
-  undefined ()
+  let mc = Instantiate.of_module m in
+  let um = Instantiate.usage m mc in
+  let tvm = Instantiate.usage_expand um in
+  Instantiate.expand m tvm
 
