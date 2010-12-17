@@ -68,7 +68,7 @@ let usage_expand : tv_usage -> tv_usage = fun tum ->
 let usage_filter : tv_usage -> tv_usage = fun tum -> 
   List.map (function x, ts -> x, List.unique ~eq:(fun x y -> TypingType.oType_to_mType x = TypingType.oType_to_mType x) ts) tum
 
-let expand : Module.t -> tv_usage -> t = fun m tum ->
+let expand : Module.t -> tv_usage -> Module.t = fun m tum ->
   Debug.dbgprint "called Module.expand";
   let assoc t tum = if List.mem_assoc t tum then List.assoc t tum else [] in
   let f = function x, (qtvs, t, e) -> 
@@ -86,9 +86,9 @@ let expand : Module.t -> tv_usage -> t = fun m tum ->
   let uis = List.concat (List.map f (Module.defs_expr_cont m)) in
   List.fold_left Module.addExprInstance m uis
 
-let instantiate : Module.t -> t = fun m -> 
-  let mc = Instantiate.of_module m in
-  let um = Instantiate.usage m mc in
-  let tvm = Instantiate.usage_expand um in
-  Instantiate.expand m tvm
+let instantiate : Module.t -> Module.t = fun m -> 
+  let mc = of_module m in
+  let um = usage m mc in
+  let tvm = usage_expand um in
+  expand m tvm
 
