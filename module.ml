@@ -1,10 +1,8 @@
 open MyUtil
 
-type template =
+type elt =
   | Type of Id.t * (Id.t list * TypingType.oType)
   | Expr of Id.t * (Id.t list * TypingType.typeScheme * Typing.result)
-
-type elt = template
 
 type substitutions = {
   s_Type: TypingType.substitution list;
