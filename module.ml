@@ -166,8 +166,26 @@ let addExpr = fun m ->
       let eim' = {eim with eim_Expr = (ename, b) :: List.remove_assoc ename eim.eim_Expr} in
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
-      
- let exprFreeVars = function
+
+let addExprInstance = fun m ->  function
+  | ename, t, r -> 
+      Debug.dbgprint "called addExprInstance";
+      Debug.dbgprint (Format.sprintf "input: %s" ename);
+      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
+      let eim, iem, es = m.eim, m.iem, m.defs in
+      Debug.dbgprint "typed input expr:";
+      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
+      let fvs = Typing.freeVars r in
+      Debug.dbgprint "free variables:";
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
+      let b = Typing.genVar t in
+      let bn = Typing.varName b in
+      let mss = {emptysubst with s_Expr = [(ename, t), b]} in
+      let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
+      let m' = subst mss m in
+      {m' with iem = iem'; defs = Expr (bn, ([], TypingType.OType t, r)) :: m'.defs} 
+
+let exprFreeVars = function
   | { defs = ds } -> 
     let rec f = function
       | [] -> []
