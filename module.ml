@@ -3,6 +3,7 @@ open MyUtil
 type elt =
   | Type of Id.t * (Id.t list * TypingType.oType)
   | Expr of Id.t * (Id.t list * TypingType.typeScheme * Typing.result)
+(*  | Generic of Id.t * (TypingType.typeScheme * (Id.t * TypingType.oType list) list) *)
 
 type substitutions = {
   s_Type: TypingType.substitution list;
