@@ -208,3 +208,8 @@ let coerceFreeTypeVars :TypingType.oType -> t -> t = fun ot m ->
   let ss = List.map (fun x -> TypingType.Substitution (x, ot)) ftvs in
   subst {emptysubst with s_Type = ss} m
 
+let unusedExprVars m =
+  List.setDiff (List.map (function v, t -> v) (defs_expr_cont m)) (List.map (function v, t -> v) (exprFreeVars m))
+
+let removeExpr m vs =
+  {m with defs = List.filter (function Expr (v, c) -> not (List.mem v vs) | _ -> true) m.defs}
