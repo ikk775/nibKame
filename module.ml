@@ -7,7 +7,7 @@ type elt =
 
 type substitutions = {
   s_Type: TypingType.substitution list;
-  s_Expr: TypingExpr.substitution list;
+  s_Expr: Typing.substitution list;
   }
 
 type extToIntMap = {
@@ -104,8 +104,8 @@ let rec subst : substitutions -> t -> t = fun ss m ->
       let rec substElt = function
         | Type _ as t-> t
         | Expr (ev, (qtvs, et, r)) -> 
-          let e = Typing.result_to_expr r in
-					undefined ()
+          let r' = Typing.substitute ess r in
+          Expr (ev, (qtvs, et, r'))
       in
       subst {ss with s_Expr = []} {m with defs = List.map substElt m.defs}
   
