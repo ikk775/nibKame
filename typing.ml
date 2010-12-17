@@ -38,7 +38,7 @@ let rec freeVars : result -> (Id.t * TypingType.oType) list = function
   | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freeVars [e1; e2]))) 
   | R_Fix ((v, t), e, t') -> List.remove_assoc v (freeVars e)
 
-type substitution = ((resultVar * TypingType.oType) * result) list
+type substitution = ((resultVar * TypingType.oType) * result) (* 置換元と置換先の型は一致している必要がある *)
 
 let rec typeVars : result -> Id.t list = fun r -> 
   let ftv t = TypingType.freeTypeVars (TypingType.OType t) in
@@ -188,7 +188,7 @@ let typing env expr =
   let expr'' = substituteResultType ss expr' in
   valueRestrict expr'' t, expr''
   
-let rec substitute ss expr =
+let rec substitute : substitution list -> result -> result = fun ss expr -> 
   let subst = substitute ss in
   let subst' v = substitute (List.filter (function (v', t'), c -> v' <> v) ss) in
   match expr with
