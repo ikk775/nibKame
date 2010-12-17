@@ -10,7 +10,10 @@ type substitutions = {
   s_Expr: TypingExpr.substitution list;
   }
 
-type extToIntMap = substitutions
+type extToIntMap = {
+  eim_Type: TypingType.substitution list;
+  eim_Expr: TypingExpr.substitution list;
+  }
 
 type intToExtMap = Id.substitution list
 
@@ -20,7 +23,9 @@ type t = {
   defs: elt list
 }
 
-let empty:t = {eim = {s_Type = []; s_Expr = []}; iem = []; defs = []}
+let empty:t = {eim = {eim_Type = []; eim_Expr = []}; iem = []; defs = []}
+
+let emptyeim: extToIntMap = {eim_Type = []; eim_Expr = []}
 
 let emptysubst: substitutions = {s_Type = []; s_Expr = []}
 
@@ -112,11 +117,11 @@ let addType = fun m ->
       let bn = TypingType.getOTypeVariableName b in
       let tvbs = TypingType.genTypeVars (List.length tvs) in
       let tvbsn = List.map TypingType.getOTypeVariableName tvbs in
-      let eim' = {eim with s_Type =TypingType.composite eim.s_Type [TypingType.Substitution(tname, b)]} in
-      let eim'' = {eim' with s_Type =TypingType.composite eim.s_Type (List.map2 (fun f t -> TypingType.Substitution(f, t)) tvs tvbs)} in
+      let eim' = {eim with eim_Type =TypingType.composite eim.eim_Type [TypingType.Substitution(tname, b)]} in
+      let eim'' = {eim' with eim_Type =TypingType.composite eim.eim_Type (List.map2 (fun f t -> TypingType.Substitution(f, t)) tvs tvbs)} in
       let iem' = Id.compose iem (Id.Substitution(bn, tname) :: List.map2 (fun f t -> Id.Substitution(f, t)) tvbsn tvs) in
-      let t' = TypingType.substitute eim''.s_Type t in
-      let substtoname tvn = TypingType.getOTypeVariableName (TypingType.substitute eim''.s_Type (TypingType.O_Variable tvn)) in
+      let t' = TypingType.substitute eim''.eim_Type t in
+      let substtoname tvn = TypingType.getOTypeVariableName (TypingType.substitute eim''.eim_Type (TypingType.O_Variable tvn)) in
       {m with eim = eim'; iem = iem'; defs = (Type (bn, (List.map substtoname tvs , t')) :: es)}
 
 (* top-level let 相当 *)
@@ -127,7 +132,7 @@ let addExpr = fun m ->
       Debug.dbgprint (Format.sprintf "input: %s" ename);
       Debug.dbgprintsexpr (TypingExpr.to_sexpr e);
       let eim, iem, es = m.eim, m.iem, m.defs in
-      let e' = TypingExpr.substituteExpr eim.s_Expr e in
+      let e' = TypingExpr.substituteExpr eim.eim_Expr e in
       let t, r = Typing.typing (exprEnv m) e' in
       Debug.dbgprint "typed input expr";
       Debug.dbgprint "type:";
@@ -158,7 +163,7 @@ let addExpr = fun m ->
       let m' = f m fvs in
       let b = TypingExpr.genExprVar () in
       let bn = TypingExpr.getExprVarName b in
-      let eim' = {eim with s_Expr = (ename, b) :: List.remove_assoc ename eim.s_Expr} in
+      let eim' = {eim with eim_Expr = (ename, b) :: List.remove_assoc ename eim.eim_Expr} in
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
       
