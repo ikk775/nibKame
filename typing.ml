@@ -38,6 +38,8 @@ let rec freeVars : result -> (Id.t * TypingType.oType) list = function
   | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freeVars [e1; e2]))) 
   | R_Fix ((v, t), e, t') -> List.remove_assoc v (freeVars e)
 
+type substitution = ((resultVar * TypingType.oType) * result) list
+
 let rec typeVars : result -> Id.t list = fun r -> 
   let ftv t = TypingType.freeTypeVars (TypingType.OType t) in
   let rec g = function
@@ -186,6 +188,23 @@ let typing env expr =
   let expr'' = substituteResultType ss expr' in
   valueRestrict expr'' t, expr''
   
+let rec substitute ss expr =
+  let subst = substitute ss in
+  let subst' v = substitute (List.filter (function (v', t'), c -> v' <> v) ss) in
+  match expr with
+    | R_Variable (v ,t) ->
+      if List.exists (function (v', t'), c -> v = v' && t = t') ss
+      then snd (List.find (function (v', t'), c -> v = v' && t = t') ss)
+      else R_Variable (v, t)
+    | R_Constant (v ,t) as e -> e
+    | R_Fun((v, t), e) -> R_Fun((v, t), subst' v e)
+    | R_Apply(e1, e2) -> R_Apply(subst e1, subst e2)
+    | R_Tuple(es, t) -> R_Tuple(List.map subst es, t)
+    | R_Vector(es, t) -> R_Vector(List.map subst es, t)
+    | R_If(e1, e2, e3) -> R_If(subst e1, subst e2, subst e3)
+    | R_Let((v, t), e1, e2) -> R_Let((v, t), subst e1, subst' v e2)
+    | R_Fix((f, t), e, t') -> R_Fix((f, t), subst' f e, t')
+
 let rec result_of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; t] -> R_Variable (v, TypingType.oType_of_sexpr t)
