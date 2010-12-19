@@ -144,7 +144,7 @@ let rec compile_exp env = function
   | Closure.Unit -> Ans(Nop)
   | Closure.Int i -> Ans(Set(Int_l i))
   | Closure.Char c -> Ans(Set(Char_l c))
-  | Closure.Float f -> let l = add_float_table f in Ans(SetL(l))
+  | Closure.Float f -> let l = add_float_table f in Ans(Set(Pointer_l l))
   | Closure.Seq (t1, t2) -> Seq (compile_exp env t1, compile_exp env t2)
   | Closure.Neg l -> Ans(Neg(l))
   | Closure.Add (a, b) -> Ans(Add(a, V b))
