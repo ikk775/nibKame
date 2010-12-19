@@ -247,17 +247,19 @@ let compile_fun { Closure.fun_name = (Id.L(label), t);
 	    { name = Id.L(label); args = fv :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
 
 let fundefs : fundef list ref = ref []
-let main : t ref = ref Ans(Set (Int 0))
+let main = ref (Ans(Set (Int_l 0)))
 
 let var_to_exp { Closure.var_name = (Id.L label, typ); Closure.expr = expr } env =
   let tmp = temp () in
   let typ' = to_ty typ in
   let env' = M.add label typ' env in
-    main := Let ((tmp, to_ty typ), g env expr,
-		 Seq (Ans(match typ with
-			    | Float -> FSt(tmp, Label label)
-			    | Char -> BSt(tmp, Label label)
-			    | _ -> St(tmp, Label label)), !main));
+    main := let_concat
+      (compile_exp env expr)
+      (tmp, typ')
+      (Seq (Ans(match typ' with
+		 | Float -> FSt(tmp, Label (Id.L label))
+		 | Char -> BSt(tmp, Label (Id.L label))
+		 | _ -> St(tmp, Label (Id.L label))), !main));
     env'
 
 (*
