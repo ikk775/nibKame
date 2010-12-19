@@ -270,9 +270,9 @@ let var_to_exp { Closure.var_name = (Id.L label, typ); Closure.expr = expr } env
 let f declears =
   let iter declear env =
     match declear with
-      | VarDecl var ->
+      | Closure.VarDecl var ->
 	  var_to_exp var env
-      | FunDecl func ->
+      | Closure.FunDecl func ->
 	  fundefs := compile_fun func env :: !fundefs;
 	  env
   in
