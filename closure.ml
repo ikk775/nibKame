@@ -45,9 +45,13 @@ and fundef = {
   body : t }
 
 type topvar = {
-  var_name : Id.t * Type.t;
+  var_name : Id.l * Type.t;
   expr : t
 }
 
-let topfuns : fundef list ref = ref []
-let topvars : topvar list ref = ref []
+type topDecl =
+  | FunDecl of fundef
+  | VarDecl of topvar
+
+let topDecls : topDecl list ref = ref []
+

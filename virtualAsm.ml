@@ -12,6 +12,7 @@ type ty =
 
 type mem_op =
   | Direct of Id.t
+  | Label of Id.l
   | Plus_offset of Id.t * id_or_imm
   | Scaled_offset of Id.t * Id.t * int
 
@@ -29,7 +30,6 @@ type t =
 and exp =
   | Nop
   | Set of literal
-  | SetL of Id.l (* ラベルにストア *)
   | Mov of id_or_imm
   | Neg of Id.t
   | Add of Id.t * id_or_imm
@@ -144,7 +144,7 @@ let rec compile_exp env = function
   | Closure.Unit -> Ans(Nop)
   | Closure.Int i -> Ans(Set(Int_l i))
   | Closure.Char c -> Ans(Set(Char_l c))
-  | Closure.Float f -> let l = add_float_table f in Ans(SetL(l))
+  | Closure.Float f -> let l = add_float_table f in Ans(Set(Pointer_l l))
   | Closure.Seq (t1, t2) -> Seq (compile_exp env t1, compile_exp env t2)
   | Closure.Neg l -> Ans(Neg(l))
   | Closure.Add (a, b) -> Ans(Add(a, V b))
@@ -234,8 +234,8 @@ let rec compile_exp env = function
 *)
 let compile_fun { Closure.fun_name = (Id.L(label), t);
 		  Closure.args = args; Closure.formal_fv = free_vars;
-		  Closure.body = exp} =
-  let env = M.add label (to_ty t) (add_list (List.map to_ty_with_var args) (add_list (List.map to_ty_with_var free_vars) M.empty)) in
+		  Closure.body = exp} env =
+  let env = M.add label (to_ty t) (add_list (List.map to_ty_with_var args) (add_list (List.map to_ty_with_var free_vars) env)) in
   let Type.Fun (_,t2) = t in
     match List.map snd free_vars with
       | [] -> 
@@ -245,21 +245,37 @@ let compile_fun { Closure.fun_name = (Id.L(label), t);
 	  let fv = (genid (), Pointer (Type.Tuple (Type.Unit :: fvs))) in
 	  let e = compile_exp (M.add (fst fv) (snd fv) env) exp in
 	    { name = Id.L(label); args = fv :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
-    
 
-let g topfun =
-  List.map compile_fun topfun
+let fundefs : fundef list ref = ref []
+let main = ref (Ans(Set (Int_l 0)))
 
-let var_to_fun vars =
-  (MyUtil.undefined ())
+let var_to_exp { Closure.var_name = (Id.L label, typ); Closure.expr = expr } env =
+  let tmp = temp () in
+  let typ' = to_ty typ in
+  let env' = M.add label typ' env in
+    main := let_concat
+      (compile_exp env expr)
+      (tmp, typ')
+      (Seq (Ans(match typ' with
+		 | Float -> FSt(tmp, Label (Id.L label))
+		 | Char -> BSt(tmp, Label (Id.L label))
+		 | _ -> St(tmp, Label (Id.L label))), !main));
+    env'
 
 (*
   f : Closure.fundef list -> Closure.topvar list
-        -> fundef list * Id.l list * (float * Id.l)
+        -> fundef list * (float * Id.l) list
   戻り値は後ろから順に処理されていって欲しい. 具体的に言うとList.rev_iterとかで
 *)
-let f topfuns top_vars =
-  let funs = g topfuns in
-  let main, lst = var_to_fun top_vars in
-    main :: funs, lst
-
+let f declears =
+  let iter declear env =
+    match declear with
+      | Closure.VarDecl var ->
+	  var_to_exp var env
+      | Closure.FunDecl func ->
+	  fundefs := compile_fun func env :: !fundefs;
+	  env
+  in
+  let e = List.fold_right iter declears M.empty in
+  let start = { name = Id.L("nibkame_entry"); args = []; body = !main; ret = Int } in
+    (start :: !fundefs), !float_literal_list
