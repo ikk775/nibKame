@@ -290,3 +290,14 @@ let rec resultType = function
   | R_If (e1, e2, e3) -> resultType e2
   | R_Let ((v, t), e1, e2) -> resultType e2
   | R_Fix ((v, t), e, t') -> t
+
+let rec to_sexpr = function
+  | R_Constant (l, t) -> Sexpr.Sexpr [Sexpr.Sident "r:constant"; Syntax.lit_to_sexpr l; TypingType.oType_to_sexpr t]
+  | R_Variable (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
+  | R_Fun((v, t), e) -> Sexpr.Sexpr [Sexpr.Sident "r:fun"; Sexpr.Sexpr [Sexpr.Sident v; TypingType.oType_to_sexpr t]; to_sexpr e]
+  | R_Apply(e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "r:apply"; to_sexpr e1; to_sexpr e2]
+  | R_Tuple (es, t) -> Sexpr.Sexpr [Sexpr.Sident "r:tuple"; TypingType.oType_to_sexpr t; Sexpr.Sexpr (List.map to_sexpr es)]
+  | R_Vector (es, t) -> Sexpr.Sexpr [Sexpr.Sident "r:vector"; TypingType.oType_to_sexpr t; Sexpr.Sexpr (List.map to_sexpr es)]
+  | R_If (e1, e2, e3) -> Sexpr.Sexpr (Sexpr.Sident "r:if" :: List.map to_sexpr [e1; e2; e3])
+  | R_Let ((v, t), e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "r:let"; Sexpr.Sexpr [Sexpr.Sident v; TypingType.oType_to_sexpr t; to_sexpr e1]; to_sexpr e2]
+  | R_Fix ((v, t), e, t') -> Sexpr.Sexpr [Sexpr.Sident "r:fix"; TypingType.oType_to_sexpr t'; Sexpr.Sexpr [Sexpr.Sident v; TypingType.oType_to_sexpr t]; to_sexpr e]

@@ -213,3 +213,34 @@ let unusedExprVars m =
 
 let removeExpr m vs =
   {m with defs = List.filter (function Expr (v, c) -> not (List.mem v vs) | _ -> true) m.defs}
+
+let elt_to_sexpr = function
+  | Type (name, (qtvs, ot)) ->
+    Sexpr.Sexpr [
+      Sexpr.Sident "define-type";
+      Sexpr.Sident name;
+      TypingType.typeScheme_to_sexpr (TypingType.QType (qtvs, TypingType.OType ot));
+    ]
+  | Expr (name, (qtvs, ts, e)) ->
+    Sexpr.Sexpr [
+      Sexpr.Sident "define-expr";
+      Sexpr.Sident name;
+      TypingType.typeScheme_to_sexpr ts;
+      Typing.to_sexpr e;
+    ]
+
+let to_sexpr m =
+  let seim = Sexpr.Sexpr [
+    Sexpr.Sident "ext->int-map";
+    Sexpr.Sexpr [Sexpr.Sident "type"; TypingType.substitutions_to_sexpr m.eim.eim_Type];
+    Sexpr.Sexpr [Sexpr.Sident "expr"; TypingExpr.substitutions_to_sexpr m.eim.eim_Expr];
+  ] in
+  let siem = Sexpr.Sexpr [
+    Sexpr.Sident "int->ext-map";
+    Sexpr.Sexpr [Sexpr.Sident "id"; Id.substitutions_to_sexpr m.iem];
+  ] in
+  let sdefs = Sexpr.Sexpr [
+    Sexpr.Sident "defines";
+  ] in
+  Sexpr.Sexpr [seim; siem; sdefs]
+  

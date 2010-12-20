@@ -41,3 +41,18 @@ let rec compose (xs:substitution list) (ys:substitution list) =
 let composeSubsts sss =
   List.fold_right compose sss []
 
+let rec substitution_to_sexpr = function
+  | Substitution(fv, tv) -> Sexpr.Sexpr [Sexpr.Sident fv; Sexpr.Sident tv]
+
+let rec substitution_of_sexpr = function
+  | Sexpr.Sexpr [Sexpr.Sident fv; Sexpr.Sident tv] -> Substitution (fv, tv)
+  | _ -> invalid_arg "unexpected token."
+
+let rec substitutions_to_sexpr = function
+  | ss -> Sexpr.Sexpr (List.map substitution_to_sexpr ss)
+
+let rec substitutions_of_sexpr = function
+  | Sexpr.Sexpr (ss) -> 
+    List.map substitution_of_sexpr ss
+  | _ -> invalid_arg "unexpected token."
+
