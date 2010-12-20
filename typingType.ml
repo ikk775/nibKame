@@ -313,10 +313,10 @@ let rec substitution_of_sexpr = function
   | _ -> invalid_arg "unexpected token."
 
 let rec substitutions_to_sexpr = function
-  | ss -> Sexpr.Sexpr ((Sexpr.Sident "substs") :: List.map substitution_to_sexpr ss)
+  | ss -> Sexpr.Sexpr (List.map substitution_to_sexpr ss)
 
 let rec substitutions_of_sexpr = function
-  | Sexpr.Sexpr ((Sexpr.Sident "substs") :: ss) -> 
+  | Sexpr.Sexpr (ss) -> 
     List.map substitution_of_sexpr ss
   | _ -> invalid_arg "unexpected token."
 
