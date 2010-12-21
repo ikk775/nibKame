@@ -254,6 +254,9 @@ let rec result_of_sexpr = function
       | _ -> invalid_arg "unexpected token.")
   | _ -> invalid_arg "unexpected token."
 
+let gather (v, t, e) e' =
+  R_Let ((v, t), e, e')
+
 let rec result_to_sexpr = function
   | R_Constant (l, t) -> Sexpr.Sexpr [Sexpr.Sident "r:constant"; Syntax.lit_to_sexpr l; TypingType.oType_to_sexpr t]
   | R_Variable (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
