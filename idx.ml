@@ -1,7 +1,6 @@
 (* type t = string *)
-include String
 
-type l = L of t (* label *)
+type l = L of string (* label *)
 
 module Set_sub = Set.Make(String)
 module Set = struct
@@ -14,10 +13,10 @@ module Map = struct
   include Map_sub
   let of_assoc map = 
     let l = ref [] in
-    Map_sub.iter (fun k c -> l := (k, c) :: !l) map
+    iter (fun k c -> l := (k, c) :: !l) map
   end
 
-type substitution = Substitution of t * t    
+type substitution = Substitution of string * string    
 
 let rec substitute ss id =
   match ss, id with 
