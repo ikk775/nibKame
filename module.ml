@@ -229,6 +229,12 @@ let elt_to_sexpr = function
       Typing.to_sexpr e;
     ]
 
+let gatherExpr = fun m -> 
+  let elts = defs_expr_cont m in
+  let elts' = List.rev elts in
+  let vtes = List.map (function v, (qtvs, ts, e) -> v, TypingType.removeQuantifier ts, e) elts' in
+  List.fold_right Typing.gather vtes (Typing.R_Constant (Syntax.Unit, TypingType.O_Constant (Type.Unit)))
+
 let to_sexpr m =
   let seim = Sexpr.Sexpr [
     Sexpr.Sident "ext->int-map";
