@@ -67,6 +67,3 @@ module String = struct
     Format.call_with_output_string (fun fmtr -> 
       List.iter (Format.fprintf fmtr "%c") cs)
 end
-
-exception Undefined
-let rec undefined () = raise Undefined
