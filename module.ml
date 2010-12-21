@@ -138,7 +138,7 @@ let addExpr = fun m ->
       Debug.dbgprint "type:";
       Debug.dbgprintsexpr (TypingType.typeScheme_to_sexpr t);
       Debug.dbgprint "result:";
-      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
+      Debug.dbgprintsexpr (Typing.to_sexpr r);
       let fvs = Typing.freeVars r in
       Debug.dbgprint "free variables:";
       Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
@@ -171,10 +171,10 @@ let addExprInstance = fun m ->  function
   | ename, t, r -> 
       Debug.dbgprint "called addExprInstance";
       Debug.dbgprint (Format.sprintf "input: %s" ename);
-      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
+      Debug.dbgprintsexpr (Typing.to_sexpr r);
       let eim, iem, es = m.eim, m.iem, m.defs in
       Debug.dbgprint "typed input expr:";
-      Debug.dbgprintsexpr (Typing.result_to_sexpr r);
+      Debug.dbgprintsexpr (Typing.to_sexpr r);
       let fvs = Typing.freeVars r in
       Debug.dbgprint "free variables:";
       Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));

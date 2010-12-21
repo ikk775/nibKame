@@ -8,7 +8,7 @@ module PShow_result = struct
   type t = Typing.result
   let show : t -> pretty_str =
     fun s fmt () ->
-      Sexpr.write fmt (Typing.result_to_sexpr s)
+      Sexpr.write fmt (Typing.to_sexpr s)
 end
 
 (* Arbitrary instances *)
