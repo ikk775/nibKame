@@ -51,6 +51,11 @@ let genVarName () =
   genVarNum := !genVarNum + 1;
   (Format.sprintf "$k:%d" !genVarNum)
 
+let rec genVarNames n =
+  if n > 0
+  then genVarName () :: genVarNames (n - 1)
+  else []
+
 let genVar () =
   Var (genVarName ())
 
@@ -219,20 +224,42 @@ let rec substitute_map sm = function
   | FCdr(v) -> (undefined ())
 and fundef_to_sexpr x = (undefined ())
 
+let internalSymbol name =
+  let operator name ts t f =
+    let vs = genVarNames (List.length ts) in
+    let v = genVarName () in
+    LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
+  in
+  let fail () = failwith "BUG: numbers of types and variables are mismatched." in
+  match name with
+  | "%neg" -> operator "%neg" [Type.Int] Type.Int (function [v] -> Neg (v) | _ -> fail ())
+  | "%add" -> operator "%add" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Add (v1, v2) | _ -> fail ())
+  | "%sub" -> operator "%sub" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ())
+  | "%mul" -> operator "%mul" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ())
+  | "%div" -> operator "%div" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Div (v1, v2) | _ -> fail ())
+  | "%fneg" -> operator "%fneg" [Type.Int] Type.Int (function [v] -> Neg (v) | _ -> fail ())
+  | "%fadd" -> operator "%fadd" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ())
+  | "%fsub" -> operator "%fsub" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FSub (v1, v2) | _ -> fail ())
+  | "%fmul" -> operator "%fmul" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FMul (v1, v2) | _ -> fail ())
+  | "%fdiv" -> operator "%fdiv" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ())
+  | _ -> invalid_arg (Printf.sprintf "invalid name: %s" name)
+      
+
+
 let rec of_typingResult = function
   | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit
-  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> (undefined ())
+  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0)
   | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i
   | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x
   | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c
-  | Typing.R_Constant (Syntax.ExtFun f, TypingType.O_Constant Type.Float) -> (undefined ())
+  | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
   | Typing.R_Constant (_, _) -> failwith "invalid constant type."
+  | Typing.R_Let ((v, t), e1, e2) -> (undefined ())
   | Typing.R_Variable (v, t) -> Var v
   | Typing.R_Fun((v, t), e) -> (undefined ())
   | Typing.R_Apply(e1, e2) -> (undefined ())
   | Typing.R_Tuple (es, t) -> (undefined ())
   | Typing.R_Vector (es, t) -> (undefined ())
   | Typing.R_If (e1, e2, e3) -> (undefined ())
-  | Typing.R_Let ((v, t), e1, e2) -> (undefined ())
   | Typing.R_Fix ((v, t), e, t') -> (undefined ())
 
