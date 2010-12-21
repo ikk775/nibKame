@@ -2,6 +2,9 @@ open MyUtil
 open TypingExpr
 open TypingType
 
+module E = TypingExpr
+module T = TypingType
+
 
 type resultVar = Id.t
 
@@ -17,34 +20,34 @@ type result =
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
   | R_Internal of Id.t * TypingType.oType
 
-let rec bindedVars : result -> (Id.t * TypingType.oType) list = function
+let rec bindedvars : result -> (Id.t * TypingType.oType) list = function
   | R_Constant (l, t) -> []
   | R_Variable (v, t) -> []
-  | R_Fun((v, t), e) -> (v, t) :: bindedVars e
-  | R_Apply(e1, e2) -> List.append (bindedVars e1) (bindedVars e2)
-  | R_Tuple (es, t) -> List.concat (List.map bindedVars es)
-  | R_Vector (es, t) -> List.concat (List.map bindedVars es)
-  | R_If (e1, e2, e3) -> List.concat (List.map bindedVars [e1; e2; e3])
-  | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map bindedVars [e1; e2])
-  | R_Fix ((v, t), e, t') -> (v, t) :: bindedVars e
+  | R_Fun((v, t), e) -> (v, t) :: bindedvars e
+  | R_Apply(e1, e2) -> List.append (bindedvars e1) (bindedvars e2)
+  | R_Tuple (es, t) -> List.concat (List.map bindedvars es)
+  | R_Vector (es, t) -> List.concat (List.map bindedvars es)
+  | R_If (e1, e2, e3) -> List.concat (List.map bindedvars [e1; e2; e3])
+  | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map bindedvars [e1; e2])
+  | R_Fix ((v, t), e, t') -> (v, t) :: bindedvars e
   | R_Internal _ -> []
 
-let rec freeVars : result -> (Id.t * TypingType.oType) list = function
+let rec freevars : result -> (Id.t * TypingType.oType) list = function
   | R_Constant (l, t) -> []
   | R_Variable (v, t) -> [(v, t)]
-  | R_Fun((v, t), e) -> List.remove_assoc v (freeVars e)
-  | R_Apply(e1, e2) -> List.unique (List.append (freeVars e1) (freeVars e2))
-  | R_Tuple (es, t) -> List.unique (List.concat (List.map freeVars es))
-  | R_Vector (es, t) -> List.unique (List.concat (List.map freeVars es))
-  | R_If (e1, e2, e3) -> List.unique (List.concat (List.map freeVars [e1; e2; e3]))
-  | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freeVars [e1; e2]))) 
-  | R_Fix ((v, t), e, t') -> List.remove_assoc v (freeVars e)
+  | R_Fun((v, t), e) -> List.remove_assoc v (freevars e)
+  | R_Apply(e1, e2) -> List.unique (List.append (freevars e1) (freevars e2))
+  | R_Tuple (es, t) -> List.unique (List.concat (List.map freevars es))
+  | R_Vector (es, t) -> List.unique (List.concat (List.map freevars es))
+  | R_If (e1, e2, e3) -> List.unique (List.concat (List.map freevars [e1; e2; e3]))
+  | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freevars [e1; e2]))) 
+  | R_Fix ((v, t), e, t') -> List.remove_assoc v (freevars e)
   | R_Internal _ -> []
 
 type substitution = ((resultVar * TypingType.oType) * result) (* 置換元と置換先の型は一致している必要がある *)
 
-let rec typeVars : result -> Id.t list = fun r -> 
-  let ftv t = TypingType.freeTypeVars (TypingType.OType t) in
+let rec typevars : result -> Id.t list = fun r -> 
+  let ftv t = TypingType.freetypevars (TypingType.OType t) in
   let rec g = function
     | R_Constant (l, t) -> []
     | R_Variable (v, t) -> [ftv t]
@@ -59,30 +62,30 @@ let rec typeVars : result -> Id.t list = fun r ->
   in
   List.concat (g r)
 
-let genVarNum = ref 0
+let gen_var_num = ref 0
 
-let genVar t =
-  genVarNum := !genVarNum + 1;
-  R_Variable (Format.sprintf "$r:%d" !genVarNum, t)
+let gen_var t =
+  gen_var_num := !gen_var_num + 1;
+  R_Variable (Format.sprintf "$r:%d" !gen_var_num, t)
 
-let varName = function
+let varname = function
   | R_Variable (v, t) -> v
   | _ -> invalid_arg "R_Variable expected."
 
-let rec resultFreeTypeVars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
-  List.concat (List.map (function x, t -> TypingType.freeTypeVars (TypingType.OType t)) vts)
+let rec result_freetypevars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
+  List.concat (List.map (function x, t -> TypingType.freetypevars (TypingType.OType t)) vts)
 
-let rec valueRestrict : result -> TypingType.oType -> TypingType.typeScheme = fun r t -> 
+let rec value_restrict : result -> TypingType.oType -> TypingType.typeScheme = fun r t -> 
   let rec f = function
     | R_Fun ((v, t), r) -> t :: f r
     | _ -> []
   in
   let ots = f r in
-  let rec ftv = MyUtil.List.unique (List.concat (List.map (fun ot -> TypingType.freeTypeVars (TypingType.OType ot)) ots)) in
+  let rec ftv = MyUtil.List.unique (List.concat (List.map (fun ot -> TypingType.freetypevars (TypingType.OType ot)) ots)) in
   TypingType.QType (ftv, TypingType.OType t)
 
-let rec substituteResultType ss expr =
-  let subst = substituteResultType ss in
+let rec substitute_result_type ss expr =
+  let subst = substitute_result_type ss in
   let tsubst = TypingType.substitute ss in
   match expr with
     | R_Variable (v ,t) -> R_Variable (v, tsubst t)
@@ -113,42 +116,42 @@ let rec result_to_expr expr =
 let rec w env expr =
   match expr with
     | E_Constant c ->
-      let t = getConstantType (E_Constant c) in
+      let t = E.get_constant_type (E_Constant c) in
       [], t, R_Constant(c, t)
     | E_Variable v ->
-      let ts = getVariableType env (E_Variable v) in
-      let freeTypeVarsTs = TypingType.freeTypeVars ts in
-      let newTypeVars = genTypeVars (List.length freeTypeVarsTs) in
+      let ts = E.get_variable_type env (E_Variable v) in
+      let freeTypeVarsTs = TypingType.freetypevars ts in
+      let newTypeVars = T.gen_typevars (List.length freeTypeVarsTs) in
       let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
-      let t = substitute subst (removeQuantifier ts) in
+      let t = substitute subst (T.remove_quantifier ts) in
       subst, t, R_Variable(v, t)
     | E_Fun(v, expr) -> 
-      let b = genTypeVar () in
-      let s1, t1, expr' = w (TypingExpr.addEnv env v (OType b)) expr in
+      let b = T.gen_typevar () in
+      let s1, t1, expr' = w (TypingExpr.add_env env v (OType b)) expr in
       let bt = substitute s1 b in
       let t2 = O_Fun(bt, t1) in
       s1, t2, R_Fun((v, bt), expr')
     | E_Apply(e1, e2) -> 
-      let b = genTypeVar () in
+      let b = T.gen_typevar () in
       let s1, t1, e1' = w env e1 in
-      let s2, t2, e2' = w (TypingExpr.substituteEnv s1 env) e2 in
+      let s2, t2, e2' = w (TypingExpr.substitute_env s1 env) e2 in
       let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
       let t = substitute s3 b in
-      composite s3 (composite s2 s1), t, R_Apply(e1', e2')
+      compose s3 (compose s2 s1), t, R_Apply(e1', e2')
     | E_Tuple(es) -> 
       let rec w_sub env es ss ts e's =
         match es with
           | [] -> ss, ts, e's
           | e :: es' -> 
             let s, t, e' = w env e in
-            let env' = (TypingExpr.substituteEnv s env) in
+            let env' = (TypingExpr.substitute_env s env) in
             w_sub env' es' (s :: ss) (t :: ts) (e' :: e's)
       in
       let w_results = w_sub env es [] [] [] in
       let ss, ts, e's = w_results in
       let e's' = List.rev e's in
       let t = O_Tuple(ts) in
-      compositeSubsts ss, t, R_Tuple(e's', t)
+      T.compose_substs ss, t, R_Tuple(e's', t)
     | E_Vector(es) -> 
       let ss, t, e' = w env (E_Tuple es) in
       let ts = (match t with
@@ -164,45 +167,45 @@ let rec w env expr =
         | t2 :: ts ->
           let t2' = substitute ss t2 in
           let ss' = unify t1 t2' in
-          u_sub (TypingExpr.substituteEnv ss' env) (composite ss' ss) (substitute ss' t2') ts)
+          u_sub (TypingExpr.substitute_env ss' env) (compose ss' ss) (substitute ss' t2') ts)
       in
-      let b = genTypeVar () in
+      let b = T.gen_typevar () in
       let env', ss', t' = u_sub env ss b ts in
       let t'' = O_Vector t' in
       ss', t'', R_Vector(e'', t'')
     | E_If(e1, e2, e3)  -> 
       let s1, t1, e1' = w env e1 in
-      let env' = (TypingExpr.substituteEnv s1 env) in
+      let env' = (TypingExpr.substitute_env s1 env) in
       let s2, t2, e2' = w env' e2 in
-      let env'' = (TypingExpr.substituteEnv s2 env') in
+      let env'' = (TypingExpr.substitute_env s2 env') in
       let s3, t3, e3' = w env'' e3 in
       let s4 = unify t1 (O_Constant Type.Bool) in
       let s5 = unify t2 t3 in
       let t = substitute s5 t2 in
-      compositeSubsts [s5;s4;s3;s2;s1], t, R_If(e1', e2', e3')
+      T.compose_substs [s5;s4;s3;s2;s1], t, R_If(e1', e2', e3')
     | E_Let(v, e1, e2)  -> 
       let s1, t1, e1' = w env e1 in
-      let s1env = TypingExpr.substituteEnv s1 env in
-      let s2, t2, e2' = w (TypingExpr.addEnv s1env v (TypingExpr.clos s1env (OType t1))) e2 in
-      composite s2 s1, t2, R_Let((v, t1), e1', e2')
+      let s1env = TypingExpr.substitute_env s1 env in
+      let s2, t2, e2' = w (TypingExpr.add_env s1env v (TypingExpr.clos s1env (OType t1))) e2 in
+      compose s2 s1, t2, R_Let((v, t1), e1', e2')
     | E_Fix(f, E_Fun(x, e)) -> 
-      let b = genTypeVar () in
-      let s1, t1, e' = w (TypingExpr.addEnv env f (OType b)) (E_Fun(x, e)) in
+      let b = T.gen_typevar () in
+      let s1, t1, e' = w (TypingExpr.add_env env f (OType b)) (E_Fun(x, e)) in
       let s2 = unify (substitute s1 b) t1 in
       let t2 = substitute s2 t1 in
       let bt = substitute s2 b in
-      composite s2 s1, t2, R_Fix((f, bt), e', t2)
+      compose s2 s1, t2, R_Fix((f, bt), e', t2)
     | _ -> invalid_arg "Invalid expr."
 
 let typing_with_subst env expr =
   let ss, t, expr' = w env expr in
-  let expr'' = substituteResultType ss expr' in
-  valueRestrict expr'' t, expr'', ss
+  let expr'' = substitute_result_type ss expr' in
+  value_restrict expr'' t, expr'', ss
 
 let typing env expr =
   let ss, t, expr' = w env expr in
-  let expr'' = substituteResultType ss expr' in
-  valueRestrict expr'' t, expr''
+  let expr'' = substitute_result_type ss expr' in
+  value_restrict expr'' t, expr''
   
 let rec substitute : substitution list -> result -> result = fun ss expr -> 
   let subst = substitute ss in
@@ -288,19 +291,19 @@ let rec to_sexpr = function
   | R_Fix ((v, t), e, t') -> Sexpr.Sexpr [Sexpr.Sident "r:fix"; to_sexpr (R_Variable(v, t)); to_sexpr e; oType_to_sexpr t']
   | R_Internal (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:internal-symbol"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
 
-let rec resultType = function
+let rec result_type = function
   | R_Constant (l, t) -> t
   | R_Variable (v, t) -> t
-  | R_Fun((v, t), e) -> TypingType.O_Fun (t, resultType e)
+  | R_Fun((v, t), e) -> TypingType.O_Fun (t, result_type e)
   | R_Apply(e1, e2) ->
-    begin match resultType e1 with
+    begin match result_type e1 with
       | TypingType.O_Fun(ft, tt) -> tt
       | _ -> invalid_arg ""
     end
   | R_Tuple (es, t) -> t
   | R_Vector (es, t) -> t
-  | R_If (e1, e2, e3) -> resultType e2
-  | R_Let ((v, t), e1, e2) -> resultType e2
+  | R_If (e1, e2, e3) -> result_type e2
+  | R_Let ((v, t), e1, e2) -> result_type e2
   | R_Fix ((v, t), e, t') -> t
   | R_Internal (v, t) -> t
 

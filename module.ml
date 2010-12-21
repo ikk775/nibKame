@@ -109,7 +109,7 @@ let rec subst : substitutions -> t -> t = fun ss m ->
       in
       subst {ss with s_Expr = []} {m with defs = List.map substElt m.defs}
   
-let addType = fun m -> 
+let add_type = fun m -> 
   function
     | tname, (tvs, t) ->
       let eim, iem, es = m.eim, m.iem, m.defs in
@@ -117,18 +117,18 @@ let addType = fun m ->
       let bn = TypingType.getOTypeVariableName b in
       let tvbs = TypingType.genTypeVars (List.length tvs) in
       let tvbsn = List.map TypingType.getOTypeVariableName tvbs in
-      let eim' = {eim with eim_Type =TypingType.composite eim.eim_Type [TypingType.Substitution(tname, b)]} in
-      let eim'' = {eim' with eim_Type =TypingType.composite eim.eim_Type (List.map2 (fun f t -> TypingType.Substitution(f, t)) tvs tvbs)} in
+      let eim' = {eim with eim_Type =TypingType.compose eim.eim_Type [TypingType.Substitution(tname, b)]} in
+      let eim'' = {eim' with eim_Type =TypingType.compose eim.eim_Type (List.map2 (fun f t -> TypingType.Substitution(f, t)) tvs tvbs)} in
       let iem' = Id.compose iem (Id.Substitution(bn, tname) :: List.map2 (fun f t -> Id.Substitution(f, t)) tvbsn tvs) in
       let t' = TypingType.substitute eim''.eim_Type t in
       let substtoname tvn = TypingType.getOTypeVariableName (TypingType.substitute eim''.eim_Type (TypingType.O_Variable tvn)) in
       {m with eim = eim'; iem = iem'; defs = (Type (bn, (List.map substtoname tvs , t')) :: es)}
 
 (* top-level let 相当 *)
-let addExpr = fun m -> 
+let add_expr = fun m -> 
   function
     | ename, e -> 
-      Debug.dbgprint "called addExpr";
+      Debug.dbgprint "called add_expr";
       Debug.dbgprint (Format.sprintf "input: %s" ename);
       Debug.dbgprintsexpr (TypingExpr.to_sexpr e);
       let eim, iem, es = m.eim, m.iem, m.defs in
@@ -167,9 +167,9 @@ let addExpr = fun m ->
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
 
-let addExprInstance = fun m ->  function
+let add_expr_instance = fun m ->  function
   | ename, t, r -> 
-      Debug.dbgprint "called addExprInstance";
+      Debug.dbgprint "called add_expr_instance";
       Debug.dbgprint (Format.sprintf "input: %s" ename);
       Debug.dbgprintsexpr (Typing.to_sexpr r);
       let eim, iem, es = m.eim, m.iem, m.defs in
@@ -185,7 +185,7 @@ let addExprInstance = fun m ->  function
       let m' = subst mss m in
       {m' with iem = iem'; defs = Expr (bn, ([], TypingType.OType t, r)) :: m'.defs} 
 
-let exprFreeVars = function
+let freeexprvars = function
   | { defs = ds } -> 
     let rec f = function
       | [] -> []
@@ -194,7 +194,7 @@ let exprFreeVars = function
     in
     List.concat (f ds)
 
- let typeFreeVars = function
+ let freetypevars = function
   | { defs = ds } -> 
     let rec f = function
       | [] -> []
@@ -203,15 +203,15 @@ let exprFreeVars = function
     in
     List.concat (f ds)
 
-let coerceFreeTypeVars :TypingType.oType -> t -> t = fun ot m ->
+let coerce _freetypevars :TypingType.oType -> t -> t = fun ot m ->
   let ftvs = typeFreeVars m in
   let ss = List.map (fun x -> TypingType.Substitution (x, ot)) ftvs in
   subst {emptysubst with s_Type = ss} m
 
-let unusedExprVars m =
-  List.setDiff (List.map (function v, t -> v) (defs_expr_cont m)) (List.map (function v, t -> v) (exprFreeVars m))
+let unused_exprvars m =
+  List.setDiff (List.map (function v, t -> v) (defs_expr_cont m)) (List.map (function v, t -> v) (freeexprvars m))
 
-let removeExpr m vs =
+let remove_expr m vs =
   {m with defs = List.filter (function Expr (v, c) -> not (List.mem v vs) | _ -> true) m.defs}
 
 let elt_to_sexpr = function
@@ -229,7 +229,7 @@ let elt_to_sexpr = function
       Typing.to_sexpr e;
     ]
 
-let gatherExpr = fun m -> 
+let gather_expr = fun m -> 
   let elts = defs_expr_cont m in
   let elts' = List.rev elts in
   let vtes = List.map (function v, (qtvs, ts, e) -> v, TypingType.removeQuantifier ts, e) elts' in

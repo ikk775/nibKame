@@ -22,42 +22,42 @@ type exprEnv =
 
 type substitution = exprVar * expr
 
-let extExprEnv = ref []
+let extexprenv = ref []
 
-let getExtExprEnv = !extExprEnv
-let setExtExprEnv eenv =
-  extExprEnv := eenv
-let addExtExprEnv tp =
-  extExprEnv := tp :: !extExprEnv
+let get_extexprenv = !extexprenv
+let set_extexprenv eenv =
+  extexprenv := eenv
+let add_extexprenv tp =
+  extexprenv := tp :: !extexprenv
  
-let genExprVarNum = ref 0
+let gen_exprvar_num = ref 0
 
-let genExprVar () =
-  genExprVarNum := !genExprVarNum + 1;
-  E_Variable (Format.sprintf "$e:%d" !genExprVarNum)
+let gen_exprvar () =
+  gen_exprvar_num := !gen_exprvar_num + 1;
+  E_Variable (Format.sprintf "$e:%d" !gen_exprvar_num)
 
-let rec genExprVars n =
+let rec gen_exprvars n =
   if n > 0
-  then genExprVar () :: genExprVars (n - 1)
+  then gen_exprvar () :: gen_exprvars (n - 1)
   else []
 
-let substituteEnv ss env =
+let substitute_env ss env =
   match env with
-    | ExprEnv envList -> ExprEnv (List.map (function ftw, tts -> ftw, TypingType.substituteTs ss tts) envList)
+    | ExprEnv envList -> ExprEnv (List.map (function ftw, tts -> ftw, TypingType.substitute_ts ss tts) envList)
 
-let addEnv = function ExprEnv envList -> fun ev ts -> 
+let add_env = function ExprEnv envList -> fun ev ts -> 
   ExprEnv((ev, ts) :: List.remove_assoc ev envList)
 
-let rec freeTypeVarsEnv = function
+let rec freetypevars_env = function
   | ExprEnv l ->
-    List.unique (List.concat (List.map (fun x -> TypingType.freeTypeVars (snd x)) l))
+    List.unique (List.concat (List.map (fun x -> TypingType.freetypevars (snd x)) l))
 
 let clos env ts =
-  let freeVars = MyUtil.List.setDiff (TypingType.freeTypeVars ts) (freeTypeVarsEnv env) in
+  let freeVars = MyUtil.List.setDiff (TypingType.freetypevars ts) (freetypevars_env env) in
   TypingType.QType(freeVars, ts)
 
 exception ExtFun_not_found of string
-let getConstantType = function
+let get_constant_type = function
   | E_Constant c ->
     (match c with
       | Syntax.Unit -> TypingType.O_Constant Type.Unit
@@ -67,30 +67,30 @@ let getConstantType = function
       | Syntax.Char _ -> TypingType.O_Constant Type.Char
       | Syntax.ExtFun f -> 
         (try
-          List.assoc f !extExprEnv
+          List.assoc f !extexprenv
         with
           | Not_found -> raise (ExtFun_not_found f)))
   | _ -> invalid_arg "expected type E_Constant"
 
-let getVariableType env expr =
+let get_variable_type env expr =
   match env, expr with
     | ExprEnv envList, E_Variable v -> List.assoc v envList
     | _ -> invalid_arg "expected type E_Variable"
 
-let getExprVarName = function
+let get_exprvar_name = function
   | E_Variable v -> v
   | _ -> invalid_arg "expected type E_Variable"
 
-let rec getExprType = function
+let rec get_expr_type = function
   | E_Type (_, t) -> t
-  | E_Let (_, _, e) -> getExprType e
-  | E_If (_, _, e) -> getExprType e
-  | E_Declare (_, _, e) -> getExprType e
-  | E_Fun (_, e) -> getExprType e
+  | E_Let (_, _, e) -> get_expr_type e
+  | E_If (_, _, e) -> get_expr_type e
+  | E_Declare (_, _, e) -> get_expr_type e
+  | E_Fun (_, e) -> get_expr_type e
   | _ -> invalid_arg "expected type-infered expr"
 
-let rec substituteExpr ss expr =
-  let subst = substituteExpr ss in
+let rec substitute_expr ss expr =
+  let subst = substitute_expr ss in
   match expr with
     | E_Variable v ->
       if List.mem_assoc v ss 
@@ -99,7 +99,7 @@ let rec substituteExpr ss expr =
     | E_Constant c -> E_Constant c
     | E_Fun(v, e) ->
       let ss' = List.remove_assoc v ss in
-      let subst' = substituteExpr ss' in
+      let subst' = substitute_expr ss' in
       E_Fun(v, subst' e)
     | E_Apply(e1, e2) -> E_Apply(subst e1, subst e2)
     | E_Tuple(es) -> E_Tuple(List.map subst es)
@@ -107,22 +107,22 @@ let rec substituteExpr ss expr =
     | E_If(e1, e2, e3) -> E_If(subst e1, subst e2, subst e3)
     | E_Let(v, e1, e2) ->
       let ss' = List.remove_assoc v ss in
-      let subst' = substituteExpr ss' in
+      let subst' = substitute_expr ss' in
       E_Let(v, subst e1, subst' e2)
     | E_Fix(f, e) ->
       let ss' = List.remove_assoc f ss in
-      let subst' = substituteExpr ss' in
+      let subst' = substitute_expr ss' in
       E_Fix(f, subst' e)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
-      let v' = genExprVar () in
-      let v'c = getExprVarName v' in
+      let v' = gen_exprvar () in
+      let v'c = get_exprvar_name v' in
       if List.mem_assoc v ss 
       then E_Let(v'c, List.assoc v ss, E_Declare(v'c, t, subst e))
       else E_Declare(v, t, subst e)
 
-let rec substituteExprType ss expr =
-  let subst = substituteExprType ss in
+let rec substitute_expr_type ss expr =
+  let subst = substitute_expr_type ss in
   match expr with
     | E_Variable v -> E_Variable v
     | E_Constant c -> E_Constant c
@@ -219,13 +219,13 @@ let rec of_sexpr = function
   | Sexpr.Sexpr (Sexpr.Sident "e:tuple" :: es) -> E_Tuple (List.map of_sexpr es)
   | Sexpr.Sexpr (Sexpr.Sident "e:vector" :: es) -> E_Vector (List.map of_sexpr es)
   | Sexpr.Sexpr [Sexpr.Sident "e:if"; e1; e2; e3] -> E_If (of_sexpr e1, of_sexpr e2, of_sexpr e3)
-  | Sexpr.Sexpr [Sexpr.Sident "e:let"; v; e1; e2] -> E_Let (getExprVarName (of_sexpr v), of_sexpr e1, of_sexpr e2)
-  | Sexpr.Sexpr [Sexpr.Sident "e:fix"; v; e] -> E_Fix (getExprVarName (of_sexpr v), of_sexpr e)
+  | Sexpr.Sexpr [Sexpr.Sident "e:let"; v; e1; e2] -> E_Let (get_exprvar_name (of_sexpr v), of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "e:fix"; v; e] -> E_Fix (get_exprvar_name (of_sexpr v), of_sexpr e)
   | Sexpr.Sexpr [Sexpr.Sident "e:fun"; Sexpr.Sexpr vs; e] -> 
     let fun_nest e' vs =
       let rec fun_nest_sub = function
-        | [v] ->  E_Fun(getExprVarName(of_sexpr v), of_sexpr e')
-        | v :: vs ->  E_Fun(getExprVarName(of_sexpr v), fun_nest_sub vs)
+        | [v] ->  E_Fun(get_exprvar_name(of_sexpr v), of_sexpr e')
+        | v :: vs ->  E_Fun(get_exprvar_name(of_sexpr v), fun_nest_sub vs)
         | _ -> invalid_arg "unexpected token."
       in
       fun_nest_sub vs
@@ -239,14 +239,14 @@ let rec of_sexpr = function
     in
     apply_nest (e1 :: e2 :: es)
   | Sexpr.Sexpr [Sexpr.Sident "e:type"; e; t] -> E_Type(of_sexpr e, TypingType.oType_of_sexpr t)
-  | Sexpr.Sexpr [Sexpr.Sident "e:declare"; v; t; e] -> E_Declare(getExprVarName(of_sexpr v), TypingType.oType_of_sexpr t, of_sexpr e)
+  | Sexpr.Sexpr [Sexpr.Sident "e:declare"; v; t; e] -> E_Declare(get_exprvar_name(of_sexpr v), TypingType.oType_of_sexpr t, of_sexpr e)
   | _ -> invalid_arg "unexpected token."
 
 let rec substitution_to_sexpr = function
   | v, e -> Sexpr.Sexpr (List.map to_sexpr [E_Variable v; e])
 
 let rec substitution_of_sexpr = function
-  | Sexpr.Sexpr[v; e] -> (getExprVarName (of_sexpr v), of_sexpr e)
+  | Sexpr.Sexpr[v; e] -> (get_exprvar_name (of_sexpr v), of_sexpr e)
   | _ -> invalid_arg "unexpected token."
 
 let rec substitutions_to_sexpr = function

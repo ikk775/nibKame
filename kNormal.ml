@@ -45,23 +45,23 @@ and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 type substitution =
   | Substitution of Id.t * Id.t
 
-let genVarNum = ref 0
+let gen_var_num = ref 0
 
-let genVarName () =
-  genVarNum := !genVarNum + 1;
-  (Format.sprintf "$k:%d" !genVarNum)
+let gen_varname () =
+  gen_var_num := !gen_var_num + 1;
+  (Format.sprintf "$k:%d" !gen_var_num)
 
-let rec genVarNames n =
+let rec gen_varnames n =
   if n > 0
-  then genVarName () :: genVarNames (n - 1)
+  then gen_varname () :: gen_varnames (n - 1)
   else []
 
-let genVar () =
-  Var (genVarName ())
+let gen_var () =
+  Var (gen_varname ())
 
-let rec genVars n =
+let rec gen_vars n =
   if n > 0
-  then genVar () :: genVars (n - 1)
+  then gen_var () :: gen_vars (n - 1)
   else []
 
 let vt_to_sexpr = function
@@ -158,21 +158,21 @@ and fundef_of_sexpr = function
     {name = vt_of_sexpr vt; args = List.map vt_of_sexpr args; body = of_sexpr body}
   | _ -> invalid_arg "unexpected token."
 
-let rec freeVars_set = function
+let rec freevars_set = function
   | Unit | Int _ | Float _ | Char _ | ExtArray _ -> Id.Set.empty
   | Neg(x) | FNeg(x) -> Id.Set.singleton x
   | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) -> Id.Set.of_list [x; y]
   | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) -> Id.Set.of_list [x; y]
   | IfEq(x, y, e1, e2) | IfNotEq(x, y, e1, e2) | IfLsEq(x, y, e1, e2) | IfLs(x, y, e1, e2)
-  | IfGtEq(x, y, e1, e2) | IfGt(x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freeVars_set e1)) (freeVars_set e2)
-  | Let((x, _), e1, e2) -> Id.Set.union (freeVars_set e1) (Id.Set.diff (freeVars_set e2) (Id.Set.singleton x))
+  | IfGtEq(x, y, e1, e2) | IfGt(x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freevars_set e1)) (freevars_set e2)
+  | Let((x, _), e1, e2) -> Id.Set.union (freevars_set e1) (Id.Set.diff (freevars_set e2) (Id.Set.singleton x))
   | Var(x) -> Id.Set.singleton x
   | LetFun({name = (x, t); args = yts; body = e1}, e2) ->
-    Id.Set.diff (Id.Set.union (freeVars_set e2) (Id.Set.diff (freeVars_set e1) (Id.Set.of_list (List.map fst yts)))) (Id.Set.singleton x)
+    Id.Set.diff (Id.Set.union (freevars_set e2) (Id.Set.diff (freevars_set e1) (Id.Set.of_list (List.map fst yts)))) (Id.Set.singleton x)
   | Apply(x, ys) -> Id.Set.of_list (x :: ys)
   | Tuple(xs) -> Id.Set.of_list xs
   | LetTuple(xts, y, e) -> 
-    Id.Set.add y (Id.Set.diff (freeVars_set e) (Id.Set.of_list (List.map fst xts)))
+    Id.Set.add y (Id.Set.diff (freevars_set e) (Id.Set.of_list (List.map fst xts)))
   | ExtFunApply(_, ys) -> Id.Set.of_list ys
   | ArraySet(x, i, y) -> Id.Set.of_list [x; i; y]
   | ArrayRef(x, i) -> Id.Set.of_list [x; i]
@@ -181,7 +181,7 @@ let rec freeVars_set = function
   | Car(x) | Cdr(x) | FCar(x) | FCdr(x) -> Id.Set.singleton x
   | Cons(x, y) | FCons(x, y) -> Id.Set.of_list [x; y]
 
-let rec freeVars e = Id.Set.elements (freeVars_set e)
+let rec freevars e = Id.Set.elements (freevars_set e)
 
 let rec substitute_map sm = function
   | Unit -> Unit
@@ -224,10 +224,10 @@ let rec substitute_map sm = function
   | FCdr(v) -> (undefined ())
 and fundef_to_sexpr x = (undefined ())
 
-let internalSymbol name =
+let internal_symbol name =
   let operator name ts t f =
-    let vs = genVarNames (List.length ts) in
-    let v = genVarName () in
+    let vs = gen_varnames (List.length ts) in
+    let v = gen_varname () in
     LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
   in
   let fail () = failwith "BUG: numbers of types and variables are mismatched." in

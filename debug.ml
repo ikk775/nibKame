@@ -2,11 +2,11 @@ let dbglevel = ref 0
 
 let dbglevel_stack = ref []
 
-let setDbglevel x = 
+let set_dbglevel x = 
   dbglevel_stack := !dbglevel :: !dbglevel_stack;
   dbglevel := x
 
-let restoreDbglevel () =
+let restore_dbglevel () =
   dbglevel := List.hd !dbglevel_stack;
   dbglevel_stack := List.tl !dbglevel_stack
 

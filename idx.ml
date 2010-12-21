@@ -37,7 +37,7 @@ let rec compose (xs:substitution list) (ys:substitution list) =
       then compose xs (subst_tx x ys)
       else compose xs (x :: subst_tx x ys)
 
-let composeSubsts sss =
+let compose_substs sss =
   List.fold_right compose sss []
 
 let rec substitution_to_sexpr = function

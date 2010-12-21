@@ -36,18 +36,18 @@ let () = Check_typeScheme_to_bool.quickCheck prop_sexpr_string_convert
 
 let prop_genTypeVars_duplication =
   fun n -> 
-    let vs = TypingType.genTypeVars n in
+    let vs = TypingType.gen_typevars n in
     List.length vs == List.length (ExtList.List.unique vs)
 let () = Check_int_to_bool.quickCheck prop_genTypeVars_duplication
     
 let prop_typeVars_duplication : 'a -> bool =
   fun xs ->
-      let vs = TypingType.typeVars xs in
+      let vs = TypingType.typevars xs in
       List.length vs == List.length (ExtList.List.unique vs)
 let () = Check_oType_to_bool.quickCheck prop_typeVars_duplication
 
 let prop_freeTypeVars_duplication : 'a -> bool =
   fun xs ->
-      let vs = TypingType.freeTypeVars xs in
+      let vs = TypingType.freetypevars xs in
       List.length vs == List.length (ExtList.List.unique vs)
 let () = Check_typeScheme_to_bool.quickCheck prop_freeTypeVars_duplication
