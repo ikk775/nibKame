@@ -18,7 +18,7 @@ type mType =
   | C_Float
   | C_Char
   | C_Tuple
-  | C_Array
+  | C_Ref
   | C_Variant
 
 let rec to_mt = function
@@ -30,8 +30,8 @@ let rec to_mt = function
   | Fun _ -> C_Tuple
   | Tuple _ -> C_Tuple
   | List _ -> C_Tuple
-  | Array _ -> C_Array
-  | Ref _ -> C_Array
+  | Array _ -> C_Ref
+  | Ref _ -> C_Ref
   | Variant _ -> C_Variant
   | Var _ -> invalid_arg "Var is not expected."
 
