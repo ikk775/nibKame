@@ -53,7 +53,7 @@ and exp =
   | BSt of Id.t * mem_op
 
   | Comp of cmp_op * ty * Id.t * id_or_imm
-  | If of t * t * t
+  | If of exp * t * t
 
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
@@ -159,7 +159,7 @@ let rec compile_exp env = function
   | Closure.FNeg a -> Ans(FNeg a)
 
   | Closure.If (cp, a, b, t, f) ->
-      let compare = Ans (Comp (comp_cmp_op cp, M.find a env, a, V b)) in
+      let compare = Comp (comp_cmp_op cp, M.find a env, a, V b) in
 	Ans (If (compare, compile_exp env t, compile_exp env f))
   | Closure.Let ((var, t), e1, e2) ->
       let e1' = compile_exp env e1 in
