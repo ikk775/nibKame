@@ -63,7 +63,8 @@ and exp =
 
   | Cons of Id.t * Id.t
   | Car of Id.t
-  | Cdr of Id.t  | FCons of Id.t * Id.t
+  | Cdr of Id.t
+  | FCons of Id.t * Id.t
   | FCar of Id.t
   | FCdr of Id.t
 
@@ -71,7 +72,7 @@ and exp =
   | ArrayAlloc of ty * Id.t
 
   | Save of Id.t * Id.t
-  | Pop of Id.t * Id.t
+  | Restore of Id.t * Id.t
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 
