@@ -1,3 +1,5 @@
+open MyUtil
+
 type t =
   | Unit
   | Bool
@@ -12,15 +14,43 @@ type t =
   | Variant of Id.t
   | Var of Id.t
  
-type mType =
-  | C_Unit
-  | C_Int
-  | C_Float
-  | C_Char
-  | C_Tuple
-  | C_Ref
-  | C_Variant
+type usingCategory =
+  | U_Unit
+  | U_Int
+  | U_Float
+  | U_Char
+  | U_Tuple
+  | U_Ref
+  | U_Variant
 
+type refCategory =
+  | R_Unit
+  | R_Int
+  | R_Float
+  | R_Char
+  | R_Tuple
+  | R_Ref
+  | R_Variant
+
+type exprCategory =
+  | E_Unit
+  | E_Int
+  | E_Float
+  | E_Char
+  | E_Tuple
+  | E_Ref
+  | E_Variant
+
+let rec to_uc = function
+  | _ -> undefined ()
+
+let rec to_rc = function
+  | _ -> undefined ()
+
+let rec to_ec = function
+  | _ -> undefined ()
+
+type mType = C_Unit | C_Int | C_Float | C_Char | C_Tuple | C_Ref | C_Variant
 let rec to_mt = function
   | Unit -> C_Unit
   | Bool -> C_Variant
