@@ -16,12 +16,16 @@ type t =
  
 type usingCategory =
   | U_Unit
+  | U_Bool
   | U_Int
   | U_Float
   | U_Char
-  | U_Tuple
-  | U_Ref
-  | U_Variant
+  | U_Tuple of usingCategory list
+  | U_Fun of usingCategory list * usingCategory
+  | U_Ref of usingCategory
+  | U_List of usingCategory
+  | U_Array of usingCategory
+  | U_Variant of Id.t
 
 type refCategory =
   | R_Unit
@@ -32,19 +36,46 @@ type refCategory =
   | R_Ref
   | R_Variant
 
+type accCategory =
+  | A_Unit
+  | A_Int
+  | A_Float
+  | A_Char
+  | A_Tuple
+  | A_Ref
+  | A_Variant
+
 type exprCategory =
   | E_Unit
   | E_Int
   | E_Float
   | E_Char
-  | E_Tuple
+  | E_List
+  | E_FList
+  | E_Array
+  | E_FArray
+  | E_Tuple of refCategory list
   | E_Ref
   | E_Variant
 
 let rec to_uc = function
-  | _ -> undefined ()
+  | Unit -> U_Unit
+  | Bool -> U_Bool
+  | Int -> U_Int
+  | Float -> U_Float
+  | Char -> U_Char
+  | Fun (fts, tt) -> U_Fun (List.map to_uc fts, to_uc tt)
+  | Tuple ts -> U_Tuple (List.map to_uc ts)
+  | List t -> U_List (to_uc t)
+  | Array t -> U_Array (to_uc t)
+  | Ref t -> U_Ref (to_uc t)
+  | Variant id -> U_Variant id
+  | Var _ -> invalid_arg "type variable is not allowed."
 
 let rec to_rc = function
+  | _ -> undefined ()
+
+let rec to_ac = function
   | _ -> undefined ()
 
 let rec to_ec = function
