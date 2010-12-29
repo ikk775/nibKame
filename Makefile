@@ -2,9 +2,11 @@
 
 # put here the names of your source files (in the right order)
 SOURCES = 
+SOURCES +=myUtilx.ml
 SOURCES +=myUtil.ml
-SOURCES +=id.ml
 SOURCES +=sexpr.ml
+SOURCES +=idx.ml
+SOURCES +=id.ml
 SOURCES +=debug.ml
 SOURCES +=type.ml
 SOURCES +=variant.ml
