@@ -224,25 +224,54 @@ let rec substitute_map sm = function
   | FCdr(v) -> (undefined ())
 and fundef_to_sexpr x = (undefined ())
 
-let internal_symbol name =
+let internal_symbol name t =
   let operator name ts t f =
     let vs = gen_varnames (List.length ts) in
     let v = gen_varname () in
     LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
   in
+  let int = Type.Int in
+  let float = Type.Int in
+  let bool = Type.Bool in
+  let li = [int] in
+  let lf = [float] in
+  let lb = [bool] in
+  let lii = [int; int] in
+  let lff = [float; float] in
+  let lb = [bool] in
+  let ob = TypingType.O_Constant bool in
+  let ol = TypingType.O_Constant (Type.Variant "list") in
+  let olf = TypingType.O_Variant(TypingType.O_Constant Type.Float, ol) in
+  let ovf = TypingType.O_Vector (TypingType.O_Constant Type.Float) in
+  let omii = TypingType.O_Fun (TypingType.O_Constant int, TypingType.O_Constant int) in
+  let omtiii = TypingType.O_Fun (TypingType.O_Tuple [TypingType.O_Constant int; TypingType.O_Constant int], TypingType.O_Constant int) in
+  let omff = TypingType.O_Fun (TypingType.O_Constant float, TypingType.O_Constant float) in
+  let omtfff = TypingType.O_Fun (TypingType.O_Tuple [TypingType.O_Constant float; TypingType.O_Constant float], TypingType.O_Constant float) in
+  let omlff = TypingType.O_Fun (olf, TypingType.O_Constant float) in
+  let omlflf = TypingType.O_Fun (olf, olf) in
+  let omtflflf = TypingType.O_Fun (TypingType.O_Tuple [TypingType.O_Constant float; olf], olf) in
   let fail () = failwith "BUG: numbers of types and variables are mismatched." in
-  match name with
-  | "%neg" -> operator "%neg" [Type.Int] Type.Int (function [v] -> Neg (v) | _ -> fail ())
-  | "%add" -> operator "%add" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Add (v1, v2) | _ -> fail ())
-  | "%sub" -> operator "%sub" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ())
-  | "%mul" -> operator "%mul" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ())
-  | "%div" -> operator "%div" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> Div (v1, v2) | _ -> fail ())
-  | "%fneg" -> operator "%fneg" [Type.Int] Type.Int (function [v] -> Neg (v) | _ -> fail ())
-  | "%fadd" -> operator "%fadd" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ())
-  | "%fsub" -> operator "%fsub" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FSub (v1, v2) | _ -> fail ())
-  | "%fmul" -> operator "%fmul" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FMul (v1, v2) | _ -> fail ())
-  | "%fdiv" -> operator "%fdiv" [Type.Int; Type.Int] Type.Int (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ())
-  | _ -> invalid_arg (Printf.sprintf "invalid name: %s" name)
+  match name, t with
+    | "%neg", t when t = omii -> operator "%neg" li int (function [v] -> Neg (v) | _ -> fail ())
+    | "%add", t when t = omtiii -> operator "%add" lii int (function [v1; v2] -> Add (v1, v2) | _ -> fail ())
+    | "%sub", t when t = omtiii -> operator "%sub" lii int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ())
+    | "%mul", t when t = omtiii -> operator "%mul" lii int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ())
+    | "%div", t when t = omtiii -> operator "%div" lii int (function [v1; v2] -> Div (v1, v2) | _ -> fail ())
+    | "%fneg", t when t = omff -> operator "%fneg" lf float (function [v] -> Neg (v) | _ -> fail ())
+    | "%fadd", t when t = omtfff -> operator "%fadd" lff float (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ())
+    | "%fsub", t when t = omtfff -> operator "%fsub" lff float (function [v1; v2] -> FSub (v1, v2) | _ -> fail ())
+    | "%fmul", t when t = omtfff -> operator "%fmul" lff float (function [v1; v2] -> FMul (v1, v2) | _ -> fail ())
+    | "%fdiv", t when t = omtfff -> operator "%fdiv" lff float (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ())
+    | "%true", t when t = ob -> Int 1
+    | "%false", t when t = ob -> Int 0
+    | "%cons", t when t = omtflflf -> operator "%fcons" [float; Type.List float] (Type.List float) (function [v1; v2] -> FCons (v1, v2) | _ -> fail ())
+    | "%car", t when t = omlff -> operator "%fcar" [Type.List float] float (function [v] -> FCar (v) | _ -> fail ())
+    | "%cdr", t when t = omlflf -> operator "%fcdr" [Type.List float] (Type.List float) (function [v] -> FCdr (v) | _ -> fail ())
+    | "%cons", TypingType.O_Fun (TypingType.O_Tuple [te; tl], tl') -> operator "%cons" (List.map TypingType.oType_to_type [te; tl]) (TypingType.oType_to_type tl') (function [v1; v2] -> Cons (v1, v2) | _ -> fail ())
+    | "%car", TypingType.O_Fun (TypingType.O_Tuple [tl], te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ())
+    | "%cdr", TypingType.O_Fun (TypingType.O_Tuple [tl], tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ())
+    | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ())
+    | _ -> invalid_arg (Printf.sprintf "invalid name: %s" name)
       
 
 

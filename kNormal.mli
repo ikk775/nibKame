@@ -53,6 +53,6 @@ val fundef_of_sexpr : Sexpr.t -> fundef
 val freevars_set : t -> Id.Set.t
 val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
-val fundef_to_sexpr : 'a -> 'b
-val internal_symbol : string -> t
+val fundef_to_sexpr : t -> Sexpr.t
+val internal_symbol : string -> TypingType.oType -> t
 val of_typingResult : Typing.result -> t
