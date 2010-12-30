@@ -271,6 +271,10 @@ let internal_symbol name t =
     | "%car", TypingType.O_Fun (TypingType.O_Tuple [tl], te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ())
     | "%cdr", TypingType.O_Fun (TypingType.O_Tuple [tl], tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ())
     | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ())
+    | "%set", TypingType.O_Fun (TypingType.O_Tuple [tr; te], tt) -> operator "%set" (List.map TypingType.oType_to_type [tr; te]) (TypingType.oType_to_type tt) (function [v1; v2] -> Set (v1, v2) | _ -> fail ())
+    | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ())
+    | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ())
+    | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Ref (TypingType.O_Vector te)) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ())
     | _ -> invalid_arg (Printf.sprintf "invalid name: %s" name)
       
 
