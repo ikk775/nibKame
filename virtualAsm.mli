@@ -12,13 +12,6 @@ type mem_op =
   | Plus_offset of Id.t * id_or_imm
   | Scaled_offset of Id.t * Id.t * int
 
-let to_ty = function
-  | Type.Int -> Int
-  | Type.Float -> Float
-  | Type.Char -> Char
-  | Type.Fun _ -> Fun
-  | _ as t -> Pointer t
-
 type t =
   | Ans of exp
   | Seq of t * t
