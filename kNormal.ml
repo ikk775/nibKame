@@ -252,29 +252,29 @@ let internal_symbol name t =
   let omtflflf = TypingType.O_Fun (TypingType.O_Tuple [TypingType.O_Constant float; olf], olf) in
   let fail () = failwith "BUG: numbers of types and variables are mismatched." in
   match name, t with
-    | "%neg", t when t = omii -> operator "%neg" li int (function [v] -> Neg (v) | _ -> fail ())
-    | "%add", t when t = omtiii -> operator "%add" lii int (function [v1; v2] -> Add (v1, v2) | _ -> fail ())
-    | "%sub", t when t = omtiii -> operator "%sub" lii int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ())
-    | "%mul", t when t = omtiii -> operator "%mul" lii int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ())
-    | "%div", t when t = omtiii -> operator "%div" lii int (function [v1; v2] -> Div (v1, v2) | _ -> fail ())
-    | "%fneg", t when t = omff -> operator "%fneg" lf float (function [v] -> Neg (v) | _ -> fail ())
-    | "%fadd", t when t = omtfff -> operator "%fadd" lff float (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ())
-    | "%fsub", t when t = omtfff -> operator "%fsub" lff float (function [v1; v2] -> FSub (v1, v2) | _ -> fail ())
-    | "%fmul", t when t = omtfff -> operator "%fmul" lff float (function [v1; v2] -> FMul (v1, v2) | _ -> fail ())
-    | "%fdiv", t when t = omtfff -> operator "%fdiv" lff float (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ())
-    | "%true", t when t = ob -> Int 1
-    | "%false", t when t = ob -> Int 0
-    | "%cons", t when t = omtflflf -> operator "%fcons" [float; Type.List float] (Type.List float) (function [v1; v2] -> FCons (v1, v2) | _ -> fail ())
-    | "%car", t when t = omlff -> operator "%fcar" [Type.List float] float (function [v] -> FCar (v) | _ -> fail ())
-    | "%cdr", t when t = omlflf -> operator "%fcdr" [Type.List float] (Type.List float) (function [v] -> FCdr (v) | _ -> fail ())
-    | "%cons", TypingType.O_Fun (TypingType.O_Tuple [te; tl], tl') -> operator "%cons" (List.map TypingType.oType_to_type [te; tl]) (TypingType.oType_to_type tl') (function [v1; v2] -> Cons (v1, v2) | _ -> fail ())
-    | "%car", TypingType.O_Fun (TypingType.O_Tuple [tl], te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ())
-    | "%cdr", TypingType.O_Fun (TypingType.O_Tuple [tl], tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ())
-    | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ())
-    | "%set", TypingType.O_Fun (TypingType.O_Tuple [tr; te], tt) -> operator "%set" (List.map TypingType.oType_to_type [tr; te]) (TypingType.oType_to_type tt) (function [v1; v2] -> Set (v1, v2) | _ -> fail ())
-    | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ())
-    | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ())
-    | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Ref (TypingType.O_Vector te)) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ())
+    | "%neg", t when t = omii -> operator "%neg" li int (function [v] -> Neg (v) | _ -> fail ()), int
+    | "%add", t when t = omtiii -> operator "%add" lii int (function [v1; v2] -> Add (v1, v2) | _ -> fail ()), int
+    | "%sub", t when t = omtiii -> operator "%sub" lii int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ()), int
+    | "%mul", t when t = omtiii -> operator "%mul" lii int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ()), int
+    | "%div", t when t = omtiii -> operator "%div" lii int (function [v1; v2] -> Div (v1, v2) | _ -> fail ()), int
+    | "%fneg", t when t = omff -> operator "%fneg" lf float (function [v] -> Neg (v) | _ -> fail ()), float
+    | "%fadd", t when t = omtfff -> operator "%fadd" lff float (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ()), float
+    | "%fsub", t when t = omtfff -> operator "%fsub" lff float (function [v1; v2] -> FSub (v1, v2) | _ -> fail ()), float
+    | "%fmul", t when t = omtfff -> operator "%fmul" lff float (function [v1; v2] -> FMul (v1, v2) | _ -> fail ()), float
+    | "%fdiv", t when t = omtfff -> operator "%fdiv" lff float (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ()), float
+    | "%true", t when t = ob -> Int 1, int
+    | "%false", t when t = ob -> Int 0, int
+    | "%cons", t when t = omtflflf -> operator "%fcons" [float; Type.List float] (Type.List float) (function [v1; v2] -> FCons (v1, v2) | _ -> fail ()), Type.List float
+    | "%car", t when t = omlff -> operator "%fcar" [Type.List float] float (function [v] -> FCar (v) | _ -> fail ()), float
+    | "%cdr", t when t = omlflf -> operator "%fcdr" [Type.List float] (Type.List float) (function [v] -> FCdr (v) | _ -> fail ()), Type.List float
+    | "%cons", TypingType.O_Fun (TypingType.O_Tuple [te; tl], tl') -> operator "%cons" (List.map TypingType.oType_to_type [te; tl]) (TypingType.oType_to_type tl') (function [v1; v2] -> Cons (v1, v2) | _ -> fail ()), TypingType.oType_to_type tl'
+    | "%car", TypingType.O_Fun (TypingType.O_Tuple [tl], te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ()), TypingType.oType_to_type te
+    | "%cdr", TypingType.O_Fun (TypingType.O_Tuple [tl], tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ()), TypingType.oType_to_type tl'
+    | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ()),  TypingType.oType_to_type tt
+    | "%set", TypingType.O_Fun (TypingType.O_Tuple [tr; te], tt) -> operator "%set" (List.map TypingType.oType_to_type [tr; te]) (TypingType.oType_to_type tt) (function [v1; v2] -> Set (v1, v2) | _ -> fail ()), TypingType.oType_to_type tt
+    | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
+    | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
+    | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Ref (TypingType.O_Vector te)) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
     | _ -> invalid_arg "internal_symbol"
       
 let is_valid_internal_symbol name t =
@@ -284,16 +284,16 @@ let is_valid_internal_symbol name t =
     | Invalid_argument "internal_symbol"-> false
 
 let rec from_typing_result = function
-  | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit
-  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0)
-  | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i
-  | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x
-  | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c
+  | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
+  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
+  | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
+  | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
+  | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
   | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
   | Typing.R_Constant (_, _) -> failwith "invalid constant type."
   | Typing.R_Internal (v, t) -> internal_symbol v t
   | Typing.R_Let ((v, t), e1, e2) -> (undefined ())
-  | Typing.R_Variable (v, t) -> Var v
+  | Typing.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
   | Typing.R_Fun((v, t), e) -> (undefined ())
   | Typing.R_Apply(e1, e2) -> (undefined ())
   | Typing.R_Tuple (es, t) -> (undefined ())
