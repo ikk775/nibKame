@@ -54,7 +54,7 @@ val freevars_set : t -> Id.Set.t
 val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
-val of_typingResult : Typing.result -> t
+val from_typing_result : Typing.result -> t
 
 val internal_symbol : string -> TypingType.oType -> t
 (** A internal symbol name must begin with the letter '%'. *)

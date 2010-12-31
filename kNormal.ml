@@ -275,11 +275,15 @@ let internal_symbol name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ())
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ())
     | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Ref (TypingType.O_Vector te)) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ())
-    | _ -> invalid_arg (Printf.sprintf "invalid name: %s" name)
+    | _ -> invalid_arg "internal_symbol"
       
+let is_valid_internal_symbol name t =
+  try
+    ignore (internal_symbol name t); true
+  with
+    | Invalid_argument "internal_symbol"-> false
 
-
-let rec of_typingResult = function
+let rec from_typing_result = function
   | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit
   | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0)
   | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i
@@ -287,6 +291,7 @@ let rec of_typingResult = function
   | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c
   | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
   | Typing.R_Constant (_, _) -> failwith "invalid constant type."
+  | Typing.R_Internal (v, t) -> internal_symbol v t
   | Typing.R_Let ((v, t), e1, e2) -> (undefined ())
   | Typing.R_Variable (v, t) -> Var v
   | Typing.R_Fun((v, t), e) -> (undefined ())
