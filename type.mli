@@ -59,3 +59,6 @@ val mt_equal : t -> t -> bool
 val equal : t -> t -> bool
 val of_sexpr : Sexpr.t -> t
 val to_sexpr : t -> Sexpr.t
+
+val to_string : t -> string
+val of_string : string -> t
