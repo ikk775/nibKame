@@ -12,3 +12,7 @@ val write: Format.formatter -> t -> unit
 val equal: t -> t -> bool
 val to_string: t -> string
 val from_string: string -> t
+
+exception Unreadable_object
+exception Undefined_external_form
+

@@ -149,6 +149,9 @@ let isdigit = function
       -> true
   | _ -> false
 
+exception Unreadable_object
+exception Undefined_external_form
+
 let rec build_tree = function
   | D a ->
       let l = MyUtil.String.explode a in
@@ -162,7 +165,8 @@ let rec build_tree = function
 			Schar (char_of_int (int_of_string (MyUtil.String.implode ('0' ::  tail))))
 		      else
 			Schar (charname_to_char (MyUtil.String.implode (List.map Char.lowercase tail)))
-		  | _ -> Sident a)
+		  | '<' :: cs -> raise Unreadable_object
+		  | _ -> raise Undefined_external_form)
 	   | c when isdigit c -> 
 	       (try Sint (int_of_string a) with
 		 | Failure _  -> (try Sfloat (float_of_string a) with
