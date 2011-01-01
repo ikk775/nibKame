@@ -64,9 +64,16 @@ let rec typevars : result -> Id.t list = fun r ->
 
 let gen_var_num = ref 0
 
-let gen_var t =
+let gen_varname () =
   gen_var_num := !gen_var_num + 1;
-  R_Variable (Format.sprintf "$r:%d" !gen_var_num, t)
+  Format.sprintf "$r:%d" !gen_var_num
+
+let gen_var t =
+  let b = gen_varname () in
+  R_Variable (b, t)
+
+let rec gen_varnames n =
+  List.iter_list n gen_varname
 
 let varname = function
   | R_Variable (v, t) -> v
