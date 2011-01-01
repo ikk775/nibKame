@@ -25,6 +25,7 @@ RESULT  = executable.exe
 # generate type information (.annot files)
 ANNOTATE = yes
 
+OCAMLFLAGS= -g
 
 # make target (see manual) : byte-code, debug-code, native-code, ...
 all: debug-code
