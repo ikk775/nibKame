@@ -55,3 +55,13 @@ let rec substitutions_of_sexpr = function
     List.map substitution_of_sexpr ss
   | _ -> invalid_arg "unexpected token."
 
+let is_valid = function
+  | "" -> false
+  | str -> try
+    begin match Sexpr.from_string str with
+      | Sexpr.Sident _ -> true
+      | _ -> false
+    end
+    with
+      | Sexpr.Unreadable_object -> true
+      | _ -> false
