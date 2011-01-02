@@ -291,21 +291,83 @@ let is_valid_internal_symbol name t =
   with
     | Invalid_argument "internal_symbol"-> false
 
-let rec from_typing_result = function
-  | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
-  | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
-  | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
-  | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
-  | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
-  | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
-  | Typing.R_Constant (_, _) -> failwith "invalid constant type."
-  | Typing.R_Internal (v, t) -> internal_symbol v t
-  | Typing.R_Let ((v, t), e1, e2) -> (undefined ())
-  | Typing.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
-  | Typing.R_Fun((v, t), e) -> (undefined ())
-  | Typing.R_Apply(e1, e2) -> (undefined ())
-  | Typing.R_Tuple (es, t) -> (undefined ())
-  | Typing.R_Vector (es, t) -> (undefined ())
-  | Typing.R_If (e1, e2, e3) -> (undefined ())
-  | Typing.R_Fix ((v, t), e, t') -> (undefined ())
+let rec from_typing_result r =
+  let rec f env r =
+    Debug.dbgprintsexpr (Typing.to_sexpr r);
+    match r with
+    | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
+    | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
+    | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
+    | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
+    | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
+    | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
+    | Typing.R_Constant (_, _) -> failwith "invalid constant type."
+    | Typing.R_Internal (v, t) -> internal_symbol v t
+    | Typing.R_Let ((v, t), e1, e2) ->
+      let e1', t1' = f env e1 in
+      let e2', t2' = f (Id.Map.add v t1' env) e2 in
+      Let ((v, TT.oType_to_type t), e1', e2'), t2'
+    | Typing.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
+    | Typing.R_Fun((v, t), e) ->
+      let bn = gen_varname () in
+      let ta = TT.oType_to_type t in
+      let e', t' = f (Id.Map.add v ta env) e in
+      let tra = TT.oType_to_type (T.result_type r) in
+      LetFun ({name = (bn, TT.oType_to_type t); args = [v, ta]; body = e'}, Var bn), tra
+    | Typing.R_Fix ((v, t), (T.R_Fun((vf, tf), ef) as ew), tw) ->
+      let bn = gen_varname () in
+      let t' = TT.oType_to_type t in
+      let ew', tw' = f (Id.Map.add v t' env) ew in
+      assert (t' = TT.oType_to_type t);
+      begin match ew' with
+        | LetFun ({args = [vf, ta]; body = e'}, Var _) -> 
+            LetFun ({name = (v, t'); args = [vf, ta]; body = e'}, Var bn), t'
+        | _ -> invalid_arg "from_typing_result"
+      end
+    | Typing.R_Fix ((v, t), _, tw) ->
+      invalid_arg "from_typing_result"
+    | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
+      Apply (v1, [v2]), TT.oType_to_type t2
+    | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e) ->
+      let bn = Typing.gen_varname () in
+      let t = Typing.result_type e in
+      let e' = Typing.R_Let((bn, t), e, Typing.R_Apply (rv, Typing.R_Variable (bn, t))) in
+      f env e'
+    | Typing.R_Apply(e1, e2) ->
+      let bn = Typing.gen_varname () in
+      let t1 = Typing.result_type e1 in
+      let e' = Typing.R_Let((bn, t1), e1, Typing.R_Apply (Typing.R_Variable (bn, t1), e2)) in
+      f env e'
+    | Typing.R_Tuple (es, t) when List.for_all (function Typing.R_Variable _ -> true | _ -> false) es ->
+      Tuple (List.map Typing.varname es), TT.oType_to_type t
+    | Typing.R_Tuple (es, t) ->
+      let bns = Typing.gen_varnames (List.length es) in
+      let bs = List.map2 (fun x e -> Typing.R_Variable (x, Typing.result_type e)) bns es in
+      let e' = List.fold_left2 (fun e' e b ->
+        Typing.R_Let ((b, Typing.result_type e), e, e'))
+        (Typing.R_Tuple (bs, t)) es bns
+      in
+      f env e'
+    | Typing.R_Vector (es, t) when List.for_all (function Typing.R_Variable _ -> true | _ -> false) es ->
+      undefined ()
+    | Typing.R_Vector (es, t) ->
+      let bns = Typing.gen_varnames (List.length es) in
+      let bs = List.map2 (fun x e -> Typing.R_Variable (x, Typing.result_type e)) bns es in
+      let e' = List.fold_left2 (fun e' e b ->
+        Typing.R_Let ((b, Typing.result_type e), e, e'))
+        (Typing.R_Vector (bs, t)) es bns
+      in
+      f env e'
+    | Typing.R_If (Typing.R_Variable (v, t), e2, e3) ->
+      let e2', t2' = f env e2 in
+      let e3', t3' = f env e3 in
+      IfEq (v, "%true", e2', e3'), t2'
+    | Typing.R_If (e1, e2, e3) ->
+      let bn = Typing.gen_varname () in
+      let t1 = Typing.result_type e1 in
+      let e' = Typing.R_Let((bn, t1), e1, Typing.R_If (Typing.R_Variable (bn, t1), e2, e3)) in
+      f env e'
+  in
+  f Id.Map.empty r
+  
 
