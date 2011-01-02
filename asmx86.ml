@@ -40,7 +40,6 @@ let tempF () =
     incr cnt1;
     TempF (Format.sprintf "tmpf%d" i)
 
-
 type inst =
   | Mov of reg * reg
   | Xchg of reg * reg
@@ -49,8 +48,8 @@ type inst =
   | FSt of mem *freg
   | Ld of reg * mem
   | FLd of freg * mem
-  | Set of reg * VA.literal
-  | SetM of mem * VA.literal
+  | Set of reg * imm
+  | SetM of mem * imm
   | Lea of reg * mem (* Load Effective Address *)
 
   | Push of rmi
@@ -61,6 +60,12 @@ type inst =
   | Mul of reg * rmi
   | CDQ (* Extend EAX to EDX *)
   | Div of reg (* divided edx:eax by reg *)
+
+  | AND of twoOp
+  | OR of twoOp
+  | XOR of twoOp
+  | NEG of reg
+  | NOT of reg
 
   | FAdd of freg * freg
   | FSub of freg * freg
@@ -77,6 +82,7 @@ type inst =
   | SHR of twoOp
 
   | Cmp of twoOp
+  | Test of twoOp
   | Branch of VA.cmp_op * Id.l
   | Jmp of Id.l
   | Call of Id.l
@@ -92,7 +98,7 @@ let str_of_reg = function
   | EDI -> "%edi"
   | EBP -> "%ebp"
   | ESP -> "%esp"
-  | TempR s -> raise Failure (Format.sprintf "Not assigned register, %s" s)
+  | TempR s -> failwith (Format.sprintf "Not assigned register, %s" s)
 
 let str_of_freg = function
   | XMM0 -> "%xmm0"
@@ -103,7 +109,7 @@ let str_of_freg = function
   | XMM5 -> "%xmm5"
   | XMM6 -> "%xmm6"
   | XMM7 -> "%xmm7"
-  | TempF s -> raise Failure (Format.sprintf "Not assigned register, %s" s)
+  | TempF s -> failwith (Format.sprintf "Not assigned register, %s" s)
 
 let isscale = function
   | 1 | 2 | 4 | 8 -> true
@@ -115,9 +121,9 @@ let str_of_mem = function
   | Offset (base, offset) -> Format.sprintf "%d(%s)" offset (str_of_reg base)
   | OffsetL (base, Id.L disp) -> Format.sprintf "%s(%s)" disp (str_of_reg base)
   | Index (disp, index, scale) when isscale scale -> Format.sprintf "%d(%s,%d)" disp (str_of_reg index) scale
-  | Index _ -> raise Failure "Index scale is used with 1, 2, 4, 8 only."
-  | IndexL (Id.L disp, index, scale) when isscale scale -> Format.sprintf "%s(%s,%d)" d disp (str_of_reg index) scale
-  | IndexL _ -> raise Failure "Index scale is used with 1, 2, 4, 8 only." 
+  | Index _ -> failwith "Index scale is used with 1, 2, 4, 8 only."
+  | IndexL (Id.L disp, index, scale) when isscale scale -> Format.sprintf "%s(%s,%d)" disp (str_of_reg index) scale
+  | IndexL _ -> failwith "Index scale is used with 1, 2, 4, 8 only." 
   | RcdAry (base, index, disp) -> Format.sprintf "%d(%s,%s)" disp (str_of_reg base) (str_of_reg index)
 
 let str_of_imm : imm -> string = function
@@ -137,3 +143,14 @@ let str_of_twoOp = function
   | RI (dst, src) -> Format.sprintf "%s, %s" (str_of_imm src) (str_of_reg dst)
   | MI (dst, src) -> Format.sprintf "%s, %s" (str_of_imm src) (str_of_mem dst)
 
+let str_of_inst = function
+  | Mov (dst, src) -> Format.sprintf "movl %s, %s" (str_of_reg src) (str_of_reg dst)
+  | Xchg (dst, src) -> Format.sprintf "xchgl %s, %s" (str_of_reg src) (str_of_reg dst)
+  | FMov (dst, src) -> Format.sprintf "movsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | St (mem, src) -> Format.sprintf "movl %s, %s" (str_of_reg src) (str_of_mem mem)
+  | FSt (mem, src) -> Format.sprintf "movsd %s, %s" (str_of_freg src) (str_of_mem mem)
+  | Ld (dst, mem) -> Format.sprintf "movl %s, %s" (str_of_mem mem) (str_of_reg dst)
+  | FLd (dst, mem) -> Format.sprintf "movsd %s, %s" (str_of_mem mem) (str_of_freg dst)
+  | Set (dst, imm) -> Format.sprintf "movl %s, %s" (str_of_imm imm) (str_of_reg dst)
+  | SetM (mem, imm) -> Format.sprintf "movl %s, %s" (str_of_imm imm) (str_of_mem mem)
+  | Lea (dst, mem) -> Format.sprintf "leal %s, %s" (str_of_mem mem) (str_of_reg dst)
