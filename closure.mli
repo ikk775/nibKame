@@ -42,6 +42,6 @@ and fundef = {
   formal_fv : (Id.t * Type.t) list;
   body : t;
 }
-type topvar = { var_name : Id.t * Type.t; expr : t; }
-val topfuns : fundef list ref
-val topvars : topvar list ref
+type topvar = { var_name : Id.l * Type.t; expr : t; }
+type topDecl = FunDecl of fundef | VarDecl of topvar
+val topDecls : topDecl list ref

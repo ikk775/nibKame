@@ -263,7 +263,7 @@ let var_to_exp { Closure.var_name = (Id.L label, typ); Closure.expr = expr } env
     env'
 
 (*
-  f : Closure.fundef list -> Closure.topvar list
+  f : Closure.topDecl list ->
         -> fundef list * (float * Id.l) list
   戻り値は後ろから順に処理されていって欲しい. 具体的に言うとList.rev_iterとかで
 *)
