@@ -1,5 +1,9 @@
 open MyUtil
 
+module T = Typing
+module TE = TypingExpr
+module TT = TypingType
+
 type t =
   | Unit
   | Int of int
@@ -23,7 +27,7 @@ type t =
   | IfGtEq of Id.t * Id.t * t * t
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
-  | LetFun of fundef * t (* let rec 相当 *)
+  | LetFun of fundef * t (* like let rec *)
   | Apply of Id.t * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
@@ -101,6 +105,7 @@ let rec to_sexpr = function
     Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr (List.map vt_to_sexpr vts); Sexpr.Sident v; to_sexpr e]
   | Ref (v) -> Sexpr.Sexpr [Sexpr.Sident "k:ref"; Sexpr.Sident v]
   | Set (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:set"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | ArrayAlloc (t, v) -> Sexpr.Sexpr [Sexpr.Sident "k:array-alloc"; Type.to_sexpr t; Sexpr.Sident v]
   | ArrayRef (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:array-ref"; Sexpr.Sident v1; Sexpr.Sident v2]
   | ArraySet (v1, v2, v3) -> Sexpr.Sexpr [Sexpr.Sident "k:array-set"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3]
   | Cons (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:cons"; Sexpr.Sident v1; Sexpr.Sident v2]
@@ -148,6 +153,7 @@ let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:fcons"; Sexpr.Sident v1; Sexpr.Sident v2] -> FCons(v1, v2)
   | Sexpr.Sexpr [Sexpr.Sident "k:fcar"; Sexpr.Sident v] -> FCar(v)
   | Sexpr.Sexpr [Sexpr.Sident "k:fcdr"; Sexpr.Sident v] -> FCdr(v)
+  | Sexpr.Sexpr [Sexpr.Sident "k:array-alloc"; t; Sexpr.Sident v] -> ArrayAlloc(Type.of_sexpr t, v)
   | Sexpr.Sexpr [Sexpr.Sident "k:array-ref"; Sexpr.Sident v1; Sexpr.Sident v2] -> ArrayRef(v1, v2)
   | Sexpr.Sexpr [Sexpr.Sident "k:array-set"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3] -> ArraySet(v1, v2, v3)
   | Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v] -> ExtArray v
@@ -174,6 +180,7 @@ let rec freevars_set = function
   | LetTuple(xts, y, e) -> 
     Id.Set.add y (Id.Set.diff (freevars_set e) (Id.Set.of_list (List.map fst xts)))
   | ExtFunApply(_, ys) -> Id.Set.of_list ys
+  | ArrayAlloc(t, i) -> Id.Set.singleton i
   | ArraySet(x, i, y) -> Id.Set.of_list [x; i; y]
   | ArrayRef(x, i) -> Id.Set.of_list [x; i]
   | Set(x, y) -> Id.Set.of_list [x; y]
@@ -212,6 +219,7 @@ let rec substitute_map sm = function
   | LetTuple (vts, v, e) -> (undefined ())
   | Ref (v) -> (undefined ())
   | Set (v1, v2) -> (undefined ())
+  | ArrayAlloc (v1, v2) -> (undefined ())
   | ArrayRef (v1, v2) -> (undefined ())
   | ArraySet (v1, v2, v3) -> (undefined ())
   | ExtArray v -> (undefined ())
