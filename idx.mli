@@ -57,3 +57,4 @@ val substitution_to_sexpr : substitution -> Sexpr.t
 val substitution_of_sexpr : Sexpr.t -> substitution
 val substitutions_to_sexpr : substitution list -> Sexpr.t
 val substitutions_of_sexpr : Sexpr.t -> substitution list
+val is_valid : string -> bool

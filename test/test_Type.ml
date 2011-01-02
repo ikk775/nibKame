@@ -49,3 +49,12 @@ let prop_sexpr_string_convert : 'a -> bool =
     with
       | _ -> false
 let () = Check_type_to_bool.quickCheck prop_sexpr_string_convert
+
+let prop_mangling : 'a -> bool =
+  fun x ->
+    try
+      let y = Type.of_string(Type.to_string x) in
+      gen_prop_equality Std.dump Type.equal x y
+    with
+      | _ -> false
+let () = Check_type_to_bool.verboseCheck prop_mangling

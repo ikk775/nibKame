@@ -17,6 +17,7 @@ module List :
     val shuffle : 'a list -> 'a list
     val unique : ?eq:('a -> 'a -> bool) -> 'a list -> 'a list
     val select : 'a list list -> 'a list list
+    val iter_list : int -> (unit -> 'a) -> 'a list
   end
 
 module String :

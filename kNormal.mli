@@ -53,6 +53,12 @@ val fundef_of_sexpr : Sexpr.t -> fundef
 val freevars_set : t -> Id.Set.t
 val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
-val fundef_to_sexpr : 'a -> 'b
-val internal_symbol : string -> t
-val of_typingResult : Typing.result -> t
+val fundef_to_sexpr : t -> Sexpr.t
+val from_typing_result : Typing.result -> (t * Type.t)
+
+val internal_symbol : string -> TypingType.oType -> (t * Type.t)
+(** A internal symbol name must begin with the letter '%'. *)
+(** A internal symbol as a function represents a primitive function. *)
+(** A primitive function takes one argument and should not return a function to represent a multi-argument function.
+    Therefore, if you want to add a internal symbol as a function that takes more than one arguments,
+    you try not to apply currying but to have it taking one tuple packing the arguments and returning its result. *)

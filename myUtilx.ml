@@ -50,6 +50,14 @@ module List = struct
     | xs :: xss ->
       let tl = select xss in
       List.concat (List.map (fun y -> List.map (fun x -> x :: y) xs) tl)
+
+  let rec iter_list n f =
+    let rec g n =
+      if n <= 0
+      then []
+      else (f ()) :: g (n - 1)
+    in
+    List.rev (g n)
 end
 
 module String = struct

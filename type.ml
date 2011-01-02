@@ -16,12 +16,16 @@ type t =
  
 type usingCategory =
   | U_Unit
+  | U_Bool
   | U_Int
   | U_Float
   | U_Char
-  | U_Tuple
-  | U_Ref
-  | U_Variant
+  | U_Tuple of usingCategory list
+  | U_Fun of usingCategory list * usingCategory
+  | U_Ref of usingCategory
+  | U_List of usingCategory
+  | U_Array of usingCategory
+  | U_Variant of Id.t
 
 type refCategory =
   | R_Unit
@@ -32,19 +36,46 @@ type refCategory =
   | R_Ref
   | R_Variant
 
+type accCategory =
+  | A_Unit
+  | A_Int
+  | A_Float
+  | A_Char
+  | A_Tuple
+  | A_Ref
+  | A_Variant
+
 type exprCategory =
   | E_Unit
   | E_Int
   | E_Float
   | E_Char
-  | E_Tuple
+  | E_List
+  | E_FList
+  | E_Array
+  | E_FArray
+  | E_Tuple of refCategory list
   | E_Ref
   | E_Variant
 
 let rec to_uc = function
-  | _ -> undefined ()
+  | Unit -> U_Unit
+  | Bool -> U_Bool
+  | Int -> U_Int
+  | Float -> U_Float
+  | Char -> U_Char
+  | Fun (fts, tt) -> U_Fun (List.map to_uc fts, to_uc tt)
+  | Tuple ts -> U_Tuple (List.map to_uc ts)
+  | List t -> U_List (to_uc t)
+  | Array t -> U_Array (to_uc t)
+  | Ref t -> U_Ref (to_uc t)
+  | Variant id -> U_Variant id
+  | Var _ -> invalid_arg "type variable is not allowed."
 
 let rec to_rc = function
+  | _ -> undefined ()
+
+let rec to_ac = function
   | _ -> undefined ()
 
 let rec to_ec = function
@@ -89,6 +120,98 @@ let rec equal x y =
     | Variant(id1), Variant(id2) -> id1 = id2
     | Var(id1), Var(id2) -> id1 = id2
     | _ -> false
+
+let rec to_string = function
+  | Unit -> "u"
+  | Bool -> "b"
+  | Int -> "i"
+  | Float -> "f"
+  | Char -> "c"
+  | Fun (t1s, t2) ->
+    let args = List.map (fun s -> String.length s, s) (List.map to_string t1s) in
+    let argn = List.length args in
+    let argstr = List.fold_right (function n, s -> fun s' -> s ^ s') args "" in
+    Printf.sprintf "m%ds%s%s" argn argstr (to_string t2)
+  | Tuple ts -> 
+    let ms = List.map (fun s -> String.length s, s) (List.map to_string ts) in
+    let mn = List.length ms in
+    let mstr = List.fold_right (function n, s -> fun s' -> s ^ s') ms "" in
+    Printf.sprintf "t%ds%s" mn mstr
+  | List t -> 
+    let n, m = (fun s -> String.length s, s) (to_string t) in
+    Printf.sprintf "l%s" m
+  | Array t -> 
+    let n, m = (fun s -> String.length s, s) (to_string t) in
+    Printf.sprintf "a%s" m
+  | Ref t -> 
+    let n, m = (fun s -> String.length s, s) (to_string t) in
+    Printf.sprintf "r%s" m
+  | Variant x -> 
+    assert (Id.is_valid x);
+    let n, m = (fun s -> String.length s, s) x in
+    Printf.sprintf "d%ds%s" n m
+  | Var x -> 
+    assert (Id.is_valid x);
+    let n, m = (fun s -> String.length s, s) x in
+    Printf.sprintf "v%ds%s" n m
+
+let of_string str =
+  let read_number stm =
+    let rec f cs =
+      match Stream.next stm with
+        | c when c = 's' -> cs
+        | c when String.contains "0123456789" c -> f (c :: cs)
+        | c -> invalid_arg "of_string"
+    in
+    int_of_string (String.implode (List.rev (f [])))
+  in
+  let read_id stm =
+    let cn = read_number stm in
+    let rec f n cs =
+      if n <= 0
+      then cs
+      else f (n - 1) (Stream.next stm :: cs)
+    in
+    String.implode (List.rev (f cn []))
+  in
+  let g stm =
+    let rec h () =
+      match Stream.next stm with
+        | 'u' -> Unit
+        | 'b' -> Bool
+        | 'i' -> Int
+        | 'f' -> Float
+        | 'c' -> Char
+        | 'm' ->
+          let argn = read_number stm in
+          let args = List.iter_list argn h in
+          let rst = h () in
+          Fun (args, rst)
+        | 't' ->
+          let tn = read_number stm in
+          let ts = List.iter_list tn h in
+          Tuple ts
+        | 'a' ->
+          let t = h () in
+          Array t
+        | 'l' ->
+          let t = h () in
+          List t
+        | 'r' ->
+          let t = h () in
+          Ref t
+        | 'd' -> 
+          let x = read_id stm in
+          Variant x
+        | 'v' -> 
+          let x = read_id stm in
+          Var x
+        | _ -> 
+          invalid_arg "of_string"
+    in
+    h ()
+  in
+  g (Stream.of_string str)
 
 let rec of_sexpr = function
   | Sexpr.Sident "t:unit" -> Unit
