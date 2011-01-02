@@ -55,7 +55,7 @@ type ins =
   | Save of Id.t * Id.t
   | Restore of Id.t * Id.t
 
-type fundef { name : Id.l; args ; (Id.t * VA.ty) list; body : block; ret VA.ty }
+type fundef { name : Id.l; args ; (Id.t * VA.ty) list; body : ins list; ret : VA.ty }
 
 let counter : int ref = ref 0
 let mkblockname () =
@@ -63,7 +63,7 @@ let mkblockname () =
     incf counter;
     Format.sprintf "block:%d" i
 
-let rec to_ins = function
+let rec to_ins stack = function
   | VA.Nop -> Nop
   | VA.Set (lit) -> Set lit
   | VA.Mov (v) -> Mov v
@@ -90,9 +90,12 @@ let rec to_ins = function
 
   | VA.Comp (op, ty, s1, s2) -> Comp (op, ty, s1, s2)
   | VA.If (cond, tr, fal) ->
-      let newblock = make_block tr in
-	If (to_ins cond, newblock) :: linerize fal
-
+      let newblock = mkblockname () in
+	begin match stack with
+	  | [] -> If (to_ins cond, Label newblock :: linerize [] tr) :: linerize [] fal
+	  | continue :: next ->
+	      If (to_ins cond, Label newblock :: (List.rev (Jump continue  :: (List.rev (linerize next tr))))) :: linerize next fal
+	end
   | VA.ApplyCls (cls, args) -> ApplyCls (cls, args)
   | VA.ApplyDir (func, args) -> ApplyDir (func, args)
 
@@ -111,12 +114,13 @@ let rec to_ins = function
   | VA.Save (dst, data) -> Save (dst, data)
   | VA.Restore (src, dst) -> Restore (src, dst)
 
-and linerize = function
-  | VA.Ans (t) -> [to_ins t]
-  | VA.Seq (t1, t2) -> linerize t1 @ linerize t2
+and linerize stack = function
+  | VA.Ans (t) -> [to_ins stack t]
+  | VA.Seq (t1, t2) -> 
+      let continue = mkblockname () in
+	linerize (continue :: stack) t1 @ (Label (continue) :: linerize stack t2)
   | VA.Let (id, exp, next) ->
-      Let (id, to_ins exp) :: linerize next
+      Let (id, to_ins exp) :: linerize stack next
 
-and new_block exp =
-  let label = mkblockname () in
-    Label (label) :: linerize exp
+let linerizr_func {VA.name = Id.L func_label; VA.args = args; VA.body = body } =
+  MyUtil.undefined ()
