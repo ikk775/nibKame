@@ -262,6 +262,8 @@ let var_to_exp { Closure.var_name = (Id.L label, typ); Closure.expr = expr } env
 		 | _ -> St(tmp, Label (Id.L label))), !main));
     env'
 
+let var_labels = ref Id.Set.empty
+
 (*
   f : Closure.topDecl list ->
         -> fundef list * (float * Id.l) list
@@ -271,7 +273,9 @@ let f declears =
   let iter declear env =
     match declear with
       | Closure.VarDecl var ->
-	  var_to_exp var env
+	  let Id.L label = var.var_name in
+	    var_labels := Id.Set.add label !var_labels;
+	    var_to_exp var env
       | Closure.FunDecl func ->
 	  fundefs := compile_fun func env :: !fundefs;
 	  env
