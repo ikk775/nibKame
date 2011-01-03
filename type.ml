@@ -128,89 +128,56 @@ let rec to_string = function
   | Float -> "f"
   | Char -> "c"
   | Fun (t1s, t2) ->
-    let args = List.map (fun s -> String.length s, s) (List.map to_string t1s) in
-    let argn = List.length args in
-    let argstr = List.fold_right (function n, s -> fun s' -> s ^ s') args "" in
-    Printf.sprintf "m%ds%s%s" argn argstr (to_string t2)
+    "m" ^ Mangle.write_seq to_string t1s ^ to_string t2
   | Tuple ts -> 
-    let ms = List.map (fun s -> String.length s, s) (List.map to_string ts) in
-    let mn = List.length ms in
-    let mstr = List.fold_right (function n, s -> fun s' -> s ^ s') ms "" in
-    Printf.sprintf "t%ds%s" mn mstr
+    "t" ^ Mangle.write_seq to_string ts
   | List t -> 
-    let n, m = (fun s -> String.length s, s) (to_string t) in
-    Printf.sprintf "l%s" m
+    "l" ^ to_string t
   | Array t -> 
-    let n, m = (fun s -> String.length s, s) (to_string t) in
-    Printf.sprintf "a%s" m
+    "a" ^ to_string t
   | Ref t -> 
-    let n, m = (fun s -> String.length s, s) (to_string t) in
-    Printf.sprintf "r%s" m
+    "r" ^ to_string t
   | Variant x -> 
-    assert (Id.is_valid x);
-    let n, m = (fun s -> String.length s, s) x in
-    Printf.sprintf "d%ds%s" n m
+    "d" ^ Mangle.write_id x
   | Var x -> 
-    assert (Id.is_valid x);
-    let n, m = (fun s -> String.length s, s) x in
-    Printf.sprintf "v%ds%s" n m
+    "v" ^ Mangle.write_id x
+
+let rec g stm =
+  let rec h () =
+    match Stream.next stm with
+      | 'u' -> Unit
+      | 'b' -> Bool
+      | 'i' -> Int
+      | 'f' -> Float
+      | 'c' -> Char
+      | 'm' ->
+        let args = Mangle.read_seq stm g in
+        let rst = h () in
+        Fun (args, rst)
+      | 't' ->
+        let ts = Mangle.read_seq stm g in
+        Tuple ts
+      | 'a' ->
+        let t = h () in
+        Array t
+      | 'l' ->
+        let t = h () in
+        List t
+      | 'r' ->
+        let t = h () in
+        Ref t
+      | 'd' -> 
+        let x = Mangle.read_id stm in
+        Variant x
+      | 'v' -> 
+        let x = Mangle.read_id stm in
+        Var x
+      | _ -> 
+        invalid_arg "of_string"
+  in
+  h ()
 
 let of_string str =
-  let read_number stm =
-    let rec f cs =
-      match Stream.next stm with
-        | c when c = 's' -> cs
-        | c when String.contains "0123456789" c -> f (c :: cs)
-        | c -> invalid_arg "of_string"
-    in
-    int_of_string (String.implode (List.rev (f [])))
-  in
-  let read_id stm =
-    let cn = read_number stm in
-    let rec f n cs =
-      if n <= 0
-      then cs
-      else f (n - 1) (Stream.next stm :: cs)
-    in
-    String.implode (List.rev (f cn []))
-  in
-  let g stm =
-    let rec h () =
-      match Stream.next stm with
-        | 'u' -> Unit
-        | 'b' -> Bool
-        | 'i' -> Int
-        | 'f' -> Float
-        | 'c' -> Char
-        | 'm' ->
-          let argn = read_number stm in
-          let args = List.iter_list argn h in
-          let rst = h () in
-          Fun (args, rst)
-        | 't' ->
-          let tn = read_number stm in
-          let ts = List.iter_list tn h in
-          Tuple ts
-        | 'a' ->
-          let t = h () in
-          Array t
-        | 'l' ->
-          let t = h () in
-          List t
-        | 'r' ->
-          let t = h () in
-          Ref t
-        | 'd' -> 
-          let x = read_id stm in
-          Variant x
-        | 'v' -> 
-          let x = read_id stm in
-          Var x
-        | _ -> 
-          invalid_arg "of_string"
-    in
-    h ()
-  in
   g (Stream.of_string str)
 
 let rec of_sexpr = function
