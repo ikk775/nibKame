@@ -24,6 +24,8 @@ type substitution = exprVar * expr
 
 let extexprenv = ref []
 
+let empty_exprEnv = ExprEnv []
+
 let get_extexprenv = !extexprenv
 let set_extexprenv eenv =
   extexprenv := eenv

@@ -15,6 +15,7 @@ type expr =
 type t = expr
 type exprEnv = ExprEnv of (Id.t * TypingType.typeScheme) list
 type substitution = exprVar * expr
+val empty_exprEnv : exprEnv
 val extexprenv : (string * TypingType.oType) list ref
 val get_extexprenv : (string * TypingType.oType) list
 val set_extexprenv : (string * TypingType.oType) list -> unit
