@@ -28,6 +28,7 @@ module Set :
     val choose : t -> elt
     val split : elt -> t -> t * bool * t
     val of_list : elt list -> t
+    val add_list : elt list -> t -> t
   end
 
 module Map :
@@ -47,9 +48,12 @@ module Map :
     val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
     val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
     val of_assoc : 'a t -> unit
+    val add_list : (key * 'a) list -> 'a t -> 'a t
+    val add_list2 : key list -> 'a list -> 'a t -> 'a t
   end
 type substitution = Substitution of string * string
 
+val pp_list : string list -> string
 val substitute : substitution list -> string -> string
 val compose : substitution list -> substitution list -> substitution list
 val compose_substs : substitution list list -> substitution list

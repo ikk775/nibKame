@@ -6,6 +6,7 @@ module Set_sub = Set.Make(String)
 module Set = struct
   include Set_sub
   let of_list lis = List.fold_right Set_sub.add lis Set_sub.empty 
+  let add_list xs env = List.fold_left (fun env x -> add x env) env xs
   end
 
 module Map_sub = Map.Make(String)
@@ -14,6 +15,8 @@ module Map = struct
   let of_assoc map = 
     let l = ref [] in
     iter (fun k c -> l := (k, c) :: !l) map
+  let add_list xys env = List.fold_left (fun env (x, y) -> add x y env) env xys
+  let add_list2 xs ys env = List.fold_left2 (fun env x y -> add x y env) env xs ys
   end
 
 type substitution = Substitution of string * string    
@@ -39,6 +42,11 @@ let rec compose (xs:substitution list) (ys:substitution list) =
 
 let compose_substs sss =
   List.fold_right compose sss []
+
+let rec pp_list = function
+  | [] -> ""
+  | [x] -> x
+  | x :: xs -> x ^ " " ^ pp_list xs
 
 let rec substitution_to_sexpr = function
   | Substitution(fv, tv) -> Sexpr.Sexpr [Sexpr.Sident fv; Sexpr.Sident tv]

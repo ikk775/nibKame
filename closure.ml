@@ -55,3 +55,77 @@ type topDecl =
 
 let topDecls : topDecl list ref = ref []
 
+let rec fv = function
+  | Unit | Int(_) | Float(_) | ExtArray(_) -> Id.Set.empty
+  | Neg(x) | FNeg(x) -> Id.Set.singleton x
+  | Add(x, y) | Sub(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | ArrayRef(x, y) -> Id.Set.of_list [x; y]
+  | If(_, x, y, e1, e2) -> Id.Set.add x (Id.Set.add y (Id.Set.union (fv e1) (fv e2)))
+  | Let((x, t), e1, e2) -> Id.Set.union (fv e1) (Id.Set.remove x (fv e2))
+  | Var(x) -> Id.Set.singleton x
+  | MakeCls((x, t), { entry = l; actual_fv = ys }, e) -> Id.Set.remove x (Id.Set.union (Id.Set.of_list ys) (fv e))
+  | ApplyCls(x, ys) -> Id.Set.of_list (x :: ys)
+  | ApplyDir(_, xs) | Tuple(xs) -> Id.Set.of_list xs
+  | LetTuple(xts, y, e) -> Id.Set.add y (Id.Set.diff (fv e) (Id.Set.of_list (List.map fst xts)))
+  | ArraySet(x, y, z) -> Id.Set.of_list [x; y; z]
+
+let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
+  | KNormal.Unit -> Unit
+  | KNormal.Int(i) -> Int(i)
+  | KNormal.Float(d) -> Float(d)
+  | KNormal.Neg(x) -> Neg(x)
+  | KNormal.Add(x, y) -> Add(x, y)
+  | KNormal.Sub(x, y) -> Sub(x, y)
+  | KNormal.FNeg(x) -> FNeg(x)
+  | KNormal.FAdd(x, y) -> FAdd(x, y)
+  | KNormal.FSub(x, y) -> FSub(x, y)
+  | KNormal.FMul(x, y) -> FMul(x, y)
+  | KNormal.FDiv(x, y) -> FDiv(x, y)
+  | KNormal.IfEq(x, y, e1, e2) -> If(Eq, x, y, g env known e1, g env known e2)
+  | KNormal.IfLsEq(x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
+  | KNormal.Let((x, t), e1, e2) -> Let((x, t), g env known e1, g (Id.Map.add x t env) known e2)
+  | KNormal.Var(x) -> Var(x)
+  | KNormal.LetFun({ KNormal.name = (x, t); KNormal.args = yts; KNormal.body = e1 }, e2) -> (* 関数定義の場合 (caml2html: closure_letrec) *)
+      (* 関数定義let rec x y1 ... yn = e1 in e2の場合は、
+     xに自由変数がない(closureを介さずdirectに呼び出せる)
+     と仮定し、knownに追加してe1をクロージャ変換してみる *)
+      let topdecls_backup = !topDecls in
+      let env' = Id.Map.add x t env in
+      let known' = Id.Set.add x known in
+      let e1' = g (Id.Map.add_list yts env') known' e1 in
+      (* 本当に自由変数がなかったか、変換結果e1'を確認する *)
+      (* 注意: e1'にx自身が変数として出現する場合はclosureが必要!
+         (thanks to nuevo-namasute and azounoman; test/cls-bug2.ml参照) *)
+      let zs = Id.Set.diff (fv e1') (Id.Set.of_list (List.map fst yts)) in
+      let known', e1' =
+    if Id.Set.is_empty zs then known', e1' else
+    (* 駄目だったら状態(toplevelの値)を戻して、クロージャ変換をやり直す *)
+    (Format.eprintf "free variable(s) %s found in function %s@." (Id.pp_list (Id.Set.elements zs)) x;
+     Format.eprintf "function %s cannot be directly applied in fact@." x;
+     topDecls := topdecls_backup;
+     let e1' = g (Id.Map.add_list yts env') known e1 in
+     known, e1') in
+      let zs = Id.Set.elements (Id.Set.diff (fv e1') (Id.Set.add x (Id.Set.of_list (List.map fst yts)))) in (* 自由変数のリスト *)
+      let zts = List.map (fun z -> (z, Id.Map.find z env')) zs in (* ここで自由変数zの型を引くために引数envが必要 *)
+      topDecls := FunDecl { fun_name = (Id.L(x), t); args = yts; formal_fv = zts; body = e1' } :: !topDecls; (* トップレベル関数を追加 *)
+      let e2' = g env' known' e2 in
+      if Id.Set.mem x (fv e2') then (* xが変数としてe2'に出現するか *)
+    MakeCls((x, t), { entry = Id.L(x); actual_fv = zs }, e2') (* 出現していたら削除しない *)
+      else
+    (Format.eprintf "eliminating closure(s) %s@." x;
+     e2') (* 出現しなければMakeClsを削除 *)
+  | KNormal.Apply(x, ys) when Id.Set.mem x known -> (* 関数適用の場合 (caml2html: closure_app) *)
+      Format.eprintf "directly applying %s@." x;
+      ApplyDir(Id.L(x), ys)
+  | KNormal.Apply(f, xs) -> ApplyCls(f, xs)
+  | KNormal.Tuple(xs) -> Tuple(xs)
+  | KNormal.LetTuple(xts, y, e) -> LetTuple(xts, y, g (Id.Map.add_list xts env) known e)
+  | KNormal.ArrayRef(x, y) -> ArrayRef(x, y)
+  | KNormal.ArraySet(x, y, z) -> ArraySet(x, y, z)
+  | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
+(*  | KNormal.ExtFunApp(x, ys) -> AppDir(Id.L("min_caml_" ^ x), ys) *)
+
+let f e =
+  topDecls := [];
+  let e' = g Id.Map.empty Id.Set.empty e in
+  List.rev !topDecls, e'
+
