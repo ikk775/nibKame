@@ -129,3 +129,4 @@ let f e =
   let e' = g Id.Map.empty Id.Set.empty e in
   List.rev !topDecls, e'
 
+let from_knormal k = fst (f k)
