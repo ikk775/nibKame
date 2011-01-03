@@ -56,32 +56,45 @@ type topDecl =
 let topDecls : topDecl list ref = ref []
 
 let rec fv = function
-  | Unit | Int(_) | Float(_) | ExtArray(_) -> Id.Set.empty
+  | Unit | Int(_) | Float(_) | Char(_) | ExtArray(_) -> Id.Set.empty
   | Neg(x) | FNeg(x) -> Id.Set.singleton x
-  | Add(x, y) | Sub(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | ArrayRef(x, y) -> Id.Set.of_list [x; y]
+  | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | ArrayRef(x, y) -> Id.Set.of_list [x; y]
   | If(_, x, y, e1, e2) -> Id.Set.add x (Id.Set.add y (Id.Set.union (fv e1) (fv e2)))
   | Let((x, t), e1, e2) -> Id.Set.union (fv e1) (Id.Set.remove x (fv e2))
+  | Seq(e1, e2) -> Id.Set.union (fv e1) (fv e2)
   | Var(x) -> Id.Set.singleton x
   | MakeCls((x, t), { entry = l; actual_fv = ys }, e) -> Id.Set.remove x (Id.Set.union (Id.Set.of_list ys) (fv e))
   | ApplyCls(x, ys) -> Id.Set.of_list (x :: ys)
   | ApplyDir(_, xs) | Tuple(xs) -> Id.Set.of_list xs
   | LetTuple(xts, y, e) -> Id.Set.add y (Id.Set.diff (fv e) (Id.Set.of_list (List.map fst xts)))
+  | ArrayAlloc(t, n) -> Id.Set.singleton n
   | ArraySet(x, y, z) -> Id.Set.of_list [x; y; z]
+  | Car(x) | Cdr(x) | FCar(x) | FCdr(x) -> Id.Set.singleton x
+  | Cons(x, y) | FCons(x, y) -> Id.Set.of_list [x; y]
+  | Set(x, y) -> Id.Set.of_list [x; y]
+  | Ref(x) -> Id.Set.singleton x
 
 let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
   | KNormal.Unit -> Unit
   | KNormal.Int(i) -> Int(i)
+  | KNormal.Char(c) -> Char(c)
   | KNormal.Float(d) -> Float(d)
   | KNormal.Neg(x) -> Neg(x)
   | KNormal.Add(x, y) -> Add(x, y)
   | KNormal.Sub(x, y) -> Sub(x, y)
+  | KNormal.Mul(x, y) -> Mul(x, y)
+  | KNormal.Div(x, y) -> Div(x, y)
   | KNormal.FNeg(x) -> FNeg(x)
   | KNormal.FAdd(x, y) -> FAdd(x, y)
   | KNormal.FSub(x, y) -> FSub(x, y)
   | KNormal.FMul(x, y) -> FMul(x, y)
   | KNormal.FDiv(x, y) -> FDiv(x, y)
   | KNormal.IfEq(x, y, e1, e2) -> If(Eq, x, y, g env known e1, g env known e2)
+  | KNormal.IfNotEq(x, y, e1, e2) -> If(Eq, x, y, g env known e1, g env known e2)
+  | KNormal.IfLs(x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
   | KNormal.IfLsEq(x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
+  | KNormal.IfGt(x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
+  | KNormal.IfGtEq(x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
   | KNormal.Let((x, t), e1, e2) -> Let((x, t), g env known e1, g (Id.Map.add x t env) known e2)
   | KNormal.Var(x) -> Var(x)
   | KNormal.LetFun({ KNormal.name = (x, t); KNormal.args = yts; KNormal.body = e1 }, e2) -> (* 関数定義の場合 (caml2html: closure_letrec) *)
@@ -119,10 +132,19 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2
   | KNormal.Apply(f, xs) -> ApplyCls(f, xs)
   | KNormal.Tuple(xs) -> Tuple(xs)
   | KNormal.LetTuple(xts, y, e) -> LetTuple(xts, y, g (Id.Map.add_list xts env) known e)
+  | KNormal.Cons(x, y) -> Cons(x, y)
+  | KNormal.Cdr(x) -> Cdr(x)
+  | KNormal.Car(x) -> Car(x)
+  | KNormal.FCons(x, y) -> FCons(x, y)
+  | KNormal.FCdr(x) -> FCdr(x)
+  | KNormal.FCar(x) -> FCar(x)
+  | KNormal.Ref(x) -> Ref(x)
+  | KNormal.Set(x, y) -> Set(x, y)
+  | KNormal.ArrayAlloc(t, n) -> ArrayAlloc(t, n)
   | KNormal.ArrayRef(x, y) -> ArrayRef(x, y)
   | KNormal.ArraySet(x, y, z) -> ArraySet(x, y, z)
   | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
-(*  | KNormal.ExtFunApp(x, ys) -> AppDir(Id.L("min_caml_" ^ x), ys) *)
+  | KNormal.ExtFunApply(x, ys) -> ApplyDir(Id.L("min_caml_" ^ x), ys)
 
 let f e =
   topDecls := [];
