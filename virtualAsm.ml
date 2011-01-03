@@ -273,7 +273,7 @@ let f declears =
   let iter declear env =
     match declear with
       | Closure.VarDecl var ->
-	  let Id.L label = var.var_name in
+	  let Id.L label, _ = var.Closure.var_name in
 	    var_labels := Id.Set.add label !var_labels;
 	    var_to_exp var env
       | Closure.FunDecl func ->

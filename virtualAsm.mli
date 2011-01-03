@@ -57,7 +57,7 @@ and exp =
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 val genid : unit -> Id.t
-val temp : unit - Id.t
+val temp : unit -> Id.t
 val f: Closure.topDecl list -> fundef list * (float * Id.l) list
 val var_labels: Id.Set.t ref
 
