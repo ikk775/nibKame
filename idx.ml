@@ -43,10 +43,8 @@ let rec compose (xs:substitution list) (ys:substitution list) =
 let compose_substs sss =
   List.fold_right compose sss []
 
-let rec pp_list = function
-  | [] -> ""
-  | [x] -> x
-  | x :: xs -> x ^ " " ^ pp_list xs
+let rec pp_list xs =
+  String.concat " " xs
 
 let rec substitution_to_sexpr = function
   | Substitution(fv, tv) -> Sexpr.Sexpr [Sexpr.Sident fv; Sexpr.Sident tv]
