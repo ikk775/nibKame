@@ -45,3 +45,4 @@ and fundef = {
 type topvar = { var_name : Id.l * Type.t; expr : t; }
 type topDecl = FunDecl of fundef | VarDecl of topvar
 val topDecls : topDecl list ref
+val from_knormal : KNormal.t -> topDecl list
