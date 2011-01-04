@@ -16,17 +16,17 @@ let read_sexprs : char Stream.t -> Sexpr.t list = fun stm ->
   in
   List.rev (g [])
 
-let add_def m = function
+let add_def teenv m = function
   | Syntax.TopLet (pat, e) ->
     undefined ()
   | Syntax.TopLetSimp ((x, t), e) ->
-    Module.add_expr m (x, (TypingExpr.from_syntax e))
+    Module.add_expr_with_env teenv m (x, (TypingExpr.from_syntax e))
   | Syntax.TopLetRec ((x, t), e) ->
-    Module.add_expr m (x, (TypingExpr.E_Fix (x, (TypingExpr.from_syntax e))))
+    Module.add_expr_with_env teenv m (x, (TypingExpr.E_Fix (x, (TypingExpr.from_syntax e))))
   | _ -> invalid_arg "unexpected keyword"
 
 let read : char Stream.t -> Syntax.t list = fun stm -> 
   List.map Sread.change (read_sexprs stm)
 
 let modulize : TypingExpr.exprEnv -> Syntax.t list -> Module.t = fun teenv es -> 
-  List.fold_left add_def Module.empty es
+  List.fold_left (add_def teenv) Module.empty es

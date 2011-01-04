@@ -125,7 +125,7 @@ let add_type = fun m ->
       {m with eim = eim'; iem = iem'; defs = (Type (bn, (List.map substtoname tvs , t')) :: es)}
 
 (* top-level let 相当 *)
-let add_expr = fun m -> 
+let add_expr_with_env = fun env m -> 
   function
     | ename, e -> 
       Debug.dbgprint "called add_expr";
@@ -133,7 +133,7 @@ let add_expr = fun m ->
       Debug.dbgprintsexpr (TypingExpr.to_sexpr e);
       let eim, iem, es = m.eim, m.iem, m.defs in
       let e' = TypingExpr.substitute_expr eim.eim_Expr e in
-      let t, r = Typing.typing (expr_env m) e' in
+      let t, r = Typing.typing (TypingExpr.combine_env env (expr_env m)) e' in
       Debug.dbgprint "typed input expr";
       Debug.dbgprint "type:";
       Debug.dbgprintsexpr (TypingType.typeScheme_to_sexpr t);
@@ -166,6 +166,9 @@ let add_expr = fun m ->
       let eim' = {eim with eim_Expr = (ename, b) :: List.remove_assoc ename eim.eim_Expr} in
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
+
+let add_expr m e = add_expr_with_env TypingExpr.empty_exprEnv m e
+  
 
 let add_expr_instance = fun m ->  function
   | ename, t, r -> 
