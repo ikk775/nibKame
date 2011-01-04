@@ -50,6 +50,7 @@ module Map :
     val of_assoc : 'a t -> unit
     val add_list : (key * 'a) list -> 'a t -> 'a t
     val add_list2 : key list -> 'a list -> 'a t -> 'a t
+    val compose : 'a t -> 'a t -> 'a t
   end
 type substitution = Substitution of string * string
 

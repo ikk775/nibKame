@@ -17,6 +17,7 @@ module Map = struct
     iter (fun k c -> l := (k, c) :: !l) map
   let add_list xys env = List.fold_left (fun env (x, y) -> add x y env) env xys
   let add_list2 xs ys env = List.fold_left2 (fun env x y -> add x y env) env xs ys
+  let compose mx my = fold add my mx
   end
 
 type substitution = Substitution of string * string    
