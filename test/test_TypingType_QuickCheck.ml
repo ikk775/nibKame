@@ -51,6 +51,7 @@ module Arbitrary_oType = struct
             ret_gen (TypingType.O_Vector(e1));
             ret_gen (TypingType.O_Variant(e1, e2));
             ret_gen (TypingType.O_Fun(e1, e2));
+            ret_gen (TypingType.O_Ref(e1));
             ]
     in
     sized (fun i ->
