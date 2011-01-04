@@ -1,6 +1,3 @@
-type elt = Id.t * (Type.mType list * Typing.result)
-type intToExtMap = Id.substitution list
-type t = { iem : intToExtMap; defs : elt list; }
 type ev_usage = (Id.t * TypingType.oType list) list
 type tv_usage = (Id.t * TypingType.oType list) list
 type tv_cusage = (Id.t * Type.mType list) list

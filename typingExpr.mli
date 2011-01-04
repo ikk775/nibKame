@@ -10,6 +10,7 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
+  | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 type t = expr
@@ -25,6 +26,7 @@ val gen_exprvar : unit -> expr
 val gen_exprvars : int -> expr list
 val substitute_env : TypingType.substitution list -> exprEnv -> exprEnv
 val add_env : exprEnv -> Id.t -> TypingType.typeScheme -> exprEnv
+val combine_env : exprEnv -> exprEnv -> exprEnv
 val freetypevars_env : exprEnv -> TypingType.typeVar list
 val clos : exprEnv -> TypingType.typeScheme -> TypingType.typeScheme
 exception ExtFun_not_found of string

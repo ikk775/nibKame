@@ -1,16 +1,11 @@
-type elt =
-    Type of Id.t * (Id.t list * TypingType.oType)
-  | Expr of Id.t * (Id.t list * TypingType.typeScheme * Typing.result)
+type elt
 type substitutions = {
   s_Type : TypingType.substitution list;
   s_Expr : Typing.substitution list;
 }
-type extToIntMap = {
-  eim_Type : TypingType.substitution list;
-  eim_Expr : TypingExpr.substitution list;
-}
-type intToExtMap = Id.substitution list
-type t = { eim : extToIntMap; iem : intToExtMap; defs : elt list; }
+type extToIntMap
+type intToExtMap
+type t
 val empty : t
 val emptyeim : extToIntMap
 val emptysubst : substitutions
@@ -31,6 +26,7 @@ val expr_env : t -> TypingExpr.exprEnv
 val subst : substitutions -> t -> t
 val add_type :
   t -> TypingType.typeVar * (TypingType.typeVar list * TypingType.oType) -> t
+val add_expr_with_env : TypingExpr.exprEnv -> t -> TypingExpr.exprVar * TypingExpr.expr -> t
 val add_expr : t -> TypingExpr.exprVar * TypingExpr.expr -> t
 val add_expr_instance :
   t -> Typing.resultVar * TypingType.oType * Typing.result -> t
