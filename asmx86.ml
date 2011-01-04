@@ -86,6 +86,7 @@ type inst =
   | Branch of VA.cmp_op * Id.l
   | Jmp of Id.l
   | Call of Id.l
+  | Label of Id.l
   | Leave
   | Ret
 
@@ -154,3 +155,6 @@ let str_of_inst = function
   | Set (dst, imm) -> Format.sprintf "movl %s, %s" (str_of_imm imm) (str_of_reg dst)
   | SetM (mem, imm) -> Format.sprintf "movl %s, %s" (str_of_imm imm) (str_of_mem mem)
   | Lea (dst, mem) -> Format.sprintf "leal %s, %s" (str_of_mem mem) (str_of_reg dst)
+  | Push (src) -> Fotmat.sprintf "pushl %s" (str_of_rmi src)
+  | Pop (dst) -> Format.sprintf "popl %s" (str_of_reg dst)
+
