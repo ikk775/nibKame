@@ -118,7 +118,7 @@ let rec result_to_expr expr =
     | R_If(e1, e2, e3) -> E_If(to_expr e1, to_expr e2, to_expr e3)
     | R_Let((v, t), e1, e2) -> E_Let(v, to_expr e1, to_expr e2)
     | R_Fix((f, t), e, t') -> E_Fix(f, to_expr e)
-    | R_External (v, t) -> invalid_arg (Printf.sprintf "R_External (%s, %s) cannot convert to TypingExpr." v (Sexpr.to_string (TypingType.oType_to_sexpr t)))
+    | R_External (v, t) -> E_External (v, t)
 
 let rec w env expr =
   match expr with

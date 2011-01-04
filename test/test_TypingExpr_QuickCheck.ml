@@ -50,6 +50,7 @@ module Arbitrary_expr = struct
             ret_gen (TypingExpr.E_If(e, e1, e2));
             ret_gen (TypingExpr.E_Let(s, e1, e2));
             ret_gen (TypingExpr.E_Fix(s, TypingExpr.E_Fun(s', e)));
+            ret_gen (TypingExpr.E_External (s, ot));
             ret_gen (TypingExpr.E_Type (e, ot));
             ret_gen (TypingExpr.E_Declare (s, ot, e));
             ]

@@ -52,6 +52,7 @@ module Arbitrary_result = struct
             ret_gen (Typing.R_If(e, e1, e2));
             ret_gen (Typing.R_Let((s, ot), e1, e2));
             ret_gen (Typing.R_Fix((s, ot), Typing.R_Fun((s', ot'), e), ot));
+            ret_gen (Typing.R_External(s, ot));
             ]
     in
     sized (fun i ->

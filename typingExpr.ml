@@ -12,6 +12,7 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
+  | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 
@@ -49,6 +50,10 @@ let substitute_env ss env =
 
 let add_env = function ExprEnv envList -> fun ev ts -> 
   ExprEnv((ev, ts) :: List.remove_assoc ev envList)
+
+let combine_env env = function ExprEnv envlist ->
+  List.fold_left (fun env -> function ev, ts -> add_env env ev ts) env envlist
+  
 
 let rec freetypevars_env = function
   | ExprEnv l ->
@@ -115,6 +120,7 @@ let rec substitute_expr ss expr =
       let ss' = List.remove_assoc f ss in
       let subst' = substitute_expr ss' in
       E_Fix(f, subst' e)
+    | E_External(s, t) -> E_External(s, t)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
       let v' = gen_exprvar () in
@@ -135,6 +141,7 @@ let rec substitute_expr_type ss expr =
     | E_If(e1, e2, e3) -> E_If(subst e1, subst e2, subst e3)
     | E_Let(v, e1, e2) -> E_Let(v, subst e1, subst e2)
     | E_Fix(f, e) -> E_Fix(f, subst e)
+    | E_External(s, t) -> E_External(s, TypingType.substitute ss t)
     | E_Type(e, t) -> E_Type(subst e, TypingType.substitute ss t)
     | E_Declare(v, t, e) -> E_Declare(v, TypingType.substitute ss t, subst e)
 
@@ -210,6 +217,8 @@ let rec to_sexpr = function
       | e -> [e]
     in
     Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
+  | E_External(s, t) ->
+    Sexpr.Sexpr[Sexpr.Sident "e:extenal"; Sexpr.Sident s; TypingType.oType_to_sexpr t]
   | E_Type(e, t) ->
     Sexpr.Sexpr[Sexpr.Sident "e:type"; to_sexpr e; TypingType.oType_to_sexpr t]
   | E_Declare(v, t, e) ->
@@ -240,6 +249,7 @@ let rec of_sexpr = function
       | _ -> invalid_arg "unexpected token."
     in
     apply_nest (e1 :: e2 :: es)
+  | Sexpr.Sexpr [Sexpr.Sident "e:extenal"; Sexpr.Sident s; t] -> E_External(s, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "e:type"; e; t] -> E_Type(of_sexpr e, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "e:declare"; v; t; e] -> E_Declare(get_exprvar_name(of_sexpr v), TypingType.oType_of_sexpr t, of_sexpr e)
   | _ -> invalid_arg "unexpected token."
