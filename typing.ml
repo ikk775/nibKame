@@ -125,6 +125,8 @@ let rec w env expr =
     | E_Constant c ->
       let t = E.get_constant_type (E_Constant c) in
       [], t, R_Constant(c, t)
+    | E_External (v, t) -> 
+      [], t, R_External (v, t)
     | E_Variable v ->
       let ts = E.get_variable_type env (E_Variable v) in
       let freeTypeVarsTs = TypingType.freetypevars ts in
@@ -202,7 +204,9 @@ let rec w env expr =
       let t2 = substitute s2 t1 in
       let bt = substitute s2 b in
       compose s2 s1, t2, R_Fix((f, bt), e', t2)
-    | _ -> invalid_arg "Invalid expr."
+    | E_Fix(f, _) -> failwith "A fix operator must followed by a fun operator."
+    | E_Type _ -> failwith "E_Type is not supported yet."
+    | E_Declare _ -> failwith "E_Declare is not supported yet."
 
 let typing_with_subst env expr =
   let ss, t, expr' = w env expr in
