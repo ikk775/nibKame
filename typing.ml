@@ -236,6 +236,28 @@ let rec substitute : substitution list -> result -> result = fun ss expr ->
     | R_Fix((f, t), e, t') -> R_Fix((f, t), subst' f e, t')
     | R_External (v ,t) as e -> e
 
+let rec substitute_with_expr_subst = fun ss expr -> 
+  let subst = substitute_with_expr_subst ss in
+  let subst' v = substitute_with_expr_subst (List.filter (function v', c -> v' <> v) ss) in
+  let rec f ss = function
+    | R_Variable (v ,t) ->
+      let e = TypingExpr.substitute_expr ss (TypingExpr.E_Variable v) in
+      begin match e with
+        | E_Variable v' -> R_Variable (v', t)
+        | _ -> failwith "Substituting a variable by a expression without one variable is not supported yet."
+      end
+    | R_Constant (v ,t) as e -> e
+    | R_Fun((v, t), e) -> R_Fun((v, t), subst' v e)
+    | R_Apply(e1, e2) -> R_Apply(subst e1, subst e2)
+    | R_Tuple(es, t) -> R_Tuple(List.map subst es, t)
+    | R_Vector(es, t) -> R_Vector(List.map subst es, t)
+    | R_If(e1, e2, e3) -> R_If(subst e1, subst e2, subst e3)
+    | R_Let((v, t), e1, e2) -> R_Let((v, t), subst e1, subst' v e2)
+    | R_Fix((f, t), e, t') -> R_Fix((f, t), subst' f e, t')
+    | R_External (v ,t) as e -> e
+  in
+  f ss expr
+
 let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; t] -> R_Variable (v, TypingType.oType_of_sexpr t)
