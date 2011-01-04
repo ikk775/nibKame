@@ -1,11 +1,26 @@
-type elt
+type elt =
+  | Type of Id.t * (Id.t list * TypingType.oType)
+  | Expr of Id.t * (Id.t list * TypingType.typeScheme * Typing.result)
+(*  | Generic of Id.t * (TypingType.typeScheme * (Id.t * TypingType.oType list) list) *)
+
 type substitutions = {
-  s_Type : TypingType.substitution list;
-  s_Expr : Typing.substitution list;
+  s_Type: TypingType.substitution list;
+  s_Expr: Typing.substitution list;
+  s_Expr_TE: TypingExpr.substitution list;
+  }
+
+type extToIntMap = {
+  eim_Type: TypingType.substitution list;
+  eim_Expr: TypingExpr.substitution list;
+  }
+
+type intToExtMap = Id.substitution list
+
+type t = {
+  eim: extToIntMap;
+  iem: intToExtMap;
+  defs: elt list
 }
-type extToIntMap
-type intToExtMap
-type t
 val empty : t
 val emptyeim : extToIntMap
 val emptysubst : substitutions
@@ -23,6 +38,7 @@ val def_type : t -> Id.t -> Id.t * (Id.t list * TypingType.oType)
 val add_def_tail : t -> elt -> t
 val add_def_head : t -> elt -> t
 val expr_env : t -> TypingExpr.exprEnv
+val ext_expr_env : t -> TypingExpr.exprEnv
 val subst : substitutions -> t -> t
 val add_type :
   t -> TypingType.typeVar * (TypingType.typeVar list * TypingType.oType) -> t
@@ -38,3 +54,4 @@ val remove_expr : t -> Id.t list -> t
 val elt_to_sexpr : elt -> Sexpr.t
 val gather_expr : t -> Typing.result
 val to_sexpr : t -> Sexpr.t
+val compose : t -> t -> t

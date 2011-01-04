@@ -8,6 +8,7 @@ type elt =
 type substitutions = {
   s_Type: TypingType.substitution list;
   s_Expr: Typing.substitution list;
+  s_Expr_TE: TypingExpr.substitution list;
   }
 
 type extToIntMap = {
@@ -20,14 +21,25 @@ type intToExtMap = Id.substitution list
 type t = {
   eim: extToIntMap;
   iem: intToExtMap;
-  defs: elt list
+  defs: elt list (* the definitions are stored in reverse order. *)
 }
 
 let empty:t = {eim = {eim_Type = []; eim_Expr = []}; iem = []; defs = []}
 
 let emptyeim: extToIntMap = {eim_Type = []; eim_Expr = []}
 
-let emptysubst: substitutions = {s_Type = []; s_Expr = []}
+let emptysubst: substitutions = {s_Type = []; s_Expr = []; s_Expr_TE = []}
+
+let compose_eim eim eim' =
+  let {eim_Expr = eime; eim_Type = eimt} = eim in
+  let {eim_Expr = eime'; eim_Type = eimt'} = eim' in
+  {eim_Expr = TypingExpr.compose_expr_subst eime eime'; eim_Type = TypingType.compose eimt eimt'}
+
+let compose_iem iem iem' =
+  Id.compose iem iem'
+
+let compose_defs defs defs' =
+  defs' @ defs
 
 let elt_name : elt -> Id.t = function
   | Type (x, _)
@@ -42,6 +54,12 @@ let defs_type : t -> elt list = fun m ->
 
 let defs_expr : t -> elt list = fun m -> 
   List.filter (function Expr _ -> true | _ -> false) (defs m)
+
+let exists_type_def m x =
+  List.mem x (List.map elt_name (defs_type m))
+
+let exists_expr_def m x =
+  List.mem x (List.map elt_name (defs_expr m))
 
 let defs_type_cont = fun m -> 
   List.map (function Type (name, cont) -> name, cont | _ -> failwith "something went wrong!") (defs_type m)
@@ -77,14 +95,21 @@ let expr_env : t -> TypingExpr.exprEnv = fun m ->
   in
   TypingExpr.ExprEnv (List.map f (defs_expr m))
 
+let ext_expr_env m =
+  let TypingExpr.ExprEnv envlist = expr_env m in
+  let rss = TypingExpr.reverse_substitution m.eim.eim_Expr in
+  let visiblevars = TypingExpr.substitution_domain rss in
+  let envlist' = List.filter (function v, c -> List.mem v visiblevars) envlist in
+  TypingExpr.ExprEnv (List.map (function v, c -> Id.substitute m.iem v, c) envlist')
+
 let rec subst : substitutions -> t -> t = fun ss m ->
   let typedefs = defs_type m in
   let typedefns = List.map elt_name typedefs in
   let exprdefs = defs_expr m in 
   let exprdefns = List.map elt_name exprdefs in
-  match ss.s_Type, ss.s_Expr with
-    | [], [] -> m
-    | tss, [] ->
+  match ss with
+    | {s_Type = []; s_Expr = []; s_Expr_TE = []} -> m
+    | {s_Type = tss; s_Expr = []; s_Expr_TE = []} ->
       let rec substElt = function
         | Type (tv, (qtvs, t)) ->  
           let t' = TypingType.substitute tss t in
@@ -100,7 +125,7 @@ let rec subst : substitutions -> t -> t = fun ss m ->
           Expr (ev, (qtvs', et'', e'))
       in
       subst {ss with s_Type = []} {m with defs = List.map substElt m.defs}
-    | _, ess -> 
+    | {s_Type = _; s_Expr = ess; s_Expr_TE = []} ->
       let rec substElt = function
         | Type _ as t-> t
         | Expr (ev, (qtvs, et, r)) -> 
@@ -108,6 +133,16 @@ let rec subst : substitutions -> t -> t = fun ss m ->
           Expr (ev, (qtvs, et, r'))
       in
       subst {ss with s_Expr = []} {m with defs = List.map substElt m.defs}
+    | {s_Type = _; s_Expr = []; s_Expr_TE = ess} ->
+      let rec substElt = function
+        | Type _ as t-> t
+        | Expr (ev, (qtvs, et, r)) -> 
+          let r' = Typing.substitute_with_expr_subst ess r in
+          Expr (ev, (qtvs, et, r'))
+      in
+      subst {ss with s_Expr_TE = []} {m with defs = List.map substElt m.defs}
+    | {s_Type = _; s_Expr = _; s_Expr_TE = _} ->
+      failwith "Substitution order is ambiguous."
   
 let add_type = fun m -> 
   function
@@ -144,7 +179,7 @@ let add_expr_with_env = fun env m ->
       Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
       let rec f m = function
         | [] -> m
-        | (fv, ot) :: fvs -> 
+        | (fv, ot) :: fvs when exists_expr_def m fv -> 
           Debug.dbgprint (Format.sprintf "backpatching %s" fv);
           let _, (qtvs', t', r') = def_expr m fv in
           let ot' = TypingType.remove_quantifier t' in
@@ -157,8 +192,11 @@ let add_expr_with_env = fun env m ->
           Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'));
           Debug.dbgprint "free-variable-removed subst:";
           Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
-          let m' = subst {s_Type = ss'; s_Expr = []} m in
+          let m' = subst {emptysubst with s_Type = ss'} m in
           f m' fvs
+        | (fv, ot) :: fvs -> 
+          Debug.dbgprint (Format.sprintf "%s is in external module." fv);
+          f m fvs
       in
       let m' = f m fvs in
       let b = TypingExpr.gen_exprvar () in
@@ -252,4 +290,7 @@ let to_sexpr m =
     Sexpr.Sident "defines";
   ] in
   Sexpr.Sexpr [seim; siem; sdefs]
-  
+ 
+let compose m1 m2 =
+  let m2' = subst {emptysubst with s_Type = m1.eim.eim_Type; s_Expr_TE = m1.eim.eim_Expr} m2 in
+  {eim = compose_eim m1.eim m2'.eim; iem = compose_iem m1.iem m2'.iem; defs = compose_defs m1.defs m2'.defs}
