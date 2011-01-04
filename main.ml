@@ -2,11 +2,12 @@ open MyUtil
 
 let read_module stm =
   let syntaxs = TranslationUnit.read stm in
-  TranslationUnit.modulize TypingExpr.empty_exprEnv syntaxs
+  TranslationUnit.modulize (Module.expr_env Predefined.perspective) syntaxs
 
 let knormalize_module m =
-  let m' = Instantiate.instantiate m in
-  let r = Module.gather_expr m' in
+  let m = Module.compose Predefined.perspective m in
+  let m = Instantiate.instantiate m in
+  let r = Module.gather_expr m in
   fst (KNormal.from_typing_result r)
 
 let optimize_knormal k = k
@@ -24,7 +25,7 @@ let compile ch stm =
   let k = knormalize_module m in
   let k' = optimize_knormal k in
   let va = compile_knormal k' in
-  emit_asm ch va
+  Printf.fprintf ch "%s" (Std.dump va)
 
 let string str = compile stdout (Stream.of_string str)
 
@@ -32,7 +33,7 @@ let file f =
   let inchan = open_in (f ^ ".ml") in
   let outchan = open_out (f ^ ".s") in
   try
-    compile outchan (Stream.of_channel inchan)
+    compile outchan (Stream.of_channel inchan);
     close_in inchan;
     close_out outchan;
   with e -> (close_in inchan; close_out outchan; raise e)
