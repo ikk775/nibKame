@@ -85,7 +85,7 @@ let rec targetVars ss =
   List.map (fun x -> O_Variable(x)) (domain ss)
 
 let domain_restrict ss dom =
-  List.filter (function Substitution(ftv, _) as s -> List.mem ftv dom) ss
+  List.filter (function Substitution(ftv, _) -> List.mem ftv dom) ss
 
 let domain_diff ss dom =
   domain_restrict ss (MyUtil.List.setDiff (domain ss) dom)
@@ -179,6 +179,7 @@ let rec unify_u eqns substs =
       let eqns'' = substitute_eqnpairs substs' eqns' in
       let substs'' = compose substs' substs in
       unify_u eqns'' substs''
+    | (O_Tuple(ts1) , O_Tuple(ts2)):: eqns' -> unify_u (List.combine ts1 ts2 @ eqns') substs
     | _ -> raise (Unification_Failure(eqns, substs))
 
 let unify: oType -> oType -> substitution list = fun t1 t2 -> 
