@@ -34,8 +34,11 @@ val get_constant_type : expr -> TypingType.oType
 val get_variable_type : exprEnv -> expr -> TypingType.typeScheme
 val get_exprvar_name : expr -> exprVar
 val get_expr_type : expr -> TypingType.oType
+val substitution_domain : substitution list -> exprVar list
+val reverse_substitution : substitution list -> substitution list
 val substitute_expr : (exprVar * expr) list -> expr -> expr
 val substitute_expr_type : TypingType.substitution list -> expr -> expr
+val compose_expr_subst : substitution list -> substitution list -> substitution list
 val from_syntax : Syntax.t -> expr
 val to_sexpr : expr -> Sexpr.t
 val of_sexpr : Sexpr.t -> expr

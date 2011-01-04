@@ -96,6 +96,16 @@ let rec get_expr_type = function
   | E_Fun (_, e) -> get_expr_type e
   | _ -> invalid_arg "expected type-infered expr"
 
+let substitution_domain ss =
+  List.map fst ss
+
+let reverse_substitution ss =
+  let f = function
+    | v, E_Variable v' -> v', E_Variable v
+    | _ -> failwith "Only inter-variable substitution can be reversed."
+  in
+  List.map f ss
+
 let rec substitute_expr ss expr =
   let subst = substitute_expr ss in
   match expr with
@@ -144,6 +154,18 @@ let rec substitute_expr_type ss expr =
     | E_External(s, t) -> E_External(s, TypingType.substitute ss t)
     | E_Type(e, t) -> E_Type(subst e, TypingType.substitute ss t)
     | E_Declare(v, t, e) -> E_Declare(v, TypingType.substitute ss t, subst e)
+
+let rec compose_expr_subst xs ys =
+  let subst_v x ys = (List.map (fun y -> match y with fv, te -> (fv ,substitute_expr [x] te)) ys) in
+  match xs, ys with
+    | [], ys -> ys
+    | xs, [] -> xs
+    | x :: xs, ys ->
+      if (List.exists (fun y -> 
+        match x, y with
+          | (fvx, _), (fvy, _) -> fvx = fvy) ys)
+      then compose_expr_subst xs (subst_v x ys)
+      else compose_expr_subst xs (x :: subst_v x ys)
 
 (*
 type pat =
