@@ -302,7 +302,8 @@ let rec from_typing_result r =
     | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
     | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
     | Typing.R_Constant (_, _) -> failwith "invalid constant type."
-    | Typing.R_Internal (v, t) -> internal_symbol v t
+    | Typing.R_External (v, t) when v.[0] = '%' -> internal_symbol v t
+    | Typing.R_External (v, t) -> failwith "external function is not supported yet."
     | Typing.R_Let ((v, t), e1, e2) ->
       let e1', t1' = f env e1 in
       let e2', t2' = f (Id.Map.add v t1' env) e2 in

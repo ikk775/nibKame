@@ -18,7 +18,7 @@ type result =
   | R_If of result * result * result
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
-  | R_Internal of Id.t * TypingType.oType
+  | R_External of Id.t * TypingType.oType
 
 let rec bindedvars : result -> (Id.t * TypingType.oType) list = function
   | R_Constant (l, t) -> []
@@ -30,7 +30,7 @@ let rec bindedvars : result -> (Id.t * TypingType.oType) list = function
   | R_If (e1, e2, e3) -> List.concat (List.map bindedvars [e1; e2; e3])
   | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map bindedvars [e1; e2])
   | R_Fix ((v, t), e, t') -> (v, t) :: bindedvars e
-  | R_Internal _ -> []
+  | R_External _ -> []
 
 let rec freevars : result -> (Id.t * TypingType.oType) list = function
   | R_Constant (l, t) -> []
@@ -42,7 +42,7 @@ let rec freevars : result -> (Id.t * TypingType.oType) list = function
   | R_If (e1, e2, e3) -> List.unique (List.concat (List.map freevars [e1; e2; e3]))
   | R_Let ((v, t), e1, e2) -> List.remove_assoc v(List.unique (List.concat (List.map freevars [e1; e2]))) 
   | R_Fix ((v, t), e, t') -> List.remove_assoc v (freevars e)
-  | R_Internal _ -> []
+  | R_External _ -> []
 
 type substitution = ((resultVar * TypingType.oType) * result) (* 置換元と置換先の型は一致している必要がある *)
 
@@ -58,7 +58,7 @@ let rec typevars : result -> Id.t list = fun r ->
     | R_If (e1, e2, e3) -> List.unique (List.concat (List.map g [e1; e2; e3]))
     | R_Let ((v, t), e1, e2) -> List.unique (ftv t :: (List.concat (List.map g [e1; e2]))) 
     | R_Fix ((v, t), e, t') -> List.unique (ftv t :: g e)
-    | R_Internal (v, t) -> [ftv t]
+    | R_External (v, t) -> [ftv t]
   in
   List.concat (g r)
 
@@ -104,7 +104,7 @@ let rec substitute_result_type ss expr =
     | R_If(e1, e2, e3) -> R_If(subst e1, subst e2, subst e3)
     | R_Let((v, t), e1, e2) -> R_Let((v, tsubst t), subst e1, subst e2)
     | R_Fix((f, t), e, t') -> R_Fix((f, tsubst t), subst e, tsubst t')
-    | R_Internal (v ,t) -> R_Internal (v, tsubst t)
+    | R_External (v ,t) -> R_External (v, tsubst t)
 
 let rec result_to_expr expr =
   let to_expr = result_to_expr in
@@ -118,7 +118,7 @@ let rec result_to_expr expr =
     | R_If(e1, e2, e3) -> E_If(to_expr e1, to_expr e2, to_expr e3)
     | R_Let((v, t), e1, e2) -> E_Let(v, to_expr e1, to_expr e2)
     | R_Fix((f, t), e, t') -> E_Fix(f, to_expr e)
-    | R_Internal (v, t) -> invalid_arg (Printf.sprintf "R_Internal (%s, %s) cannot convert to TypingExpr." v (Sexpr.to_string (TypingType.oType_to_sexpr t)))
+    | R_External (v, t) -> invalid_arg (Printf.sprintf "R_External (%s, %s) cannot convert to TypingExpr." v (Sexpr.to_string (TypingType.oType_to_sexpr t)))
 
 let rec w env expr =
   match expr with
@@ -230,7 +230,7 @@ let rec substitute : substitution list -> result -> result = fun ss expr ->
     | R_If(e1, e2, e3) -> R_If(subst e1, subst e2, subst e3)
     | R_Let((v, t), e1, e2) -> R_Let((v, t), subst e1, subst' v e2)
     | R_Fix((f, t), e, t') -> R_Fix((f, t), subst' f e, t')
-    | R_Internal (v ,t) as e -> e
+    | R_External (v ,t) as e -> e
 
 let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)
@@ -269,7 +269,7 @@ let rec of_sexpr = function
     (match of_sexpr v with
       | R_Variable(v, t) -> R_Fix((v, t), of_sexpr e, TypingType.oType_of_sexpr t')
       | _ -> invalid_arg "unexpected token.")
-  | Sexpr.Sexpr [Sexpr.Sident "r:internal-symbol"; Sexpr.Sident v; t] -> R_Internal (v, TypingType.oType_of_sexpr t)
+  | Sexpr.Sexpr [Sexpr.Sident "r:external-symbol"; Sexpr.Sident v; t] -> R_External (v, TypingType.oType_of_sexpr t)
   | _ -> invalid_arg "unexpected token."
 
 let gather (v, t, e) e' =
@@ -296,7 +296,7 @@ let rec to_sexpr = function
   | R_If (e1, e2, e3) -> Sexpr.Sexpr (Sexpr.Sident "r:if" :: List.map to_sexpr [e1; e2; e3])
   | R_Let ((v, t), e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "r:let"; to_sexpr (R_Variable(v, t)); to_sexpr e1; to_sexpr e2]
   | R_Fix ((v, t), e, t') -> Sexpr.Sexpr [Sexpr.Sident "r:fix"; to_sexpr (R_Variable(v, t)); to_sexpr e; oType_to_sexpr t']
-  | R_Internal (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:internal-symbol"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
+  | R_External (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:external-symbol"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
 
 let rec result_type = function
   | R_Constant (l, t) -> t
@@ -312,5 +312,5 @@ let rec result_type = function
   | R_If (e1, e2, e3) -> result_type e2
   | R_Let ((v, t), e1, e2) -> result_type e2
   | R_Fix ((v, t), e, t') -> t
-  | R_Internal (v, t) -> t
+  | R_External (v, t) -> t
 
