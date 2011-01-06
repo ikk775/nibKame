@@ -53,7 +53,7 @@ and exp =
   | TupleAlloc of (Id.t * ty) list
   | ArrayAlloc of ty * Id.t
   | Save of Id.t * Id.t
-  | Pop of Id.t * Id.t
+  | Restore of Id.t * Id.t
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 val genid : unit -> Id.t
