@@ -39,8 +39,8 @@
 \begin{document}
 \maketitle
 %\section{はじめに}
-我々は\emph{nibKame}という名の関数型言語を設計し、そのコンパイラを製作した。
-nibKameとは、ML系の関数型言語である\emph{MinCaml}という言語を拡張したものである。
+我々は\emph{nibKame}という名の\emph{関数型言語}を設計し、そのコンパイラを製作した。
+nibKameとは、\emph{ML}系の関数型言語である\emph{MinCaml}という言語を拡張したものである。
 そもそもMinCamlはコンパイラの教育用に設計された言語であるため機能が少なく、
 実用的なML系の言語に存在する
 \begin{inlineenummerate}
@@ -83,10 +83,10 @@ nibKameは以下の特徴を持つ。
 \item[レジスタ割り当て] 実際にレジスタを割り当てる。
 \item[アセンブリで出力] 
 \end{inlineenummerate}
-また、その後GNUアセンブラによって出力したアセンブリをアセンブルし、
-GNUリンカで事前に用意したランタイムとリンクする。
+また、その後GNUアセンブラ(gas)によって出力したアセンブリをアセンブルし、
+GNUリンカ(ld)で事前に用意したランタイムとリンクする。
 
-現状では、構文解析部はScheme (Gauche)で、それ以外はOCaml (OCaml)で書かれている。
+現状では、構文解析部は\emph{Scheme} (処理系は\emph{Gauche}を用いた)で、それ以外は\emph{Objective Caml} (OCaml)で書かれている。
 ソースソードの言語別行数内訳は以下のようになっている。
 ここで、OCamlにおいては\verb/*.ml/のファイルが実装を定義し、
 \verb/*.mli/のファイルがインターフェースを定義する。
@@ -100,4 +100,6 @@ GNUリンカで事前に用意したランタイムとリンクする。
 \begin{inlineenummerate}
 \item OCaml \verb/*.ml/ : 1058行
 \end{inlineenummerate}
+
+キーワード: 型推論 関数型言語
 \end{document}
