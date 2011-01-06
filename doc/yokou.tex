@@ -1,0 +1,103 @@
+\documentclass[a4paper,12pt]{jarticle}
+\usepackage{mathpazo}
+\title{\LARGE 関数型言語の設計と製作}
+\date{\relax}
+
+\makeatletter
+\newcounter{ienum}
+%\renewcommand{\theienum}{\@arabic\c@ienum}
+%\renewcommand{\theienum}{\@alph\c@ienum}
+%\renewcommand{\theienum}{\@roman\c@ienum}
+%\renewcommand{\theienum}{\@Alph\c@ienum}
+\renewcommand{\theienum}{\@alph\c@ienum}
+%\newcommand{\labelienum}{\theienum.}
+%\newcommand{\labelienum}{(\theienum)}
+%\newcommand{\labelienum}{\theienum.}
+\newcommand{\labelienum}{\theienum.}
+\let\@one=1
+\newcommand{\inlineitem}[1][\relax]{%
+\hspace{1ex plus 1.5ex}%
+\linebreak[1]%
+\addtocounter{ienum}{1}%
+\textbf{\labelienum}%
+\hspace{1ex plus 0.5ex}%
+\ifx#1\relax\relax\else\textbf{#1}\hspace{1ex plus 1ex}\fi%
+\nolinebreak}
+\newenvironment{inlineenummerate}
+  {\begingroup
+   \setcounter{ienum}{0}%
+   \let\item=\inlineitem%
+   \hspace{1ex}%
+   }{\endgroup\hspace{2ex plus 5ex minus 0.2ex}\linebreak[3]}%
+\makeatother
+\topmargin=-1in
+\advance\topmargin -10mm
+\advance\textheight 2in
+\advance\oddsidemargin -0.5in
+\advance\evensidemargin -0.5in
+\advance\textwidth 1in
+\begin{document}
+\maketitle
+%\section{はじめに}
+我々は\emph{nibKame}という名の関数型言語を設計し、そのコンパイラを製作した。
+nibKameとは、ML系の関数型言語である\emph{MinCaml}という言語を拡張したものである。
+そもそもMinCamlはコンパイラの教育用に設計された言語であるため機能が少なく、
+実用的なML系の言語に存在する
+\begin{inlineenummerate}
+\item[多相関数]
+\item[関数の部分適用]
+\item[代数型データ型]
+\item[モジュール]
+\item[パターンマッチング]
+\item[GC]
+\end{inlineenummerate}
+等の機能が欠けており、nibKameにおいては
+多相関数、
+関数の部分適用、
+代数的データ型
+を実装した。
+
+%\section{nibKameの言語仕様について}
+nibKameは以下の特徴を持つ。
+\begin{inlineenummerate}
+\item[値呼び]
+\item[暗な多層型]
+\item[非純粋な関数型言語]
+\item[Hindley/Milner-like type system]
+\item[モジュール]
+\end{inlineenummerate}
+
+%\section{nibKameのコンパイラの仕様について}
+コンパイラは以下のフェーズに分かれている。
+\begin{inlineenummerate}
+\item[構文解析] ソースコードを読み込み抽象構文木に変換。
+\item[抽象構文木の読み込み] 
+\item[型推論] 
+\item[パターンマッチの展開] 
+\item[K正規形に変換] 
+\item[K正規形に対する最適化] 
+\item[クロージャ変換] 
+\item[仮想機械語に変換] 
+\item[直線変換] 木構造となっている仮想機械語の命令を線形リストに変換する。
+\item[機械語に変換] レジスタが無限にあるとして機械語に変換。
+\item[レジスタ割り当て] 実際にレジスタを割り当てる。
+\item[アセンブリで出力] 
+\end{inlineenummerate}
+また、その後GNUアセンブラによって出力したアセンブリをアセンブルし、
+GNUリンカで事前に用意したランタイムとリンクする。
+
+現状では、構文解析部はScheme (Gauche)で、それ以外はOCaml (OCaml)で書かれている。
+ソースソードの言語別行数内訳は以下のようになっている。
+ここで、OCamlにおいては\verb/*.ml/のファイルが実装を定義し、
+\verb/*.mli/のファイルがインターフェースを定義する。
+実装: 
+\begin{inlineenummerate}
+\item Scheme \verb/*.scm/ : 337行
+\item OCaml \verb/*.ml/ : 3305行
+\item OCaml \verb/*.mli/ : 646行
+\end{inlineenummerate}
+テスト: 
+\begin{inlineenummerate}
+\item OCaml \verb/*.ml/ : 1058行
+\end{inlineenummerate}
+\end{document}
