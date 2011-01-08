@@ -204,7 +204,7 @@ let rec w env expr =
       let t2 = substitute s2 t1 in
       let bt = substitute s2 b in
       compose s2 s1, t2, R_Fix((f, bt), e', t2)
-    | E_Fix(f, _) -> failwith "A fix operator must followed by a fun operator."
+    | E_Fix(f, _) -> failwith "A fix operator must be followed by a fun operator."
     | E_Declare (v, t, e) ->
       w (E.add_env env v (T.OType t)) e
     | E_Type (e, t) ->
