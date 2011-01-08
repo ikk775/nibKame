@@ -144,6 +144,19 @@ let rec substitute_expr ss expr =
       let subst' = substitute_expr ss' in
       E_Fix(f, subst' e)
     | E_External(s, t) -> E_External(s, t)
+    | E_Match(e, cls) ->
+      let rec f p = match p with
+        | EP_Any | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
+        | EP_Apply (p1, p2) -> EP_Apply (f p1, f p2)
+        | EP_And (p1, p2) -> EP_And (f p1, f p2)
+        | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
+        | EP_Not p -> EP_Not (f p)
+        | EP_Predicate e -> EP_Predicate (subst e)
+        | EP_Tuple ps -> EP_Tuple (List.map f ps)
+        | EP_Vector ps -> EP_Vector (List.map f ps)
+      in
+      let g = function p, e -> f p, subst e in
+      E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
       let v' = gen_exprvar () in
@@ -165,6 +178,19 @@ let rec substitute_expr_type ss expr =
     | E_Let(v, e1, e2) -> E_Let(v, subst e1, subst e2)
     | E_Fix(f, e) -> E_Fix(f, subst e)
     | E_External(s, t) -> E_External(s, TypingType.substitute ss t)
+    | E_Match(e, cls) ->
+      let rec f p = match p with
+        | EP_Any | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
+        | EP_Apply (p1, p2) -> EP_Apply (f p1, f p2)
+        | EP_And (p1, p2) -> EP_And (f p1, f p2)
+        | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
+        | EP_Not p -> EP_Not (f p)
+        | EP_Predicate e -> EP_Predicate (subst e)
+        | EP_Tuple ps -> EP_Tuple (List.map f ps)
+        | EP_Vector ps -> EP_Vector (List.map f ps)
+      in
+      let g = function p, e -> f p, subst e in
+      E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, TypingType.substitute ss t)
     | E_Declare(v, t, e) -> E_Declare(v, TypingType.substitute ss t, subst e)
 
