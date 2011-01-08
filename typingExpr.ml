@@ -12,9 +12,21 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
+  | E_Match of expr * (pattern * expr) list
   | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
+and pattern =
+  | EP_Constant of Syntax.lit
+  | EP_Variable of Id.t
+  | EP_Constructor of Id.t
+  | EP_Apply of pattern * pattern
+  | EP_And of pattern * pattern
+  | EP_Or of pattern * pattern (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
+  | EP_Not of pattern
+  | EP_Predicate of expr
+  | EP_Tuple of pattern list
+  | EP_Vector of pattern list
 
 type t = expr
 
@@ -217,6 +229,7 @@ let rec from_syntax = function
     E_Vector(List.map from_syntax es)
   | _ -> invalid_arg "unexpected Syntax"
 
+
 let rec to_sexpr = function
   | E_Constant e -> Sexpr.Sexpr [Sexpr.Sident "e:constant"; Syntax.lit_to_sexpr e]
   | E_Variable v -> Sexpr.Sexpr [Sexpr.Sident "e:var"; Sexpr.Sident v]
@@ -239,12 +252,41 @@ let rec to_sexpr = function
       | e -> [e]
     in
     Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
+  | E_Match(e, cls) ->
+    Sexpr.tagged_sexpr "e:match" (List.map (function p, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]) cls)
   | E_External(s, t) ->
     Sexpr.Sexpr[Sexpr.Sident "e:extenal"; Sexpr.Sident s; TypingType.oType_to_sexpr t]
   | E_Type(e, t) ->
     Sexpr.Sexpr[Sexpr.Sident "e:type"; to_sexpr e; TypingType.oType_to_sexpr t]
   | E_Declare(v, t, e) ->
     Sexpr.Sexpr[Sexpr.Sident "e:declare"; to_sexpr(E_Variable v); TypingType.oType_to_sexpr t; to_sexpr e]
+and pattern_to_sexpr = function
+  | EP_Constant lit -> Sexpr.tagged_sexpr "ep:constant" [Syntax.lit_to_sexpr lit]
+  | EP_Variable v -> Sexpr.tagged_sexpr "ep:var" [Sexpr.Sident v]
+  | EP_Constructor v -> Sexpr.tagged_sexpr "ep:constructor" [Sexpr.Sident v]
+  | EP_Apply (p1, p2) ->
+    let rec f ps = function
+      | EP_Apply (p1, p2) -> f (p1 :: ps) p2
+      | _ as p -> p :: ps
+    in
+    Sexpr.tagged_sexpr "ep:apply" (pattern_to_sexpr p1 :: List.rev_map pattern_to_sexpr (f [] p2))
+  | EP_And (p1, p2) ->
+    let rec f ps = function
+      | EP_And (p1, p2) -> f (p1 :: ps) p2
+      | _ as p -> p :: ps
+    in
+    Sexpr.tagged_sexpr "ep:and" (pattern_to_sexpr p1 :: List.rev_map pattern_to_sexpr (f [] p2))
+  | EP_Or (p1, p2) ->
+    let rec f ps = function
+      | EP_Or (p1, p2) -> f (p1 :: ps) p2
+      | _ as p -> p :: ps
+    in
+    Sexpr.tagged_sexpr "ep:or" (pattern_to_sexpr p1 :: List.rev_map pattern_to_sexpr (f [] p2))
+  | EP_Not p -> Sexpr.tagged_sexpr "ep:not" [pattern_to_sexpr p]
+  | EP_Predicate e -> Sexpr.tagged_sexpr "ep:predicate" [to_sexpr e]
+  | EP_Tuple ps -> Sexpr.tagged_sexpr "ep:tuple" (List.map pattern_to_sexpr ps)
+  | EP_Vector ps -> Sexpr.tagged_sexpr "ep:vector" (List.map pattern_to_sexpr ps)
+
 
 let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "e:constant"; e] -> E_Constant (Syntax.lit_of_sexpr e)
@@ -271,10 +313,47 @@ let rec of_sexpr = function
       | _ -> invalid_arg "unexpected token."
     in
     apply_nest (e1 :: e2 :: es)
+  | Sexpr.Sexpr (Sexpr.Sident "e:match" :: e :: cls) ->
+    let f = function
+      | Sexpr.Sexpr [p; e] -> pattern_of_sexpr p, of_sexpr e
+      | _ -> invalid_arg "of_sexpr"
+    in
+    E_Match (of_sexpr e, List.map f cls)
   | Sexpr.Sexpr [Sexpr.Sident "e:extenal"; Sexpr.Sident s; t] -> E_External(s, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "e:type"; e; t] -> E_Type(of_sexpr e, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "e:declare"; v; t; e] -> E_Declare(get_exprvar_name(of_sexpr v), TypingType.oType_of_sexpr t, of_sexpr e)
   | _ -> invalid_arg "unexpected token."
+and pattern_of_sexpr =
+  let nest f initial list =
+    let rec g p = function
+      | [] -> p
+      | p' :: ps' -> g (f p p') ps'
+    in
+    g initial list
+  in function
+  | Sexpr.Sexpr [Sexpr.Sident "ep:constant"; lit] -> EP_Constant (Syntax.lit_of_sexpr lit)
+  | Sexpr.Sexpr [Sexpr.Sident "ep:var"; Sexpr.Sident v] -> EP_Variable v
+  | Sexpr.Sexpr [Sexpr.Sident "ep:constructor"; Sexpr.Sident v] -> EP_Constructor v
+  | Sexpr.Sexpr (Sexpr.Sident "ep:apply" :: arg1 :: arg2 :: rest) ->
+    let p1 = pattern_of_sexpr arg1 in
+    let p2 = pattern_of_sexpr arg2 in
+    let ps = List.map pattern_of_sexpr rest in
+    nest (fun p p' -> EP_Apply (p, p')) p1 (p2 :: ps)
+  | Sexpr.Sexpr (Sexpr.Sident "ep:and" :: arg1 :: arg2 :: rest) ->
+    let p1 = pattern_of_sexpr arg1 in
+    let p2 = pattern_of_sexpr arg2 in
+    let ps = List.map pattern_of_sexpr rest in
+    nest (fun p p' -> EP_And (p, p')) p1 (p2 :: ps)
+  | Sexpr.Sexpr (Sexpr.Sident "ep:or" :: arg1 :: arg2 :: rest) ->
+    let p1 = pattern_of_sexpr arg1 in
+    let p2 = pattern_of_sexpr arg2 in
+    let ps = List.map pattern_of_sexpr rest in
+    nest (fun p p' -> EP_Or (p, p')) p1 (p2 :: ps)
+  | Sexpr.Sexpr [Sexpr.Sident "ep:not";  p] ->  EP_Not (pattern_of_sexpr p)
+  | Sexpr.Sexpr [Sexpr.Sident "ep:predicate";  e] ->  EP_Predicate (of_sexpr e)
+  | Sexpr.Sexpr (Sexpr.Sident "ep:tuple" :: ps) ->  EP_Tuple (List.map pattern_of_sexpr ps)
+  | Sexpr.Sexpr (Sexpr.Sident "ep:vector" :: ps) ->  EP_Vector (List.map pattern_of_sexpr ps)
+  | _ -> invalid_arg "pattern_of_sexpr"
 
 let rec substitution_to_sexpr = function
   | v, e -> Sexpr.Sexpr (List.map to_sexpr [E_Variable v; e])
