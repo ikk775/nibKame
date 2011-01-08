@@ -15,6 +15,7 @@ type expr =
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 and pattern =
+  | EP_Any
   | EP_Constant of Syntax.lit
   | EP_Variable of Id.t
   | EP_Constructor of Id.t

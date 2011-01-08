@@ -17,6 +17,7 @@ type expr =
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 and pattern =
+  | EP_Any
   | EP_Constant of Syntax.lit
   | EP_Variable of Id.t
   | EP_Constructor of Id.t
@@ -261,6 +262,7 @@ let rec to_sexpr = function
   | E_Declare(v, t, e) ->
     Sexpr.Sexpr[Sexpr.Sident "e:declare"; to_sexpr(E_Variable v); TypingType.oType_to_sexpr t; to_sexpr e]
 and pattern_to_sexpr = function
+  | EP_Any -> Sexpr.Sident "ep:any"
   | EP_Constant lit -> Sexpr.tagged_sexpr "ep:constant" [Syntax.lit_to_sexpr lit]
   | EP_Variable v -> Sexpr.tagged_sexpr "ep:var" [Sexpr.Sident v]
   | EP_Constructor v -> Sexpr.tagged_sexpr "ep:constructor" [Sexpr.Sident v]
@@ -331,6 +333,7 @@ and pattern_of_sexpr =
     in
     g initial list
   in function
+  | Sexpr.Sident "ep:any" -> EP_Any
   | Sexpr.Sexpr [Sexpr.Sident "ep:constant"; lit] -> EP_Constant (Syntax.lit_of_sexpr lit)
   | Sexpr.Sexpr [Sexpr.Sident "ep:var"; Sexpr.Sident v] -> EP_Variable v
   | Sexpr.Sexpr [Sexpr.Sident "ep:constructor"; Sexpr.Sident v] -> EP_Constructor v
