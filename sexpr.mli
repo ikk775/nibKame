@@ -16,3 +16,7 @@ val from_string: string -> t
 exception Unreadable_object
 exception Undefined_external_form
 
+val ident: string -> t
+val string: string -> t
+val tagged_sexpr: string -> t list -> t
+val parse_tagged_sexpr: t -> string * t list
