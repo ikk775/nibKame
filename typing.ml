@@ -205,8 +205,13 @@ let rec w env expr =
       let bt = substitute s2 b in
       compose s2 s1, t2, R_Fix((f, bt), e', t2)
     | E_Fix(f, _) -> failwith "A fix operator must followed by a fun operator."
-    | E_Type _ -> failwith "E_Type is not supported yet."
-    | E_Declare _ -> failwith "E_Declare is not supported yet."
+    | E_Declare (v, t, e) ->
+      w (E.add_env env v (T.OType t)) e
+    | E_Type (e, t) ->
+      let s, t', e' = w env e in
+      let s' = unify (substitute s t') t in
+      let t'' = substitute s' t' in
+      compose s' s, t'', e'
 
 let typing_with_subst env expr =
   let ss, t, expr' = w env expr in
