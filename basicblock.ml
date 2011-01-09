@@ -1,14 +1,17 @@
 module VA = VirtualAsm
 
-type block =
-  { blockname : Id.l; body : ins list }
+module M = Map.Make
+  (struct
+    type t = Id.l
+    let compare = compare
+   end)
 
 type ins =
   | Let of (Id.t * VA.ty) * ins
-  | Ret of Id.t
   | Entry
   | Jump of Id.l
   | Label of Id.l
+  | Nop
 
   | Set of VA.literal
   | Mov of VA.id_or_imm
@@ -49,19 +52,22 @@ type ins =
   | FCar of Id.t
   | FCdr of Id.t
 
-  | TupleAlloc of (Id.t * ty) list
-  | ArrayAlloc of ty * Id.t
+  | TupleAlloc of (Id.t * VA.ty) list
+  | ArrayAlloc of VA.ty * Id.t
 
   | Save of Id.t * Id.t
   | Restore of Id.t * Id.t
 
-type fundef { name : Id.l; args ; (Id.t * VA.ty) list; body : ins list; ret : VA.ty }
+type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty }
+
+type block =
+  { blockname : Id.l; body : ins list }
 
 let counter : int ref = ref 0
 let mkblockname () =
-  let i = counter in
-    incf counter;
-    Format.sprintf "block:%d" i
+  let i = !counter in
+    counter := !counter + 1;
+    Id.L (Format.sprintf "block:%d" i)
 
 let rec to_ins stack = function
   | VA.Nop -> Nop
@@ -89,13 +95,7 @@ let rec to_ins stack = function
   | VA.BSt (data, mem) -> BSt (data, mem)
 
   | VA.Comp (op, ty, s1, s2) -> Comp (op, ty, s1, s2)
-  | VA.If (cond, tr, fal) ->
-      let newblock = mkblockname () in
-	begin match stack with
-	  | [] -> If (to_ins cond, Label newblock :: linerize [] tr) :: linerize [] fal
-	  | continue :: next ->
-	      If (to_ins cond, Label newblock :: (List.rev (Jump continue  :: (List.rev (linerize next tr))))) :: linerize next fal
-	end
+
   | VA.ApplyCls (cls, args) -> ApplyCls (cls, args)
   | VA.ApplyDir (func, args) -> ApplyDir (func, args)
 
@@ -105,6 +105,7 @@ let rec to_ins stack = function
   | VA.Cons (h, t) -> Cons (h, t)
   | VA.Car (l) -> Car l
   | VA.Cdr (l) -> Cdr l
+  | VA.FCons (h, t) -> FCons (h, t)
   | VA.FCar (l) -> FCar l
   | VA.FCdr (l) -> FCdr l
 
@@ -115,12 +116,22 @@ let rec to_ins stack = function
   | VA.Restore (src, dst) -> Restore (src, dst)
 
 and linerize stack = function
+  | VA.Ans (VA.If (cond, tr, fal)) ->
+      let block_tr = mkblockname () in
+	begin match stack with
+	  | [] ->
+	      let _ = Label block_tr :: linerize [] tr in
+		If (to_ins [] cond,  block_tr) :: linerize [] fal
+	  | continue :: next ->
+	      let _ =  Label block_tr :: (List.rev (Jump continue  :: (List.rev (linerize next tr)))) in
+		If (to_ins [] cond, block_tr) :: linerize next fal
+	end
   | VA.Ans (t) -> [to_ins stack t]
   | VA.Seq (t1, t2) -> 
       let continue = mkblockname () in
 	linerize (continue :: stack) t1 @ (Label (continue) :: linerize stack t2)
   | VA.Let (id, exp, next) ->
-      Let (id, to_ins exp) :: linerize stack next
+      Let (id, to_ins stack exp) :: linerize stack next
 
 let linerizr_func {VA.name = Id.L func_label; VA.args = args; VA.body = body } =
-  MyUtil.undefined ()
+  

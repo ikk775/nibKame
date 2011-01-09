@@ -40,7 +40,7 @@ and exp =
   | BLd of mem_op
   | BSt of Id.t * mem_op
   | Comp of cmp_op * ty * Id.t * id_or_imm
-  | If of t * t * t
+  | If of exp * t * t
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
   | ArrayRef of Id.t * Id.t
