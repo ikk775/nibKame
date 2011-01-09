@@ -1,14 +1,16 @@
 module VA = VirtualAsm
 
-module M = Map.Make
-  (struct
-    type t = Id.l
-    let compare = compare
-   end)
+module M = 
+  Map.Make
+    (struct
+       type t = Id.l
+       let compare = compare
+     end)
 
 type ins =
   | Let of (Id.t * VA.ty) * ins
   | Entry
+  | Ret
   | Jump of Id.l
   | Label of Id.l
   | Nop
@@ -58,10 +60,10 @@ type ins =
   | Save of Id.t * Id.t
   | Restore of Id.t * Id.t
 
-type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty }
+type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty; block_labels : Id.l list }
 
 type block =
-  { blockname : Id.l; body : ins list }
+  { blockname : Id.l; blockbody : ins list }
 
 let counter : int ref = ref 0
 let mkblockname () =
@@ -69,7 +71,7 @@ let mkblockname () =
     counter := !counter + 1;
     Id.L (Format.sprintf "block:%d" i)
 
-let rec to_ins stack = function
+let to_ins = function
   | VA.Nop -> Nop
   | VA.Set (lit) -> Set lit
   | VA.Mov (v) -> Mov v
@@ -115,23 +117,35 @@ let rec to_ins stack = function
   | VA.Save (dst, data) -> Save (dst, data)
   | VA.Restore (src, dst) -> Restore (src, dst)
 
-and linerize stack = function
+let rec linerize blocks stack = function
   | VA.Ans (VA.If (cond, tr, fal)) ->
       let block_tr = mkblockname () in
 	begin match stack with
 	  | [] ->
-	      let _ = Label block_tr :: linerize [] tr in
-		If (to_ins [] cond,  block_tr) :: linerize [] fal
+	      blocks := M.add block_tr (Label block_tr :: linerize blocks [] tr) !blocks;
+	      If (to_ins cond,  block_tr) :: linerize blocks [] fal
 	  | continue :: next ->
-	      let _ =  Label block_tr :: (List.rev (Jump continue  :: (List.rev (linerize next tr)))) in
-		If (to_ins [] cond, block_tr) :: linerize next fal
+	      blocks := M.add block_tr (Label block_tr :: (List.rev (Jump continue  :: (List.rev (linerize blocks next tr))))) !blocks;
+	      If (to_ins cond, block_tr) :: linerize blocks next fal
 	end
-  | VA.Ans (t) -> [to_ins stack t]
+  | VA.Ans (t) -> [to_ins t]
   | VA.Seq (t1, t2) -> 
       let continue = mkblockname () in
-	linerize (continue :: stack) t1 @ (Label (continue) :: linerize stack t2)
+	linerize blocks (continue :: stack) t1 @ (Label (continue) :: linerize blocks stack t2)
   | VA.Let (id, exp, next) ->
-      Let (id, to_ins stack exp) :: linerize stack next
+      Let (id, to_ins exp) :: linerize blocks stack next
 
-let linerizr_func {VA.name = Id.L func_label; VA.args = args; VA.body = body } =
-  
+let rec add_ret = function
+  | [Jump label] as i -> i
+  | [] -> [Ret]
+  | ins :: tail -> ins :: add_ret tail
+
+
+let linerizr_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
+  let blocks = ref M.empty in
+  let insts = linerize blocks [] body in
+  let blocknames, inst = M.fold (fun key ins ret ->
+				   let block, inst = ret in
+				     key :: block, ins @ inst)
+                                !blocks ([], []) in
+    { name = func_label; args = args; body = Label func_label :: insts @ inst; ret = ret; block_labels = blocknames }
