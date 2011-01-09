@@ -61,6 +61,9 @@ type inst =
   | CDQ (* Extend EAX to EDX *)
   | Div of reg (* divided edx:eax by reg *)
 
+  | INC of rmi
+  | DEC of rmi
+
   | AND of twoOp
   | OR of twoOp
   | XOR of twoOp
@@ -158,3 +161,47 @@ let str_of_inst = function
   | Push (src) -> Fotmat.sprintf "pushl %s" (str_of_rmi src)
   | Pop (dst) -> Format.sprintf "popl %s" (str_of_reg dst)
 
+  | Add op -> Format.sprintf "addl %s" (str_of_twoOp op)
+  | Sub op -> Format.sprintf "subl %s" (str_of_twoOp op)
+  | Mul (dst, src) -> Format.sprintf "imul %s, %s" (str_of_reg src) (str_of_rmi dst)
+  | CDQ -> "cdq"
+  | Div reg -> Format.sprintf "idiv %s" (str_of_reg reg)
+
+  | INC op -> Format.sprintf "incl %s" (str_of_rmi op)
+  | DEC op -> Format.sprintf "decl %s" (str_of_rmi op)
+
+  | AND op -> Format.sprintf "andl %s" (str_of_twoOp op)
+  | OR op -> Format.sprintf "orl %s" (str_of_twoOp op)
+  | XOR op -> Format.sprintf "xorl %s" (str_of_twoOp op)
+  | NEG reg -> Format.sprintf "negl %s" (str_of_reg reg)
+  | NOT reg -> Format.sprintf "notl %s" (str_of_reg reg)
+
+  | Fadd (dst, src) -> Format.sprintf "addsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | Fsub (dst, src) -> Format.sprintf "subsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | Fmul (dst, src) -> Format.sprintf "mulsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | Fdiv (dst, src) -> Format.sprintf "divsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | Fsqrt (dst, src) -> Format.sprintf "sqrtsd %s, %s" (str_of_freg src) (str_of_freg dst)
+
+  | F2I (dst, src) -> Format.sprintf "cvtsi2sd %s, %s" (str_of_freg src) (str_of_reg dst)
+  | I2F (dst, src) -> Format.sprintf "cvttsdi2si %s, %s" (str_of_reg src) (str_of_freg dst)
+
+  | SAL op -> Format.sprintf "sall %s" (str_of_twoOp op)
+  | SHL op -> Format.sprintf "shll %s" (str_of_twoOp op)
+  | SAR op -> Format.sprintf "sarl %s" (str_of_twoOp op)
+  | SHR op -> Format.sprintf "shrl %s" (str_of_twoOp op)
+
+  | Cmp op -> Format.sprintf "cmp %s" (str_of_twoOp op)
+  | Test op -> Format.sprintf "testl %s" (str_of_twoOp op)
+  | Branch (cond, Id.L label) ->
+      Format.sprintf (match cond with
+			| VA.Eq -> "je %s"
+			| VA.NotEq "jne %s"
+			| VA.LsEq -> "jle %s"
+			| VA.Ls -> "jl %s"
+			| VA.Gt -> "jg %s"
+			| VA.GtEq -> "jge %s") label
+  | Jmp (Id.L label) -> Format.sprintf "jmp %s" label
+  | Call (Id.L label) -> Format.sprintf "call %s" label 
+  | Label (Id.L label) -> Format.spintf "%s:" label
+  | Leave -> "leave"
+  | Ret -> "ret"
