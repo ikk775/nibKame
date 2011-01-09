@@ -10,14 +10,13 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
-  | E_Match of expr * (pattern * expr) list
+  | E_Match of expr * (pattern * expr * expr) list
   | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 and pattern =
-  | EP_Any
   | EP_Constant of Syntax.lit
-  | EP_Variable of Id.t
+  | EP_Variable of Id.t option
   | EP_Constructor of Id.t
   | EP_Apply of pattern * pattern
   | EP_And of pattern * pattern

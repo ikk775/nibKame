@@ -12,14 +12,13 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
-  | E_Match of expr * (pattern * expr) list
+  | E_Match of expr * (pattern * expr * expr) list 
   | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 and pattern =
-  | EP_Any
   | EP_Constant of Syntax.lit
-  | EP_Variable of Id.t
+  | EP_Variable of Id.t option
   | EP_Constructor of Id.t
   | EP_Apply of pattern * pattern
   | EP_And of pattern * pattern
@@ -146,7 +145,7 @@ let rec substitute_expr ss expr =
     | E_External(s, t) -> E_External(s, t)
     | E_Match(e, cls) ->
       let rec f p = match p with
-        | EP_Any | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
+        | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
         | EP_Apply (p1, p2) -> EP_Apply (f p1, f p2)
         | EP_And (p1, p2) -> EP_And (f p1, f p2)
         | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
@@ -155,7 +154,7 @@ let rec substitute_expr ss expr =
         | EP_Tuple ps -> EP_Tuple (List.map f ps)
         | EP_Vector ps -> EP_Vector (List.map f ps)
       in
-      let g = function p, e -> f p, subst e in
+      let g = function p, guard, e -> f p, subst guard, subst e in
       E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
@@ -180,7 +179,7 @@ let rec substitute_expr_type ss expr =
     | E_External(s, t) -> E_External(s, TypingType.substitute ss t)
     | E_Match(e, cls) ->
       let rec f p = match p with
-        | EP_Any | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
+        | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
         | EP_Apply (p1, p2) -> EP_Apply (f p1, f p2)
         | EP_And (p1, p2) -> EP_And (f p1, f p2)
         | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
@@ -189,7 +188,7 @@ let rec substitute_expr_type ss expr =
         | EP_Tuple ps -> EP_Tuple (List.map f ps)
         | EP_Vector ps -> EP_Vector (List.map f ps)
       in
-      let g = function p, e -> f p, subst e in
+      let g = function p, guard, e -> f p, subst guard, subst e in
       E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, TypingType.substitute ss t)
     | E_Declare(v, t, e) -> E_Declare(v, TypingType.substitute ss t, subst e)
@@ -280,7 +279,7 @@ let rec to_sexpr = function
     in
     Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
   | E_Match(e, cls) ->
-    Sexpr.tagged_sexpr "e:match" (List.map (function p, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]) cls)
+    Sexpr.tagged_sexpr "e:match" (List.map (function p, g, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr g; to_sexpr e]) cls)
   | E_External(s, t) ->
     Sexpr.Sexpr[Sexpr.Sident "e:extenal"; Sexpr.Sident s; TypingType.oType_to_sexpr t]
   | E_Type(e, t) ->
@@ -288,9 +287,9 @@ let rec to_sexpr = function
   | E_Declare(v, t, e) ->
     Sexpr.Sexpr[Sexpr.Sident "e:declare"; to_sexpr(E_Variable v); TypingType.oType_to_sexpr t; to_sexpr e]
 and pattern_to_sexpr = function
-  | EP_Any -> Sexpr.Sident "ep:any"
   | EP_Constant lit -> Sexpr.tagged_sexpr "ep:constant" [Syntax.lit_to_sexpr lit]
-  | EP_Variable v -> Sexpr.tagged_sexpr "ep:var" [Sexpr.Sident v]
+  | EP_Variable None -> Sexpr.Sident "ep:any"
+  | EP_Variable (Some v) -> Sexpr.tagged_sexpr "ep:var" [Sexpr.Sident v]
   | EP_Constructor v -> Sexpr.tagged_sexpr "ep:constructor" [Sexpr.Sident v]
   | EP_Apply (p1, p2) ->
     let rec f ps = function
@@ -343,7 +342,7 @@ let rec of_sexpr = function
     apply_nest (e1 :: e2 :: es)
   | Sexpr.Sexpr (Sexpr.Sident "e:match" :: e :: cls) ->
     let f = function
-      | Sexpr.Sexpr [p; e] -> pattern_of_sexpr p, of_sexpr e
+      | Sexpr.Sexpr [p; g; e] -> pattern_of_sexpr p, of_sexpr g, of_sexpr e
       | _ -> invalid_arg "of_sexpr"
     in
     E_Match (of_sexpr e, List.map f cls)
@@ -359,9 +358,9 @@ and pattern_of_sexpr =
     in
     g initial list
   in function
-  | Sexpr.Sident "ep:any" -> EP_Any
+  | Sexpr.Sident "ep:any" -> EP_Variable None
   | Sexpr.Sexpr [Sexpr.Sident "ep:constant"; lit] -> EP_Constant (Syntax.lit_of_sexpr lit)
-  | Sexpr.Sexpr [Sexpr.Sident "ep:var"; Sexpr.Sident v] -> EP_Variable v
+  | Sexpr.Sexpr [Sexpr.Sident "ep:var"; Sexpr.Sident v] -> EP_Variable (Some v)
   | Sexpr.Sexpr [Sexpr.Sident "ep:constructor"; Sexpr.Sident v] -> EP_Constructor v
   | Sexpr.Sexpr (Sexpr.Sident "ep:apply" :: arg1 :: arg2 :: rest) ->
     let p1 = pattern_of_sexpr arg1 in
