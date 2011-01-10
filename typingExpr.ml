@@ -24,7 +24,6 @@ and pattern =
   | EP_And of pattern * pattern
   | EP_Or of pattern * pattern (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
   | EP_Not of pattern
-  | EP_Predicate of expr
   | EP_Tuple of pattern list
   | EP_Vector of pattern list
 
@@ -150,7 +149,6 @@ let rec substitute_expr ss expr =
         | EP_And (p1, p2) -> EP_And (f p1, f p2)
         | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
         | EP_Not p -> EP_Not (f p)
-        | EP_Predicate e -> EP_Predicate (subst e)
         | EP_Tuple ps -> EP_Tuple (List.map f ps)
         | EP_Vector ps -> EP_Vector (List.map f ps)
       in
@@ -184,7 +182,6 @@ let rec substitute_expr_type ss expr =
         | EP_And (p1, p2) -> EP_And (f p1, f p2)
         | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
         | EP_Not p -> EP_Not (f p)
-        | EP_Predicate e -> EP_Predicate (subst e)
         | EP_Tuple ps -> EP_Tuple (List.map f ps)
         | EP_Vector ps -> EP_Vector (List.map f ps)
       in
@@ -310,7 +307,6 @@ and pattern_to_sexpr = function
     in
     Sexpr.tagged_sexpr "ep:or" (pattern_to_sexpr p1 :: List.rev_map pattern_to_sexpr (f [] p2))
   | EP_Not p -> Sexpr.tagged_sexpr "ep:not" [pattern_to_sexpr p]
-  | EP_Predicate e -> Sexpr.tagged_sexpr "ep:predicate" [to_sexpr e]
   | EP_Tuple ps -> Sexpr.tagged_sexpr "ep:tuple" (List.map pattern_to_sexpr ps)
   | EP_Vector ps -> Sexpr.tagged_sexpr "ep:vector" (List.map pattern_to_sexpr ps)
 
@@ -378,7 +374,6 @@ and pattern_of_sexpr =
     let ps = List.map pattern_of_sexpr rest in
     nest (fun p p' -> EP_Or (p, p')) p1 (p2 :: ps)
   | Sexpr.Sexpr [Sexpr.Sident "ep:not";  p] ->  EP_Not (pattern_of_sexpr p)
-  | Sexpr.Sexpr [Sexpr.Sident "ep:predicate";  e] ->  EP_Predicate (of_sexpr e)
   | Sexpr.Sexpr (Sexpr.Sident "ep:tuple" :: ps) ->  EP_Tuple (List.map pattern_of_sexpr ps)
   | Sexpr.Sexpr (Sexpr.Sident "ep:vector" :: ps) ->  EP_Vector (List.map pattern_of_sexpr ps)
   | _ -> invalid_arg "pattern_of_sexpr"

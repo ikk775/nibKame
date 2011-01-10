@@ -22,7 +22,6 @@ and pattern =
   | EP_And of pattern * pattern
   | EP_Or of pattern * pattern (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
   | EP_Not of pattern
-  | EP_Predicate of expr
   | EP_Tuple of pattern list
   | EP_Vector of pattern list
 type t = expr
