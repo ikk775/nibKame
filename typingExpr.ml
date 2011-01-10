@@ -296,9 +296,31 @@ let rec from_syntax = function
     List.fold_right f es (E_Variable "Nil")
   | Syntax.Array es -> 
     E_Vector(List.map from_syntax es)
-  | _ -> invalid_arg "unexpected Syntax"
-
-
+  | Syntax.Fix ((v, t), e) -> E_Fix(v, from_syntax e)
+  | Syntax.Match (e, cls) -> 
+    let f = function pat, guard, expr ->
+      pattern_from_syntax_pattern pat, from_syntax guard, from_syntax expr
+    in
+    E_Match (from_syntax e, List.map f cls)
+  | Syntax.Let (Syntax.P_Ident v, e1, e2) -> E_Let (v, from_syntax e1, from_syntax e2)
+  | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, E_Constant (Syntax.Bool true), from_syntax e2])
+  | Syntax.Variant v -> E_Variable v
+  | Syntax.TopLet _ | Syntax.TopLetRec _ | Syntax.TopLetSimp _ -> invalid_arg "from_syntax"
+  | Syntax.LetRec _ -> failwith "let rec is not supported yet."
+and pattern_from_syntax_pattern = function
+  | Syntax.P_Ident v -> EP_Variable (Some v)
+  | Syntax.P_Literal lit -> EP_Constant lit 
+  | Syntax.P_Tuple ps -> EP_Tuple (List.map pattern_from_syntax_pattern ps)
+  | Syntax.P_List ps -> (undefined ())
+  | Syntax.P_Array ps -> (undefined ())
+  | Syntax.P_Variant (v, ps) ->
+    let ps' = List.rev ps in
+    let rec f = function
+      | [] -> EP_Constructor v
+      | p :: ps -> EP_Apply (f ps, pattern_from_syntax_pattern p)
+     in
+    f ps'
+  | Syntax.Any -> EP_Variable None
 let rec to_sexpr = function
   | E_Constant e -> Sexpr.Sexpr [Sexpr.Sident "e:constant"; Syntax.lit_to_sexpr e]
   | E_Variable v -> Sexpr.Sexpr [Sexpr.Sident "e:var"; Sexpr.Sident v]
