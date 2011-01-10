@@ -48,7 +48,7 @@ type t =
   | Tuple of t list
   | Array of t list
   | List of t list
-  | Match of t * (pat * t) list
+  | Match of t * (pat * t * t) list
 val lit_to_sexpr : lit -> Sexpr.t
 val lit_of_sexpr : Sexpr.t -> lit
 val pat_to_sexpr : pat -> Sexpr.t
