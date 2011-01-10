@@ -21,7 +21,7 @@ type result =
   | R_Match of result * (pattern * result * result) list
   | R_External of Id.t * TypingType.oType
 and pattern =
-  | RP_Constant of Syntax.lit
+  | RP_Constant of Syntax.lit * TypingType.oType
   | RP_Variable of (Id.t * TypingType.oType) option
   | RP_Constructor of Id.t * TypingType.oType
   | RP_Apply of pattern * pattern
@@ -203,7 +203,7 @@ let rec result_to_expr expr =
         let rec g = function
           | RP_Variable None -> EP_Variable None
           | RP_Variable (Some (v, t)) -> EP_Variable (Some v)
-          | RP_Constant lit -> EP_Constant lit
+          | RP_Constant (lit, t) -> EP_Constant lit
           | RP_Constructor (v, t) -> EP_Constructor v
           | RP_Apply (p1, p2) -> EP_Apply (g p1, g p2)
           | RP_And (p1, p2) -> EP_And (g p1, g p2)
@@ -421,7 +421,7 @@ and pattern_of_sexpr =
     g initial list
   in function
   | Sexpr.Sident "rp:any" -> RP_Variable None
-  | Sexpr.Sexpr [Sexpr.Sident "rp:constant"; lit; t] -> RP_Constant (Syntax.lit_of_sexpr lit)
+  | Sexpr.Sexpr [Sexpr.Sident "rp:constant"; lit; t] -> RP_Constant (Syntax.lit_of_sexpr lit, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "rp:var"; Sexpr.Sident v; t] -> RP_Variable (Some (v, TypingType.oType_of_sexpr t))
   | Sexpr.Sexpr [Sexpr.Sident "rp:constructor"; Sexpr.Sident v; t] -> RP_Constructor (v, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr (Sexpr.Sident "rp:apply" :: arg1 :: arg2 :: rest) ->
@@ -472,7 +472,7 @@ let rec to_sexpr = function
     Sexpr.tagged_sexpr "r:match" (List.map (function p, g, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr g; to_sexpr e]) cls)
   | R_External (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:external-symbol"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
 and pattern_to_sexpr = function
-  | RP_Constant lit -> Sexpr.tagged_sexpr "rp:constant" [Syntax.lit_to_sexpr lit]
+  | RP_Constant (lit, t) -> Sexpr.tagged_sexpr "rp:constant" [Syntax.lit_to_sexpr lit; TypingType.oType_to_sexpr t]
   | RP_Variable None -> Sexpr.Sident "rp:any"
   | RP_Variable (Some (v, t)) -> Sexpr.tagged_sexpr "rp:var" [Sexpr.Sident v; TypingType.oType_to_sexpr t]
   | RP_Constructor (v, t) -> Sexpr.tagged_sexpr "rp:constructor" [Sexpr.Sident v; TypingType.oType_to_sexpr t]

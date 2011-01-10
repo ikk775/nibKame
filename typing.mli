@@ -12,7 +12,7 @@ type result =
   | R_Match of result * (pattern * result * result) list
   | R_External of Id.t * TypingType.oType
 and pattern =
-  | RP_Constant of Syntax.lit
+  | RP_Constant of Syntax.lit * TypingType.oType
   | RP_Variable of (Id.t * TypingType.oType) option
   | RP_Constructor of Id.t * TypingType.oType
   | RP_Apply of pattern * pattern
