@@ -323,6 +323,91 @@ let rec w env expr =
       let s' = unify (substitute s t') t in
       let t'' = substitute s' t' in
       compose s' s, t'', e'
+and w_pattern env = function
+  | EP_Constant c ->
+    let t = E.get_constant_type (E_Constant c) in
+    [], t, RP_Constant(c, t)
+  | EP_Variable None ->
+    let t = T.gen_typevar () in
+    [], t, RP_Variable (None, t)
+  | EP_Variable (Some v) ->
+    let ts = T.OType (T.gen_typevar ()) in
+    let env = E.add_env env v ts in
+    let freeTypeVarsTs = TypingType.freetypevars ts in
+    let newTypeVars = T.gen_typevars (List.length freeTypeVarsTs) in
+    let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
+    let t = substitute subst (T.remove_quantifier ts) in
+    subst, t, RP_Variable (Some v, t)
+  | EP_Constructor v -> 
+    let ts = E.get_variable_type env (E_Variable v) in
+    let freeTypeVarsTs = TypingType.freetypevars ts in
+    let newTypeVars = T.gen_typevars (List.length freeTypeVarsTs) in
+    let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
+    let t = substitute subst (T.remove_quantifier ts) in
+    subst, t, RP_Constructor (v, t)
+  | EP_Apply(p1, p2) -> 
+    let b = T.gen_typevar () in
+    let s1, t1, p1' = w_pattern env p1 in
+    let s2, t2, p2' = w_pattern (TypingExpr.substitute_env s1 env) p2 in
+    let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
+    let t = substitute s3 b in
+    compose s3 (compose s2 s1), t, RP_Apply((p1', p2'), t)
+  | EP_Tuple(ps) -> 
+    let rec w_pattern_sub env ps ss ts p's =
+      match ps with
+        | [] -> ss, ts, p's
+        | p :: ps' -> 
+          let s, t, p' = w_pattern env p in
+          let env' = (TypingExpr.substitute_env s env) in
+          w_pattern_sub env' ps' (s :: ss) (t :: ts) (p' :: p's)
+    in
+    let w_results = w_pattern_sub env ps [] [] [] in
+    let ss, ts, p's = w_results in
+    let p's' = List.rev p's in
+    let t = O_Tuple(ts) in
+    T.compose_substs ss, t, RP_Tuple(p's', t)
+  | EP_Vector(ps) -> 
+    let ss, t, p' = w_pattern env (EP_Tuple ps) in
+    let ts = (match t with
+      | O_Tuple ts -> ts
+      | _ -> invalid_arg "unexpected ")
+    in
+    let p'' = (match p' with
+      | RP_Tuple (ps, t) -> ps
+      | _ -> invalid_arg "unexpected ")
+    in
+    let rec u_sub env ss t1 = (function
+      | [] -> env, ss, t1
+      | t2 :: ts ->
+        let t2' = substitute ss t2 in
+        let ss' = unify t1 t2' in
+        u_sub (TypingExpr.substitute_env ss' env) (compose ss' ss) (substitute ss' t2') ts)
+    in
+    let b = T.gen_typevar () in
+    let env', ss', t' = u_sub env ss b ts in
+    let t'' = O_Vector t' in
+    ss', t'', RP_Vector(p'', t'')
+  | EP_And(p1, p2) -> 
+    let ss, t, p' = w_pattern env (EP_Vector [p1; p2]) in
+    let t' = (match t with
+      | O_Vector ts -> ts
+      | _ -> invalid_arg "unexpected ")
+    in
+    let p1', p2' = (match p' with
+      | RP_Vector ([p1; p2], t) -> p1, p2
+      | _ -> invalid_arg "unexpected ")
+    in
+    ss, t', RP_And ((p1', p2'), t')
+  | EP_Or(p1, p2) -> 
+    let ss, t, p' = w_pattern env (EP_And (p1, p2)) in
+    let p1', p2' = (match p' with
+      | RP_And ((p1, p2), t) -> p1, p2
+      | _ -> invalid_arg "unexpected ")
+    in
+    ss, t, RP_Or ((p1', p2'), t)
+  | EP_Not p -> 
+    let ss, t, p' = w_pattern env p in
+    ss, t, RP_Not (p', t)
 
 let typing_with_subst env expr =
   let ss, t, expr' = w env expr in
