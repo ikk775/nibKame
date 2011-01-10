@@ -53,7 +53,7 @@ and exp =
   | BSt of Id.t * mem_op
 
   | Comp of cmp_op * ty * Id.t * id_or_imm
-  | If of t * t * t
+  | If of exp * t * t
 
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
@@ -63,7 +63,8 @@ and exp =
 
   | Cons of Id.t * Id.t
   | Car of Id.t
-  | Cdr of Id.t  | FCons of Id.t * Id.t
+  | Cdr of Id.t
+  | FCons of Id.t * Id.t
   | FCar of Id.t
   | FCdr of Id.t
 
@@ -71,7 +72,7 @@ and exp =
   | ArrayAlloc of ty * Id.t
 
   | Save of Id.t * Id.t
-  | Pop of Id.t * Id.t
+  | Restore of Id.t * Id.t
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 
@@ -159,7 +160,7 @@ let rec compile_exp env = function
   | Closure.FNeg a -> Ans(FNeg a)
 
   | Closure.If (cp, a, b, t, f) ->
-      let compare = Ans (Comp (comp_cmp_op cp, M.find a env, a, V b)) in
+      let compare = Comp (comp_cmp_op cp, M.find a env, a, V b) in
 	Ans (If (compare, compile_exp env t, compile_exp env f))
   | Closure.Let ((var, t), e1, e2) ->
       let e1' = compile_exp env e1 in
