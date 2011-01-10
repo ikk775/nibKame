@@ -12,19 +12,18 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
-  | E_Match of expr * (pattern * expr) list
+  | E_Match of expr * (pattern * expr * expr) list 
   | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
 and pattern =
   | EP_Constant of Syntax.lit
-  | EP_Variable of Id.t
+  | EP_Variable of Id.t option
   | EP_Constructor of Id.t
   | EP_Apply of pattern * pattern
   | EP_And of pattern * pattern
   | EP_Or of pattern * pattern (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
   | EP_Not of pattern
-  | EP_Predicate of expr
   | EP_Tuple of pattern list
   | EP_Vector of pattern list
 
@@ -75,6 +74,46 @@ let clos env ts =
   let freeVars = MyUtil.List.setDiff (TypingType.freetypevars ts) (freetypevars_env env) in
   TypingType.QType(freeVars, ts)
 
+let rec pattern_subst f_leaf pat =
+  let rec g pat = match pat with
+    | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> f_leaf pat
+    | EP_Apply (p1, p2) -> EP_Apply (g p1, g p2)
+    | EP_And (p1, p2) -> EP_And (g p1, g p2)
+    | EP_Or (p1, p2) -> EP_Or (g p1, g p2)
+    | EP_Not p -> EP_Not (g p)
+    | EP_Tuple ps -> EP_Tuple (List.map g ps)
+    | EP_Vector ps -> EP_Vector (List.map g ps)
+  in
+  g pat
+
+let rec walk_pattern_leaf f_leaf pat =
+  let rec g pat = match pat with
+    | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> f_leaf pat
+    | EP_Apply (p1, p2) | EP_And (p1, p2) | EP_Or (p1, p2) -> g p1 @ g p2
+    | EP_Not p -> g p
+    | EP_Tuple ps | EP_Vector ps -> List.concat (List.map g ps)
+  in
+  g pat
+
+let pattern_freevars pat =
+  let f = function
+    | EP_Constant _  -> []
+    | EP_Variable None -> [] 
+    | EP_Variable (Some v) -> [v] 
+    | EP_Constructor _ -> []
+    | EP_Apply _ | EP_And _ | EP_Or _ | EP_Not _ | EP_Tuple _ | EP_Vector _ -> failwith "something went wrong."
+  in
+  walk_pattern_leaf f pat
+
+let pattern_constructors pat =
+  let f = function
+    | EP_Constant _  -> []
+    | EP_Variable _ -> [] 
+    | EP_Constructor v -> [v]
+    | EP_Apply _ | EP_And _ | EP_Or _ | EP_Not _ | EP_Tuple _ | EP_Vector _ -> failwith "something went wrong."
+  in
+  walk_pattern_leaf f pat
+
 exception ExtFun_not_found of string
 let get_constant_type = function
   | E_Constant c ->
@@ -91,9 +130,15 @@ let get_constant_type = function
           | Not_found -> raise (ExtFun_not_found f)))
   | _ -> invalid_arg "expected type E_Constant"
 
+exception Variable_not_found of string
 let get_variable_type env expr =
   match env, expr with
-    | ExprEnv envList, E_Variable v -> List.assoc v envList
+    | ExprEnv envList, E_Variable v ->
+      begin try
+        List.assoc v envList
+      with
+        | Not_found -> raise (Variable_not_found v)
+      end
     | _ -> invalid_arg "expected type E_Variable"
 
 let get_exprvar_name = function
@@ -143,6 +188,18 @@ let rec substitute_expr ss expr =
       let subst' = substitute_expr ss' in
       E_Fix(f, subst' e)
     | E_External(s, t) -> E_External(s, t)
+    | E_Match(e, cls) ->
+      let rec f p = match p with
+        | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
+        | EP_Apply (p1, p2) -> EP_Apply (f p1, f p2)
+        | EP_And (p1, p2) -> EP_And (f p1, f p2)
+        | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
+        | EP_Not p -> EP_Not (f p)
+        | EP_Tuple ps -> EP_Tuple (List.map f ps)
+        | EP_Vector ps -> EP_Vector (List.map f ps)
+      in
+      let g = function p, guard, e -> f p, subst guard, subst e in
+      E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
       let v' = gen_exprvar () in
@@ -164,6 +221,18 @@ let rec substitute_expr_type ss expr =
     | E_Let(v, e1, e2) -> E_Let(v, subst e1, subst e2)
     | E_Fix(f, e) -> E_Fix(f, subst e)
     | E_External(s, t) -> E_External(s, TypingType.substitute ss t)
+    | E_Match(e, cls) ->
+      let rec f p = match p with
+        | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> p
+        | EP_Apply (p1, p2) -> EP_Apply (f p1, f p2)
+        | EP_And (p1, p2) -> EP_And (f p1, f p2)
+        | EP_Or (p1, p2) -> EP_Or (f p1, f p2)
+        | EP_Not p -> EP_Not (f p)
+        | EP_Tuple ps -> EP_Tuple (List.map f ps)
+        | EP_Vector ps -> EP_Vector (List.map f ps)
+      in
+      let g = function p, guard, e -> f p, subst guard, subst e in
+      E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, TypingType.substitute ss t)
     | E_Declare(v, t, e) -> E_Declare(v, TypingType.substitute ss t, subst e)
 
@@ -253,7 +322,7 @@ let rec to_sexpr = function
     in
     Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
   | E_Match(e, cls) ->
-    Sexpr.tagged_sexpr "e:match" (List.map (function p, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]) cls)
+    Sexpr.tagged_sexpr "e:match" (List.map (function p, g, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr g; to_sexpr e]) cls)
   | E_External(s, t) ->
     Sexpr.Sexpr[Sexpr.Sident "e:extenal"; Sexpr.Sident s; TypingType.oType_to_sexpr t]
   | E_Type(e, t) ->
@@ -262,7 +331,8 @@ let rec to_sexpr = function
     Sexpr.Sexpr[Sexpr.Sident "e:declare"; to_sexpr(E_Variable v); TypingType.oType_to_sexpr t; to_sexpr e]
 and pattern_to_sexpr = function
   | EP_Constant lit -> Sexpr.tagged_sexpr "ep:constant" [Syntax.lit_to_sexpr lit]
-  | EP_Variable v -> Sexpr.tagged_sexpr "ep:var" [Sexpr.Sident v]
+  | EP_Variable None -> Sexpr.Sident "ep:any"
+  | EP_Variable (Some v) -> Sexpr.tagged_sexpr "ep:var" [Sexpr.Sident v]
   | EP_Constructor v -> Sexpr.tagged_sexpr "ep:constructor" [Sexpr.Sident v]
   | EP_Apply (p1, p2) ->
     let rec f ps = function
@@ -283,7 +353,6 @@ and pattern_to_sexpr = function
     in
     Sexpr.tagged_sexpr "ep:or" (pattern_to_sexpr p1 :: List.rev_map pattern_to_sexpr (f [] p2))
   | EP_Not p -> Sexpr.tagged_sexpr "ep:not" [pattern_to_sexpr p]
-  | EP_Predicate e -> Sexpr.tagged_sexpr "ep:predicate" [to_sexpr e]
   | EP_Tuple ps -> Sexpr.tagged_sexpr "ep:tuple" (List.map pattern_to_sexpr ps)
   | EP_Vector ps -> Sexpr.tagged_sexpr "ep:vector" (List.map pattern_to_sexpr ps)
 
@@ -315,7 +384,7 @@ let rec of_sexpr = function
     apply_nest (e1 :: e2 :: es)
   | Sexpr.Sexpr (Sexpr.Sident "e:match" :: e :: cls) ->
     let f = function
-      | Sexpr.Sexpr [p; e] -> pattern_of_sexpr p, of_sexpr e
+      | Sexpr.Sexpr [p; g; e] -> pattern_of_sexpr p, of_sexpr g, of_sexpr e
       | _ -> invalid_arg "of_sexpr"
     in
     E_Match (of_sexpr e, List.map f cls)
@@ -331,8 +400,9 @@ and pattern_of_sexpr =
     in
     g initial list
   in function
+  | Sexpr.Sident "ep:any" -> EP_Variable None
   | Sexpr.Sexpr [Sexpr.Sident "ep:constant"; lit] -> EP_Constant (Syntax.lit_of_sexpr lit)
-  | Sexpr.Sexpr [Sexpr.Sident "ep:var"; Sexpr.Sident v] -> EP_Variable v
+  | Sexpr.Sexpr [Sexpr.Sident "ep:var"; Sexpr.Sident v] -> EP_Variable (Some v)
   | Sexpr.Sexpr [Sexpr.Sident "ep:constructor"; Sexpr.Sident v] -> EP_Constructor v
   | Sexpr.Sexpr (Sexpr.Sident "ep:apply" :: arg1 :: arg2 :: rest) ->
     let p1 = pattern_of_sexpr arg1 in
@@ -350,7 +420,6 @@ and pattern_of_sexpr =
     let ps = List.map pattern_of_sexpr rest in
     nest (fun p p' -> EP_Or (p, p')) p1 (p2 :: ps)
   | Sexpr.Sexpr [Sexpr.Sident "ep:not";  p] ->  EP_Not (pattern_of_sexpr p)
-  | Sexpr.Sexpr [Sexpr.Sident "ep:predicate";  e] ->  EP_Predicate (of_sexpr e)
   | Sexpr.Sexpr (Sexpr.Sident "ep:tuple" :: ps) ->  EP_Tuple (List.map pattern_of_sexpr ps)
   | Sexpr.Sexpr (Sexpr.Sident "ep:vector" :: ps) ->  EP_Vector (List.map pattern_of_sexpr ps)
   | _ -> invalid_arg "pattern_of_sexpr"
