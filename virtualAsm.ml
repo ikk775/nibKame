@@ -231,7 +231,6 @@ let rec compile_exp env = function
 
 (*
   自由変数は関数へのポインタと一緒にしたタプルとして渡される 
-  現状ではたとえ自由変数がなくとも引数にタプルが渡される
 *)
 let compile_fun { Closure.fun_name = (Id.L(label), t);
 		  Closure.args = args; Closure.formal_fv = free_vars;
@@ -241,7 +240,7 @@ let compile_fun { Closure.fun_name = (Id.L(label), t);
     match List.map snd free_vars with
       | [] -> 
 	  let e = compile_exp env exp in
-	    { name = Id.L(label); args = (genid (), Pointer (Type.Tuple [Type.Unit])) :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
+	    { name = Id.L(label); args = List.map to_ty_with_var args; body = e; ret = to_ty t2 }
       | fvs ->
 	  let fv = (genid (), Pointer (Type.Tuple (Type.Unit :: fvs))) in
 	  let e = compile_exp (M.add (fst fv) (snd fv) env) exp in
