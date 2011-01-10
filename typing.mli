@@ -13,14 +13,14 @@ type result =
   | R_External of Id.t * TypingType.oType
 and pattern =
   | RP_Constant of Syntax.lit * TypingType.oType
-  | RP_Variable of (Id.t * TypingType.oType) option
+  | RP_Variable of Id.t option * TypingType.oType
   | RP_Constructor of Id.t * TypingType.oType
-  | RP_Apply of pattern * pattern
-  | RP_And of pattern * pattern
-  | RP_Or of pattern * pattern (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
-  | RP_Not of pattern
-  | RP_Tuple of pattern list
-  | RP_Vector of pattern list
+  | RP_Apply of (pattern * pattern) * TypingType.oType
+  | RP_And of (pattern * pattern) * TypingType.oType
+  | RP_Or of (pattern * pattern) * TypingType.oType (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
+  | RP_Not of pattern * TypingType.oType
+  | RP_Tuple of pattern list * TypingType.oType
+  | RP_Vector of pattern list * TypingType.oType
 val bindedvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
