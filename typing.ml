@@ -31,15 +31,15 @@ and pattern =
   | RP_Tuple of pattern list
   | RP_Vector of pattern list
 
-let rec walk_pattern f_pattern f_expr pat =
+let rec pattern_subst f_leaf pat =
   let rec g pat = match pat with
-    | RP_Constant _ | RP_Variable _ | RP_Constructor _ -> f_pattern pat 
-    | RP_Apply (p1, p2) -> f_pattern (RP_Apply(g p1, g p2))
-    | RP_And (p1, p2) -> f_pattern (RP_And (g p1, p2))
-    | RP_Or (p1, p2) -> f_pattern (RP_Or (g p1, g p2))
-    | RP_Not p -> f_pattern (RP_Not (g p))
-    | RP_Tuple ps -> f_pattern (RP_Tuple (List.map g ps))
-    | RP_Vector ps -> f_pattern (RP_Vector (List.map g ps))
+    | RP_Constant _ | RP_Variable _ | RP_Constructor _ -> f_leaf pat
+    | RP_Apply (p1, p2) -> RP_Apply (g p1, g p2)
+    | RP_And (p1, p2) -> RP_And (g p1, g p2)
+    | RP_Or (p1, p2) -> RP_Or (g p1, g p2)
+    | RP_Not p -> RP_Not (g p)
+    | RP_Tuple ps -> RP_Tuple (List.map g ps)
+    | RP_Vector ps -> RP_Vector (List.map g ps)
   in
   g pat
 
@@ -130,7 +130,7 @@ let rec typevars : result -> Id.t list = fun r ->
           | RP_Not _
           | RP_Tuple _ | RP_Vector _ -> failwith "something went wrong."
         in
-        List.unique (h pat)
+        List.unique (walk_pattern_leaf h pat)
       in
       List.unique (g e @ List.concat (List.map f cls))
   in
@@ -181,7 +181,16 @@ let rec substitute_result_type ss expr =
     | R_External (v ,t) -> R_External (v, tsubst t)
     | R_Match (e, cls) -> 
       let g = function pat, guard, expr -> 
-        walk_pattern (fun x -> x) subst pat, subst guard, subst expr
+        let rec h pat = match pat with
+          | RP_Variable None -> pat
+          | RP_Variable (Some (v, t)) -> RP_Variable (Some (v, tsubst t))
+          | RP_Constructor (v, t) -> RP_Constructor (v, tsubst t)
+          | RP_Constant (c, t)  -> RP_Constant (c, tsubst t)
+          | RP_Apply _ | RP_And _ | RP_Or _
+          | RP_Not _
+          | RP_Tuple _ | RP_Vector _ -> failwith "something went wrong."
+        in
+        pattern_subst h pat, subst guard, subst expr
       in
       R_Match(subst e, List.map g cls)
 
