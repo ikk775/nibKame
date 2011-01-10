@@ -40,6 +40,8 @@ val add_env : exprEnv -> Id.t -> TypingType.typeScheme -> exprEnv
 val combine_env : exprEnv -> exprEnv -> exprEnv
 val freetypevars_env : exprEnv -> TypingType.typeVar list
 val clos : exprEnv -> TypingType.typeScheme -> TypingType.typeScheme
+val pattern_freevars : pattern -> exprVar list
+val pattern_constructors : pattern -> exprVar list
 exception ExtFun_not_found of string
 val get_constant_type : expr -> TypingType.oType
 exception Variable_not_found of string

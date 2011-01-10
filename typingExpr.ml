@@ -74,6 +74,46 @@ let clos env ts =
   let freeVars = MyUtil.List.setDiff (TypingType.freetypevars ts) (freetypevars_env env) in
   TypingType.QType(freeVars, ts)
 
+let rec pattern_subst f_leaf pat =
+  let rec g pat = match pat with
+    | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> f_leaf pat
+    | EP_Apply (p1, p2) -> EP_Apply (g p1, g p2)
+    | EP_And (p1, p2) -> EP_And (g p1, g p2)
+    | EP_Or (p1, p2) -> EP_Or (g p1, g p2)
+    | EP_Not p -> EP_Not (g p)
+    | EP_Tuple ps -> EP_Tuple (List.map g ps)
+    | EP_Vector ps -> EP_Vector (List.map g ps)
+  in
+  g pat
+
+let rec walk_pattern_leaf f_leaf pat =
+  let rec g pat = match pat with
+    | EP_Constant _ | EP_Variable _ | EP_Constructor _ -> f_leaf pat
+    | EP_Apply (p1, p2) | EP_And (p1, p2) | EP_Or (p1, p2) -> g p1 @ g p2
+    | EP_Not p -> g p
+    | EP_Tuple ps | EP_Vector ps -> List.concat (List.map g ps)
+  in
+  g pat
+
+let pattern_freevars pat =
+  let f = function
+    | EP_Constant _  -> []
+    | EP_Variable None -> [] 
+    | EP_Variable (Some v) -> [v] 
+    | EP_Constructor _ -> []
+    | EP_Apply _ | EP_And _ | EP_Or _ | EP_Not _ | EP_Tuple _ | EP_Vector _ -> failwith "something went wrong."
+  in
+  walk_pattern_leaf f pat
+
+let pattern_constructors pat =
+  let f = function
+    | EP_Constant _  -> []
+    | EP_Variable _ -> [] 
+    | EP_Constructor v -> [v]
+    | EP_Apply _ | EP_And _ | EP_Or _ | EP_Not _ | EP_Tuple _ | EP_Vector _ -> failwith "something went wrong."
+  in
+  walk_pattern_leaf f pat
+
 exception ExtFun_not_found of string
 let get_constant_type = function
   | E_Constant c ->
