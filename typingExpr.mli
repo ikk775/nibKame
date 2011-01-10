@@ -42,6 +42,7 @@ val freetypevars_env : exprEnv -> TypingType.typeVar list
 val clos : exprEnv -> TypingType.typeScheme -> TypingType.typeScheme
 exception ExtFun_not_found of string
 val get_constant_type : expr -> TypingType.oType
+exception Variable_not_found of string
 val get_variable_type : exprEnv -> expr -> TypingType.typeScheme
 val get_exprvar_name : expr -> exprVar
 val get_expr_type : expr -> TypingType.oType

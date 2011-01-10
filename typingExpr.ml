@@ -90,9 +90,15 @@ let get_constant_type = function
           | Not_found -> raise (ExtFun_not_found f)))
   | _ -> invalid_arg "expected type E_Constant"
 
+exception Variable_not_found of string
 let get_variable_type env expr =
   match env, expr with
-    | ExprEnv envList, E_Variable v -> List.assoc v envList
+    | ExprEnv envList, E_Variable v ->
+      begin try
+        List.assoc v envList
+      with
+        | Not_found -> raise (Variable_not_found v)
+      end
     | _ -> invalid_arg "expected type E_Variable"
 
 let get_exprvar_name = function
