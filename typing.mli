@@ -9,7 +9,18 @@ type result =
   | R_If of result * result * result
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
+  | R_Match of result * (pattern * result * result) list
   | R_External of Id.t * TypingType.oType
+and pattern =
+  | RP_Constant of Syntax.lit
+  | RP_Variable of (Id.t * TypingType.oType) option
+  | RP_Constructor of Id.t * TypingType.oType
+  | RP_Apply of pattern * pattern
+  | RP_And of pattern * pattern
+  | RP_Or of pattern * pattern (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
+  | RP_Not of pattern
+  | RP_Tuple of pattern list
+  | RP_Vector of pattern list
 val bindedvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
