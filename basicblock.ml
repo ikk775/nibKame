@@ -62,9 +62,6 @@ type ins =
 
 type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty; block_labels : Id.l list }
 
-type block =
-  { blockname : Id.l; blockbody : ins list }
-
 let counter : int ref = ref 0
 let mkblockname () =
   let i = !counter in
@@ -141,7 +138,7 @@ let rec add_ret = function
   | ins :: tail -> ins :: add_ret tail
 
 
-let linerizr_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
+let linerize_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
   let blocks = ref M.empty in
   let insts = linerize blocks [] body in
   let blocknames, inst = M.fold (fun key ins ret ->
@@ -149,3 +146,6 @@ let linerizr_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret 
 				     key :: block, ins @ inst)
                                 !blocks ([], []) in
     { name = func_label; args = args; body = Label func_label :: insts @ inst; ret = ret; block_labels = blocknames }
+
+let f funs =
+  List.map linerize_func funs
