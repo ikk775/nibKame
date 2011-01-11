@@ -62,3 +62,5 @@ val substitution_to_sexpr : exprVar * expr -> Sexpr.t
 val substitution_of_sexpr : Sexpr.t -> exprVar * expr
 val substitutions_to_sexpr : (exprVar * expr) list -> Sexpr.t
 val substitutions_of_sexpr : Sexpr.t -> (exprVar * expr) list
+val exprEnv_to_sexpr : exprEnv -> Sexpr.t
+val exprEnv_of_sexpr : Sexpr.t -> exprEnv

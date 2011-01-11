@@ -116,7 +116,7 @@ let rec compose (xs:substitution list) (ys:substitution list) =
       else compose xs (x :: subst_tot x ys)
 
 let compose_substs sss =
-  List.fold_right compose sss []
+  List.fold_right (fun sx sy -> compose sy sx) (List.rev sss) []
 
 let rec supp ss =
   List.filter (fun tv -> tv = substitute ss tv) (targetVars ss)
