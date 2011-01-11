@@ -53,7 +53,7 @@ and exp =
   | BSt of Id.t * mem_op
 
   | Comp of cmp_op * ty * Id.t * id_or_imm
-  | If of t * t * t
+  | If of exp * t * t
 
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
@@ -63,7 +63,8 @@ and exp =
 
   | Cons of Id.t * Id.t
   | Car of Id.t
-  | Cdr of Id.t  | FCons of Id.t * Id.t
+  | Cdr of Id.t
+  | FCons of Id.t * Id.t
   | FCar of Id.t
   | FCdr of Id.t
 
@@ -71,7 +72,7 @@ and exp =
   | ArrayAlloc of ty * Id.t
 
   | Save of Id.t * Id.t
-  | Pop of Id.t * Id.t
+  | Restore of Id.t * Id.t
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 
@@ -159,7 +160,7 @@ let rec compile_exp env = function
   | Closure.FNeg a -> Ans(FNeg a)
 
   | Closure.If (cp, a, b, t, f) ->
-      let compare = Ans (Comp (comp_cmp_op cp, M.find a env, a, V b)) in
+      let compare = Comp (comp_cmp_op cp, M.find a env, a, V b) in
 	Ans (If (compare, compile_exp env t, compile_exp env f))
   | Closure.Let ((var, t), e1, e2) ->
       let e1' = compile_exp env e1 in
@@ -230,7 +231,6 @@ let rec compile_exp env = function
 
 (*
   自由変数は関数へのポインタと一緒にしたタプルとして渡される 
-  現状ではたとえ自由変数がなくとも引数にタプルが渡される
 *)
 let compile_fun { Closure.fun_name = (Id.L(label), t);
 		  Closure.args = args; Closure.formal_fv = free_vars;
@@ -240,7 +240,7 @@ let compile_fun { Closure.fun_name = (Id.L(label), t);
     match List.map snd free_vars with
       | [] -> 
 	  let e = compile_exp env exp in
-	    { name = Id.L(label); args = (genid (), Pointer (Type.Tuple [Type.Unit])) :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
+	    { name = Id.L(label); args = List.map to_ty_with_var args; body = e; ret = to_ty t2 }
       | fvs ->
 	  let fv = (genid (), Pointer (Type.Tuple (Type.Unit :: fvs))) in
 	  let e = compile_exp (M.add (fst fv) (snd fv) env) exp in
