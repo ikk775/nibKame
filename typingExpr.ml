@@ -439,3 +439,19 @@ let rec substitutions_of_sexpr = function
     List.map substitution_of_sexpr ss
   | _ -> invalid_arg "unexpected token."
 
+let rec exprEnv_to_sexpr = function
+  | ExprEnv eqs ->
+    let eq_to_sexpr = function
+      | v, ts -> Sexpr.Sexpr [Sexpr.Sident v; TypingType.typeScheme_to_sexpr ts]
+    in
+    Sexpr.Sexpr (Sexpr.Sident "ee:env" :: List.map eq_to_sexpr eqs)
+
+let rec exprEnv_of_sexpr = function
+  | Sexpr.Sexpr (Sexpr.Sident "ee:env" :: eqs) -> 
+    let eq_of_sexpr = function
+      | Sexpr.Sexpr [Sexpr.Sident v; ts] -> v, TypingType.typeScheme_of_sexpr ts
+      | _ -> invalid_arg "unexpected token."
+    in
+    ExprEnv (List.map eq_of_sexpr eqs)
+  | _ -> invalid_arg "unexpected token."
+    
