@@ -199,6 +199,9 @@ let rec substitute_result_type ss expr =
         map_pattern_type tsubst pat, subst guard, subst expr
       in
       R_Match(subst e, List.map g cls)
+and substitute_pattern_type ss pat =
+  let tsubst = TypingType.substitute ss in
+  map_pattern_type tsubst pat
 
 let rec result_to_expr expr =
   let to_expr = result_to_expr in
@@ -323,6 +326,39 @@ let rec w env expr =
       let s' = unify (substitute s t') t in
       let t'' = substitute s' t' in
       compose s' s, t'', e'
+    | E_Match (e, cls) ->
+      let f = function (ss, env, tpat, texpr), cls -> function pat, guard, expr -> 
+        let sps, tp, p' = w_pattern env pat in
+        let sps' = unify tp tpat in
+        let tpat' = T.substitute sps' tp in
+        let p'' = substitute_pattern_type sps p' in
+        let vts = patternvars p'' in
+        let vs = List.map fst vts in
+        if List.length vs <> List.length (List.unique vs)
+        then failwith "Variable names must be unique in the pattern."
+        else ();
+        let env' = E.combine_env env (E.ExprEnv (List.map (function v, t -> v, T.OType t) vts)) in
+        let sgs, tg, g' = w env' guard in
+        let sgs' = unify tg (O_Constant Type.Bool) in
+        let g'' = substitute_result_type sgs' g' in
+        let env'' = E.substitute_env (T.compose sgs' sgs) env' in
+        let ses, te, e' = w env'' expr in
+        let env''' = E.substitute_env ses env'' in
+        let ses' = unify te texpr in
+        let texpr' = T.substitute ses' te in
+        let e'' = substitute_result_type ses' e' in
+        let env''' = E.substitute_env ses' env''' in
+        (T.compose_substs [ses'; ses; sgs'; sgs; sps'; sps; ss], env''', tpat', texpr'), (p'', g'', e'') :: cls
+      in
+      let ses, te, e' = w env e in
+      let env' = E.substitute_env ses env in
+      let b1 = T.gen_typevar () in
+      let b2 = T.gen_typevar () in
+      let rstcls = List.fold_left f ((ses, env', b1, b2), []) cls in
+      let ss, env, tclp, tcle = fst rstcls in
+      let rcls = snd rstcls in
+      let ses' = unify te tclp in
+      T.compose_substs [ses'; ses; ss], tcle, R_Match (e', rcls)
 and w_pattern env = function
   | EP_Constant c ->
     let t = E.get_constant_type (E_Constant c) in
