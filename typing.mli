@@ -9,7 +9,18 @@ type result =
   | R_If of result * result * result
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
+  | R_Match of result * (pattern * result * result) list
   | R_External of Id.t * TypingType.oType
+and pattern =
+  | RP_Constant of Syntax.lit * TypingType.oType
+  | RP_Variable of Id.t option * TypingType.oType
+  | RP_Constructor of Id.t * TypingType.oType
+  | RP_Apply of (pattern * pattern) * TypingType.oType
+  | RP_And of (pattern * pattern) * TypingType.oType
+  | RP_Or of (pattern * pattern) * TypingType.oType (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
+  | RP_Not of pattern * TypingType.oType
+  | RP_Tuple of pattern list * TypingType.oType
+  | RP_Vector of pattern list * TypingType.oType
 val bindedvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
@@ -23,6 +34,7 @@ val value_restrict : result -> TypingType.oType -> TypingType.typeScheme
 val substitute_result_type : TypingType.substitution list -> result -> result
 val result_to_expr : result -> TypingExpr.expr
 val w : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.substitution list * TypingType.oType * result
+val w_pattern : TypingExpr.exprEnv -> TypingExpr.pattern -> TypingType.substitution list * TypingType.oType * pattern
 val typing_with_subst : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.typeScheme * result * TypingType.substitution list
 val typing : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.typeScheme * result
 val substitute : substitution list -> result -> result
