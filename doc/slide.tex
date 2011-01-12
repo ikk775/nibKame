@@ -224,6 +224,8 @@ match list with
 %\item 名前付け替え, インライン展開, 簡約
 \item クロージャ変換
 \item 仮想機械語へ変換
+\item 仮想機械語の線形化
+\item x86命令の生成
 \item レジスタ割り当て
 \item アセンブリコードの出力
 \end{itemize}
@@ -232,7 +234,7 @@ match list with
 
 \subsection{構文解析}
 解析表現文法を用いた構文解析器 \\
-Schemeにて実装予定
+Schemeにて実装
 
 マクロの実装はこの段階で行う
 
@@ -280,6 +282,27 @@ let rec gcd = fun x y ->
 ないのならば, 呼び出しは他の関数と同じにできる
 
 \newpage
+
+\subsection{仮想機械語の生成}
+計算機の命令として一般的なものと，組込み関数として実現するものを分けてい
+く．レジスタにある変数と，メモリに置かれるデータの区別を始める．
+
+\subsection{仮想機械語の線形化}
+ここまでは，命令は木構造をしている．それを単純な並びに直し，ジャンプ命令
+を挿入する．
+
+\includegraphics[scale=0.3]{instree.pdf}
+\includegraphics[scale=0.3]{insliner.pdf}
+
+\subsection{命令選択}
+線形化した仮想機械語を x86 命令に置き換えていく
+
+この段階では変数は全てレジスタに置かれているとする
+
+\subsection{レジスタ割り当て}
+実際に変数へレジスタを割り当てる
+
+スタックフレームの生成と破棄はここで挿入される
 
 \section{付録}
 \subsection{メモリへのデータ構造の割り付け}
