@@ -130,21 +130,29 @@
     繁木:
       (match <e1> (<pattern> <expr>) ...)
     正規化木:
-      なし
+      (match <e1> (<pattern> <expr>) ...)
   - match <e1> with | <pattern> when <guard> -> <expr> ...
     繁木:
-      (match <e1> (<pattern> when <expr>) ...)
+      (match <e1> (<pattern> <guard> <expr>) ...)
     正規化木:
-      なし
+      (match <e1> (<pattern> <guard> <expr>) ...)
 ..... パターン式
   - リテラル
     そのまま
   - 変数
     そのまま
+  - 複数のパターンの全てにマッチ
+    (and <pattern> ...)
+  - 複数のパターンのどれかにマッチ
+    (or <pattern> ...)
+  - マッチしない
+    (not <pattern>)
   - <constructor> <pattern> : データコンストラクタ
     (<constructor> <pattern>)
   - <varible>, ... : タプル
    (tuple <varible> ...)
+  - [<varible> ...] : 配列
+   (array <varible> ...)
 .... fun式
   - fun <id> -> <expr>
     繁木:

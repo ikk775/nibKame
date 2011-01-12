@@ -40,7 +40,7 @@ and exp =
   | BLd of mem_op
   | BSt of Id.t * mem_op
   | Comp of cmp_op * ty * Id.t * id_or_imm
-  | If of t * t * t
+  | If of exp * t * t
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
   | ArrayRef of Id.t * Id.t
@@ -53,11 +53,10 @@ and exp =
   | TupleAlloc of (Id.t * ty) list
   | ArrayAlloc of ty * Id.t
   | Save of Id.t * Id.t
-  | Pop of Id.t * Id.t
+  | Restore of Id.t * Id.t
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 val genid : unit -> Id.t
 val temp : unit -> Id.t
 val f: Closure.topDecl list -> fundef list * (float * Id.l) list
 val var_labels: Id.Set.t ref
-

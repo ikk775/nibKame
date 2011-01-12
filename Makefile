@@ -16,6 +16,8 @@ SOURCES +=typingType.ml
 SOURCES +=typingExpr.ml
 SOURCES +=typing.ml
 SOURCES +=kNormal.ml
+SOURCES +=closure.ml
+SOURCES +=virtualAsm.ml
 SOURCES +=module.ml
 SOURCES +=instantiate.ml
 
