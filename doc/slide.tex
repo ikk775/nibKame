@@ -165,18 +165,16 @@ let rec sort xs =
 ひとつのプログラムに複数の型がつく
 
 \begin{lstlisting}
-val last : 'a list -> 'a
+val fst : 'a * 'b -> 'a
 \end{lstlisting}
-int list でも char list でも OK
+どんな二つ組でも一つ目を返すのはいっしょ
 
 どのような型でも可能なものは, 型変数に置き換わる.\\
 使用するときは実際の型が代入される
 
 \vspace{1em}
 
-型推論のおかげで, コンパイラが(C++の)テンプレートのように出来るところを自動で型変数で置き換える
-
-実体化も自動でしてくれる機能
+まったく同じコードを型の数だけ書く必要はない
 
 \newpage
 
@@ -199,24 +197,6 @@ type 'a list =
 
 パターンマッチとの組み合せが強力
 
-\newpage
-\subsection{クロージャ}
-関数と, それの実行に必要なものをひとまとまりにしたもの
-関数引数の他に, 外から与えられる自由変数をあわせたもの
-
-\begin{verbatim}
-cf. グローバル変数
-\end{verbatim}
-呼び出したときでなく, 関数の書かれた位置で値が決まる
-
-\begin{lstlisting}
-  let g y =
-    let h z = y + z in
-    h in
-  let h' = g 1 in
-    h' x    (* x+1 *)
-\end{lstlisting}
-関数 \lstinline|g| をでたのに \lstinline|y| の値が参照できる!
 
 \newpage
 \subsection{パターンマッチング}
@@ -252,6 +232,25 @@ match list with
 型システムから, 出現しうるパターンを予測できる 
 
 \hspace{1em} $\rightarrow$ パターンに漏れがないか検査できる
+
+\newpage
+\subsection{クロージャ}
+関数と, それの実行に必要なものをひとまとまりにしたもの
+関数引数の他に, 外から与えられる自由変数をあわせたもの
+
+\begin{verbatim}
+cf. グローバル変数
+\end{verbatim}
+呼び出したときでなく, 関数の書かれた位置で値が決まる
+
+\begin{lstlisting}
+  let g y =
+    let h z = y + z in
+    h in
+  let h' = g 1 in
+    h' x    (* x+1 *)
+\end{lstlisting}
+関数 \lstinline|g| をでたのに \lstinline|y| の値が参照できる!
 
 \section{コンパイラの構造}
 
