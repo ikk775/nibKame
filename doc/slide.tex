@@ -62,42 +62,29 @@
 \date{}
 \maketitle
 
-\tableofcontents
+%\tableofcontents
 
 \section{目的}
-教育目的のコンパイラとして \\
-ML 系関数型言語 Objective Caml のサブセット MinCaml min-caml.sourceforge.net
+教育目的のコンパイラとして開発
+\begin{center}
+ ML 系関数型言語 Objective Caml のサブセット \\
+ MinCaml min-caml.sourceforge.net
+\end{center}
 
 「美しい日本の ML コンパイラ」
 
 ただし教育用のサブセット \\
-ML としての重要な機能の削除
+ML としての重要な機能の欠如
 \begin{itemize}
 \item 多相型
 \item 代数的データ型
 \item パターンマッチング
 \end{itemize}
-
-それを補ったコンパイラの作成
+\begin{center}
+ それを補ったコンパイラの作成
+\end{center}
 
 \section{プログラム言語 nibkame の設計}
-%\begin{itemize}
-%\item MinCamlを参考とした min-caml.sourceforge.net
-%\item 
-%\begin{itemize}
-%\item 多相型
-%\item ヴァリアント型
-%\item パターンマッチング
-%\item もしかしたら
-%\begin{itemize}
-%\item ガベージコレクタ
-%\item マクロ
-%\end{itemize}
-%\end{itemize}
-%%\item なぜか構文解析が別プログラム
-%\end{itemize}
-
-
 \subsection{構文要素}
 \begin{multicols}{2}
 
@@ -108,9 +95,9 @@ ML としての重要な機能の削除
 \item 関数の生成
 \item ヴァリアントの定義
 \item パターンマッチング
-\end{itemize} %\vspace{-0.2cm}
+\end{itemize} 
 
-データ構造 %\vspace{-0.3cm}
+データ構造 
 \begin{itemize}
 \item 単純型 \\ int, float, char, bool
 \item リスト
@@ -140,6 +127,7 @@ let at_least_3 = max 3
 \#\lstinline|1 :: []| &$\Longrightarrow$& [1]\\
 \#\lstinline|1, "abc"| &$\Longrightarrow$& 1, "abc"\\
 \end{tabular}
+
 \newpage
 }
 \subsection*{\thesubsection\quad What is OCaml?}
@@ -196,9 +184,9 @@ int list でも char list でも OK
 「または」で繋がれたうち, ひとつを取る型 直和型とも
 
 \begin{lstlisting}
-type 'a list =
-  | Cons of 'a * 'a list
-  | Nil
+type 'a node =
+  | Node of 'a * 'a node
+  | Null
 \end{lstlisting}
 これは, \lstinline|list|とは
 \begin{itemize}
@@ -236,9 +224,9 @@ cf. グローバル変数
 
 いちいち
 \begin{lstlisting}
-let first = car list
-let second = cadr list
-let others = cddr list
+let first = nth 0 list
+let second = nth 1 list
+let others = drop 2 list
 \end{lstlisting}
 ではなく
 \begin{lstlisting}
@@ -252,11 +240,11 @@ let fist :: second :: others = list
 先のヴァリアントと組み合せて
 \begin{lstlisting}
 match list with
-  | Cons (1, tail) ->
+  | Node (1, tail) ->
     先頭のデータが 1 だったとき
-  | Cons (head, tail) ->
+  | Node (head, tail) ->
     データが存在するとき
-  | Nil ->
+  | Null ->
     末尾であったとき
 \end{lstlisting}
 のような場合分けもできる
