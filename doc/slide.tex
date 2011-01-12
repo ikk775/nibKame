@@ -165,7 +165,7 @@ let rec sort xs =
 ひとつのプログラムに複数の型がつく
 
 \begin{lstlisting}
-val car : 'a list -> 'a
+val last : 'a list -> 'a
 \end{lstlisting}
 int list でも char list でも OK
 
@@ -184,7 +184,7 @@ int list でも char list でも OK
 「または」で繋がれたうち, ひとつを取る型 直和型とも
 
 \begin{lstlisting}
-type 'a node =
+type 'a list =
   | Node of 'a * 'a node
   | Null
 \end{lstlisting}
