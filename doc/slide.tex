@@ -205,13 +205,13 @@ type 'a list =
 
 いちいち
 \begin{lstlisting}
-let first = nth 0 list
-let second = nth 1 list
-let others = drop 2 list
+let first = nth 0 xs
+let second = nth 1 xs
+let others = drop 2 xs
 \end{lstlisting}
 ではなく
 \begin{lstlisting}
-let fist :: second :: others = list
+let fist :: second :: others = xs
 \end{lstlisting}
 と, 左辺に構造(パターン)を書き, 右辺と同じ造りにする
 
@@ -220,7 +220,7 @@ let fist :: second :: others = list
 左辺に相当するものを複数書くこともできる \\
 先のヴァリアントと組み合せて
 \begin{lstlisting}
-match list with
+match xs with
   | Node (1, tail) ->
     先頭のデータが 1 だったとき
   | Node (head, tail) ->
