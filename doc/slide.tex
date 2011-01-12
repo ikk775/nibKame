@@ -34,7 +34,7 @@
 }
 \lstset{language=[Objective display]Caml,%
   basicstyle={\normalfont\normalsize\sffamily},%
-%  commentstyle={\small\ttfamily\itshape\bfseries\upshape},%
+  commentstyle={\small\ttfamily\itshape\bfseries\upshape},%
   classoffset=1,%
   keywordstyle={\bfseries},%
   %frame=,%
@@ -116,17 +116,7 @@ let max x y =
 let at_least_3 = max 3
 \end{lstlisting}
 {
-実行例：\vspace{-20pt}
-\begin{eqnarray*}
-&&\mathtt{\# max~1~2} \Longrightarrow 2\\
-&&\mathtt{\# at\_least\_3~7} \Longrightarrow 7\\
-&&\mathtt{\# at\_least\_3~0} \Longrightarrow 3\\
-&&\mathtt{\# [1; 2; 3]} \Longrightarrow [1; 2; 3]\\
-&&\mathtt{\# 1 :: [1; 2; 3]} \Longrightarrow [1; 1; 2; 3]\\
-&&\mathtt{\# [1; 2; 3] @ [4; 5]} \Longrightarrow [1; 2; 3; 4; 5]\\
-&&\mathtt{\# 1 :: []} \Longrightarrow [1]\\
-\end{eqnarray*}
-
+実行例：
 \begin{tabular}{lcl}
 \#\lstinline|max 1 2| &$\Longrightarrow$& 2\\
 \#\lstinline|at_least_3 7| &$\Longrightarrow$& 7\\
@@ -135,6 +125,7 @@ let at_least_3 = max 3
 \#\lstinline|1 :: [1; 2; 3]| &$\Longrightarrow$& [1; 1; 2; 3]\\
 \#\lstinline|[1; 2; 3] @ [4; 5]| &$\Longrightarrow$& [1; 2; 3; 4; 5]\\
 \#\lstinline|1 :: []| &$\Longrightarrow$& [1]\\
+\#\lstinline|1, "abc"| &$\Longrightarrow$& 1, "abc"\\
 \end{tabular}
 
 \newpage
@@ -157,7 +148,7 @@ let rec sort xs =
 
 
 \newpage
-\subsection{型}
+\subsection{基本型}
 \begin{tabular}{lcl}
 \#\lstinline|1| &$\Longrightarrow$& \lstinline|int|\\
 \#\lstinline|[1; 2; 3]| &$\Longrightarrow$& \lstinline|int list|\\
