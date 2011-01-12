@@ -193,9 +193,9 @@ int list でも char list でも OK
 「または」で繋がれたうち, ひとつを取る型 直和型とも
 
 \begin{lstlisting}
-type 'a list =
-  | Cons of 'a * 'a list
-  | Nil
+type 'a node =
+  | Node of 'a * 'a node
+  | Null
 \end{lstlisting}
 これは, \lstinline|list|とは
 \begin{itemize}
@@ -233,9 +233,9 @@ cf. グローバル変数
 
 いちいち
 \begin{lstlisting}
-let first = car list
-let second = cadr list
-let others = cddr list
+let first = nth 0 list
+let second = nth 1 list
+let others = drop 2 list
 \end{lstlisting}
 ではなく
 \begin{lstlisting}
@@ -249,11 +249,11 @@ let fist :: second :: others = list
 先のヴァリアントと組み合せて
 \begin{lstlisting}
 match list with
-  | Cons (1, tail) ->
+  | Node (1, tail) ->
     先頭のデータが 1 だったとき
-  | Cons (head, tail) ->
+  | Node (head, tail) ->
     データが存在するとき
-  | Nil ->
+  | Null ->
     末尾であったとき
 \end{lstlisting}
 のような場合分けもできる
