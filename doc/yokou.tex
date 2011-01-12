@@ -43,6 +43,7 @@
 %\advance\textwidth 1in
 
 \renewcommand{\emph}[1]{\textit{\textgt{#1}}}
+\newcommand{\texthline}{\par\vskip 2pt\rule{0.4\textwidth}{0.5pt}\vskip 2pt\par}
 
 \begin{document}
 \maketitle
@@ -143,7 +144,7 @@ O'Camlにおいては
 \begin{inlineenummerate}
 \item O'Caml \verb/*.ml/ : 1058行
 \end{inlineenummerate}
-
+\texthline
 キーワード:
 Objective Caml, ML, MinCaml, x86, 解析表現文法, Pakrat parsing, パターンマッチング,
 カリー化, 型理論, Scheme, Gauche.
