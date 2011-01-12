@@ -6,8 +6,51 @@
 \usepackage{multicol}
 
 \usepackage{mathpazo}
+\usepackage{listings}
+\usepackage{jlisting}
 
+\lstdefinelanguage[lisp]{nibkame}{%
+   morekeywords={toplet,topletrec,if,match,type,fun}%
+   sensitive,% ???
+   alsodigit=-+e.,%
+   morecomment=[l];,%
+   morecomment=[s]{\#|}{|\#},%
+   morestring=[b]"%
+}[keywords,comments,strings]
 
+\lstdefinelanguage[Objective display]{Caml}[Objective]{Caml}{%
+    morestring=[d]',%
+%    classoffset=2,
+%    morekeywords={int,float,char,string},keywordstyle=\color{red},
+%    classoffset=3,
+%    morekeywords={list,array},keywordstyle=\color{blue},
+%    classoffset=0,
+    literate=%
+        {[|}{[\hskip -1pt$|$}2%
+        {|]}{$|$\hskip -1pt]}2%
+%       {[]}{\ensuremath{[\hskip -0.1em]}}2%
+        {->}{\ensuremath{\rightarrow}~}2%
+        {::}{\ensuremath{:\hskip -0.1em:}~}2%
+}
+\lstset{language=[Objective display]Caml,%
+  basicstyle={\normalfont\normalsize\sffamily},%
+%  commentstyle={\small\ttfamily\itshape\bfseries\upshape},%
+  classoffset=1,%
+  keywordstyle={\bfseries},%
+  %frame=,%
+  %framesep=0pt,%
+  showstringspaces=false,%
+  %numbers=left,%
+  %numberstyle={\scriptsize},%
+  %stepnumber=1,%
+  tabsize=8,%
+  lineskip=-0.5ex,%
+%
+  breaklines=true,%
+  linewidth=\the\textwidth,
+%  columns=[l]flexible%
+  columns=flexible%
+}
 \begin{document}
 \title{関数型言語の設計と実装}
 \author{L班 \quad 07317 小堀 育男 \quad 07322 酒本 典明}
@@ -74,60 +117,63 @@ ML としての重要な機能の削除
 
 \newpage
 \subsection{What is OCaml?}
-\begin{verbatim}
+\begin{lstlisting}
 let max x y =
   if x > y then x else y
+
 let at_least_3 = max 3
-\end{verbatim}
+\end{lstlisting}
 {
 実行例：\vspace{-20pt}
-\begin{eqnarray*}
-&&\mathtt{\# max~1~2} \Longrightarrow 2\\
-&&\mathtt{\# at\_least\_3~7} \Longrightarrow 7\\
-&&\mathtt{\# at\_least\_3~0} \Longrightarrow 3\\
-&&\mathtt{\# [1; 2; 3]} \Longrightarrow [1; 2; 3]\\
-&&\mathtt{\# 1 :: [1; 2; 3]} \Longrightarrow [1; 1; 2; 3]\\
-&&\mathtt{\# [1; 2; 3] @ [4; 5]} \Longrightarrow [1; 2; 3; 4; 5]\\
-&&\mathtt{\# 1 :: []} \Longrightarrow [1]\\
-\end{eqnarray*}e
+\begin{tabular}{lcl}
+\#\lstinline|max 1 2| &$\Longrightarrow$& 2\\
+\#\lstinline|at_least_3 7| &$\Longrightarrow$& 7\\
+\#\lstinline|at_least_3 0| &$\Longrightarrow$& 3\\
+\#\lstinline|[1; 2; 3]| &$\Longrightarrow$& [1; 2; 3]\\
+\#\lstinline|1 :: [1; 2; 3]| &$\Longrightarrow$& [1; 1; 2; 3]\\
+\#\lstinline|[1; 2; 3] @ [4; 5]| &$\Longrightarrow$& [1; 2; 3; 4; 5]\\
+\#\lstinline|1 :: []| &$\Longrightarrow$& [1]\\
+\end{tabular}
 \newpage
 }
 \subsection{What is OCaml?}
-\begin{verbatim}
-let rec sort list =
+\begin{lstlisting}
+let rec sort xs =
    let rec part pivot hs ls = function
      | [] -> hs, pivot, ls
      | x :: xs ->
        if x > pivot
          then part pivot (x :: hs) ls xs
          else part pivot hs (x :: ls) xs in
-   match list with
-   | [] -> []
-   | x :: xs ->
-     let hs, pivot, ls = part x [] [] xs in
-     sort ls @ pivot :: sort hs
-\end{verbatim}
+   match xs with
+     | [] -> []
+     | x' :: xs' ->
+       let hs, pivot, ls = part x' [] [] xs' in
+       sort ls @ pivot :: sort hs
+\end{lstlisting}
 
 
 \newpage
 \subsection{型}
-\begin{eqnarray*}
-&&\mathtt{\# 1} \Longrightarrow \mathsf{int}\\
-&&\mathtt{\# [1; 2; 3]} \Longrightarrow \mathsf{int~list}\\
-&&\mathtt{\# 1, 1.0, 'a'} \Longrightarrow \mathsf{int} \times \mathsf{float} \times \mathsf{char} \\
-&&\mathtt{\# max} \Longrightarrow \mathsf{int} \rightarrow \mathsf{int} \rightarrow \mathsf{int}\\
-&&\mathtt{\# } \Longrightarrow 7\\
-&&\mathtt{\# at\_least\_3~0} \Longrightarrow 3\\
-\end{eqnarray*}
+\begin{tabular}{lcl}
+\#\lstinline|1| &$\Longrightarrow$& \lstinline|int|\\
+\#\lstinline|[1; 2; 3]| &$\Longrightarrow$& \lstinline|int list|\\
+\#\lstinline![|1; 2; 3|]! &$\Longrightarrow$& \lstinline|int array|\\
+\#\lstinline|1, 1.0, 'a'| &$\Longrightarrow$& \lstinline|int * float * char| \\
+\#\lstinline|max| &$\Longrightarrow$& \lstinline|int -> int -> int|\\
+                &$\equiv$& \lstinline|int -> (int -> int)| \\
+\#\lstinline|max 1| &$\Longrightarrow$& \lstinline|int -> int|\\
+\#\lstinline|max 1 2| &$\Longrightarrow$& \lstinline|int|\\
+\end{tabular}
 
 \newpage
 \subsection{多相型}
 ひとつのプログラムに複数の型がつく
 
-\begin{verbatim}
+\begin{lstlisting}
 val car : 'a list -> 'a
+\end{lstlisting}
 int list でも char list でも OK
-\end{verbatim}
 
 どのような型でも可能なものは, 型変数に置き換わる.\\
 使用するときは実際の型が代入される
@@ -143,12 +189,12 @@ int list でも char list でも OK
 \subsection{代数的データ型}
 「または」で繋がれたうち, ひとつを取る型 直和型とも
 
-\begin{verbatim}
+\begin{lstlisting}
 type 'a list =
   | Cons of 'a * 'a list
   | Nil
-\end{verbatim}
-これは, \verb|list|とは
+\end{lstlisting}
+これは, \lstinline|list|とは
 \begin{itemize}
 \item データと次のリストの組であるか
 \item 終端である
@@ -169,36 +215,36 @@ cf. グローバル変数
 \end{verbatim}
 呼び出したときでなく, 関数の書かれた位置で値が決まる
 
-\begin{verbatim}
+\begin{lstlisting}
   let g y =
     let h z = y + z in
     h in
   let h' = g 1 in
     h' x    (* x+1 *)
-\end{verbatim}
-関数 \verb|g| をでたのに \verb|y| の値が参照できる!
+\end{lstlisting}
+関数 \lstinline|g| をでたのに \lstinline|y| の値が参照できる!
 
 \newpage
 \subsection{パターンマッチング}
 データの構造を記述し, 直接取り出す
 
 いちいち
-\begin{verbatim}
+\begin{lstlisting}
 let first = car list
 let second = cadr list
 let others = cddr list
-\end{verbatim}
+\end{lstlisting}
 ではなく
-\begin{verbatim}
+\begin{lstlisting}
 let fist :: second :: others = list
-\end{verbatim}
+\end{lstlisting}
 と, 左辺に構造(パターン)を書き, 右辺と同じ造りにする
 
 \newpage
 \subsection{パターンマッチングとヴァリアント}
 左辺に相当するものを複数書くこともできる \\
 先のヴァリアントと組み合せて\vspace{-0.9em}
-\begin{verbatim}
+\begin{lstlisting}
 match list with
   | Cons (1, tail) ->
     先頭のデータが 1 だったとき
@@ -206,7 +252,7 @@ match list with
     データが存在するとき
   | Nil ->
     末尾であったとき
-\end{verbatim} \vspace{-0.8em}
+\end{lstlisting} \vspace{-0.8em}
 のような場合分けもできる
 
 型システムから, 出現しうるパターンを予測できる 
@@ -237,22 +283,22 @@ Schemeにて実装予定
 マクロの実装はこの段階で行う
 
 \subsection{S式表現}
-\begin{verbatim}
+\begin{lstlisting}
 let rec gcd = fun x y ->
   if y = 0 then x else gcd y (x - y)
-\end{verbatim}
+\end{lstlisting}
 
-\begin{verbatim}
+\begin{lstlisting}[language=Lisp,columns=fullflexible,morekeywords={topletrec,fun,if},deletekeywords={gcd}]
 (topletrec gcd
   (fun (x y)
        (if (= y 0) x
                   (apply gcd y (- x y)))))
-\end{verbatim}
+\end{lstlisting}
 
 \newpage
 \subsection{型推論}
 わかっている型を探し,構文から同じであるべきところ同士を単一化していく
-\begin{verbatim}
+\begin{lstlisting}
 定数 -> 型は自明
 変数 -> 環境から探す
 関数 ->
@@ -263,7 +309,7 @@ let rec gcd = fun x y ->
 分岐 -> 分岐先ふたつの型を求め,単一化する
 変数束縛 ->
   束縛する値の型を求め,その型を用いて続く式を推論する
-\end{verbatim}
+\end{lstlisting}
 
 \newpage
 \subsection{K正規化}
@@ -295,12 +341,12 @@ let rec gcd = fun x y ->
 
 \newpage
 \subsection{リストの構造}
-\begin{verbatim}
+\begin{lstlisting}[language=C]
 struct list {
     dword data;
     void *next;
 }
-\end{verbatim}
+\end{lstlisting}
 また, 基本サイズのリストはデータが参照であるかどうかを示すビットマップを持つ
 
 \vspace{1em}
