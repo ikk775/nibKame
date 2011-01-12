@@ -298,8 +298,9 @@ let rec gcd = fun x y ->
 \begin{lstlisting}[language=Lisp,columns=fullflexible,morekeywords={topletrec,fun,if},deletekeywords={gcd}]
 (topletrec gcd
   (fun (x y)
-       (if (= y 0) x
-                  (apply gcd y (- x y)))))
+    (if (= y 0)
+      x
+      (apply gcd y (- x y)))))
 \end{lstlisting}
 
 \newpage
