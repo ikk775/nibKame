@@ -1,8 +1,13 @@
-\documentclass[a4paper,12pt]{jarticle}
+\documentclass[a4paper,12pt]{jsarticle}
 \usepackage{mathpazo}
-\title{\LARGE 関数型言語の設計と製作}
-\date{\relax}
+\usepackage{url}
+\usepackage[deluxe]{otf}
 
+\pagestyle{empty}
+
+\title{\LARGE 関数型言語の設計と製作}
+\author{L班 \quad 07317 小堀 育男 \quad 07322 酒本 典明}
+\date{\relax}
 \makeatletter
 \newcounter{ienum}
 %\renewcommand{\theienum}{\@arabic\c@ienum}
@@ -33,73 +38,114 @@
 \topmargin=-1in
 \advance\topmargin -10mm
 \advance\textheight 2in
-\advance\oddsidemargin -0.5in
-\advance\evensidemargin -0.5in
-\advance\textwidth 1in
+%\advance\oddsidemargin -0.5in
+%\advance\evensidemargin -0.5in
+%\advance\textwidth 1in
+
+\renewcommand{\emph}[1]{\textit{\textgt{#1}}}
+\newcommand{\texthline}{\par\vskip 2pt\rule{0.4\textwidth}{0.5pt}\vskip 2pt\par}
+
 \begin{document}
 \maketitle
 %\section{はじめに}
-我々は\emph{nibKame}という名の\emph{関数型言語}を設計し、そのコンパイラを製作した。
-nibKameとは、\emph{ML}系の関数型言語である\emph{MinCaml}という言語を拡張したものである。
-そもそもMinCamlはコンパイラの教育用に設計された言語であるため機能が少なく、
+我々は\emph{nibKame}という名の
+\emph{関数型言語}を設計し, 
+そのコンパイラを製作した. 
+nibKameとは, 
+\emph{ML}系の関数型言語である
+\emph{MinCaml}という言語を拡張したものである. 
+そもそもMinCamlはコンパイラの教育用に設計された言語であるため機能が少なく, 
 実用的なML系の言語に存在する
 \begin{inlineenummerate}
-\item[多相関数]
-\item[関数の部分適用]
-\item[代数型データ型]
-\item[モジュール]
-\item[パターンマッチング]
-\item[GC]
+\item[\emph{多相関数}]
+\item[関数の\emph{部分適用}]
+\item[\emph{代数型データ型}]
+\item[\emph{モジュール}]
+\item[\emph{パターンマッチング}]
+\item[\emph{Garbage Collection} (GC)]
 \end{inlineenummerate}
-等の機能が欠けており、nibKameにおいては
-多相関数、
-関数の部分適用、
+等の機能が欠けており, nibKameにおいては
+多相関数, 
+関数の部分適用, 
 代数的データ型
-を実装した。
+を実装した. 
 
 %\section{nibKameの言語仕様について}
-nibKameは以下の特徴を持つ。
+nibKameは以下の特徴を持つ. 
 \begin{inlineenummerate}
-\item[値呼び]
-\item[暗な多層型]
-\item[非純粋な関数型言語]
-\item[Hindley/Milner-like type system]
+\item[\emph{値呼び}]
+\item[暗な多相型]
+\item[\emph{非純粋な}関数型言語]
+\item[\emph{Hindley-Milner Type System}]
 \item[モジュール]
 \end{inlineenummerate}
 
 %\section{nibKameのコンパイラの仕様について}
-コンパイラは以下のフェーズに分かれている。
+コンパイラはいくつかのフェーズに分かれている. 
+以下, 特に改良を加えたところのみを
+詳しく解説する. 
 \begin{inlineenummerate}
-\item[構文解析] ソースコードを読み込み抽象構文木に変換。
+\item[構文解析]
+ソースコードを読み込み\emph{抽象構文木}（\emph{S式}）に変換. 
+\emph{解析表現文法}（\emph{Parsing Expression Grammar}, PEG）で解析する. 
 \item[抽象構文木の読み込み] 
-\item[型推論] 
-\item[パターンマッチの展開] 
+抽象構文木(S式)を読み込み, 
+中間言語(\texttt{Syntax.t})に変換する. 
+\item[\emph{カリー化}] 
+複数引数の関数をカリー化する. 
+中間言語(\texttt{Syntax.t})を中間言語(\texttt{TypingExpr.t})に変換する. 
+\item[\emph{型推論}] 
+式に現れる変数全てに正しい型をつける. 
+中間言語(\texttt{TypingExpr.t})を中間言語(\texttt{Typing.t})に変換する. 
+\item[パターンマッチの展開]
+パターンマッチの網羅性を検査し, 
+複雑なパターンマッチをより簡単にする. 
+%Wright\footnote{Andrew K. Wright \url{wright@research.nj.nec.com}}
+%の書いたScheme向けのパターンマッチングライブラリの機能を参考にした. 
 \item[K正規形に変換] 
 \item[K正規形に対する最適化] 
 \item[クロージャ変換] 
 \item[仮想機械語に変換] 
-\item[直線変換] 木構造となっている仮想機械語の命令を線形リストに変換する。
-\item[機械語に変換] レジスタが無限にあるとして機械語に変換。
-\item[レジスタ割り当て] 実際にレジスタを割り当てる。
+\item[直線変換]
+木構造となっている仮想機械語の命令を線形リストに変換する. 
+\item[機械語に変換]
+レジスタが無限にあるとして機械語に変換. 
+\item[レジスタ割り当て]
+実際に使用するレジスタを割り当てる. 
 \item[アセンブリで出力] 
+x86アセンブリで出力する. 
 \end{inlineenummerate}
-また、その後GNUアセンブラ(gas)によって出力したアセンブリをアセンブルし、
-GNUリンカ(ld)で事前に用意したランタイムとリンクする。
+また, その後\emph{GNUアセンブラ}によって出力したアセンブリをアセンブルし, 
+\emph{GNUリンカ}で事前に用意したランタイムとリンクする. 
 
-現状では、構文解析部は\emph{Scheme} (処理系は\emph{Gauche}を用いた)で、それ以外は\emph{Objective Caml} (OCaml)で書かれている。
-ソースソードの言語別行数内訳は以下のようになっている。
-ここで、OCamlにおいては\verb/*.ml/のファイルが実装を定義し、
-\verb/*.mli/のファイルがインターフェースを定義する。
-実装: 
+現状では, 
+構文解析部は\emph{Lisp}系言語の\emph{Scheme}の処理系である
+\emph{Gauche}用に書かれており, 
+それ以外は\emph{Objective Caml} (O'Caml)で書かれている. 
+2011年1月12日の
+ソースソードの目的別言語別行数内訳は以下のようになっている. 
+ここで, 
+O'Camlにおいては
+\verb/*.ml/のファイル
+（C言語で言うところの\verb/.c/ファイル）
+が実装を定義し, 
+\verb/*.mli/のファイル
+（C言語で言うところのヘッダファイル）
+がインターフェースを定義する. 
+
+本体部分：
 \begin{inlineenummerate}
-\item Scheme \verb/*.scm/ : 337行
-\item OCaml \verb/*.ml/ : 3305行
-\item OCaml \verb/*.mli/ : 646行
-\end{inlineenummerate}
-テスト: 
-\begin{inlineenummerate}
-\item OCaml \verb/*.ml/ : 1058行
+\item O'Caml \verb/*.ml/: 4175行
+\item O'Caml \verb/*.mli/: 760行
+\item Scheme \verb/*.scm/: 337行
 \end{inlineenummerate}
 
-キーワード: 型推論 関数型言語
+テストケース：
+\begin{inlineenummerate}
+\item O'Caml \verb/*.ml/: 1058行
+\end{inlineenummerate}
+\texthline
+キーワード:
+Objective Caml, ML, MinCaml, x86, 解析表現文法, Pakrat parsing, パターンマッチング,
+カリー化, 型理論, Scheme, Gauche.
 \end{document}

@@ -144,7 +144,7 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2
   | KNormal.ArrayRef(x, y) -> ArrayRef(x, y)
   | KNormal.ArraySet(x, y, z) -> ArraySet(x, y, z)
   | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
-(*  | KNormal.ExtFunApply(x, ys) -> ApplyDir(Id.L("min_caml_" ^ x), ys) *)
+  | KNormal.ExtFunApply(x, ys) -> ApplyDir(Id.L("nibkame_" ^ x), ys)
 
 let f e =
   topDecls := [];

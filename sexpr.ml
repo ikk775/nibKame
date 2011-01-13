@@ -213,3 +213,18 @@ let to_string x =
 
 let from_string str =
   read (Stream.of_string str)
+
+let ident str =
+  Sident str
+
+let string str =
+  Sstring str
+
+let tagged_sexpr tag contents =
+  Sexpr (ident tag :: contents)
+
+let parse_tagged_sexpr = function
+  | Sexpr (Sident tag :: contents) -> tag, contents
+  | _ -> invalid_arg "parse_tagged_sexpr"
+
+
