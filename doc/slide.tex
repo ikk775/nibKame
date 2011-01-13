@@ -166,12 +166,21 @@ let rec sort xs =
 ひとつのプログラムに複数の型がつく
 
 \begin{lstlisting}
-val fst : 'a * 'b -> 'a
+let fst x, y = x
+val fst: 'a * 'b -> 'a
 \end{lstlisting}
+\begin{tabular}{lcl}
+\lstinline|fst (1, 'a')| &$\Longrightarrow$& \lstinline|1|\\
+\lstinline|fst ([2; 3], (1.0, "str"))| &$\Longrightarrow$&
+	 \lstinline|[2; 3]|
+\end{tabular}
+
+\vspace{1em}
+
 どんな二つ組でも一つ目を返すのはいっしょ
 
-どのような型でも可能なものは, 型変数に置き換わる.\\
-使用するときは実際の型が代入される
+%どのような型でも可能なものは, 型変数に置き換わる.\\
+%使用するときは実際の型が代入される
 
 \vspace{1em}
 
