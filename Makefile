@@ -7,6 +7,7 @@ SOURCES +=myUtil.ml
 SOURCES +=sexpr.ml
 SOURCES +=idx.ml
 SOURCES +=id.ml
+SOURCES +=mangle.ml
 SOURCES +=debug.ml
 SOURCES +=type.ml
 SOURCES +=variant.ml
