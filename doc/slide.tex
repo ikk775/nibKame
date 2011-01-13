@@ -15,11 +15,11 @@
    alsodigit=-+e.,%
    morecomment=[l];,%
    morecomment=[s]{\#|}{|\#},%
-   morestring=[b]"%
+   morestring=[b]"%"
 }[keywords,comments,strings]
 
 \lstdefinelanguage[Objective display]{Caml}[Objective]{Caml}{%
-    morestring=[d]',%
+    morestring=[d]',%'
 %    classoffset=2,
 %    morekeywords={int,float,char,string},keywordstyle=\color{red},
 %    classoffset=3,
@@ -65,16 +65,21 @@
 %\tableofcontents
 
 \section{目的}
-教育目的のコンパイラとして開発
-\begin{center}
- ML 系関数型言語 Objective Caml のサブセット \\
- MinCaml min-caml.sourceforge.net
-\end{center}
+教育目的のコンパイラとして開発 MinCaml
+%\begin{center}
 
-「美しい日本の ML コンパイラ」
+ML 系関数型言語 Objective Caml のサブセット \\
+% MinCaml min-caml.sourceforge.net
+%\end{center}
 
-ただし教育用のサブセット \\
-ML としての重要な機能の欠如
+\vspace{0.8em}特徴\vspace{-0.8em}
+\begin{itemize}
+ \item シンプルで軽量な実装
+ \item 高速に動作する出力コード
+\end{itemize}
+%「美しい日本の ML コンパイラ」
+
+ML に存在する一部の機能が省略
 \begin{itemize}
 \item 多相型
 \item 代数的データ型
@@ -93,7 +98,7 @@ ML としての重要な機能の欠如
 \item 変数への束縛 
 \item 条件分岐
 \item 関数の生成
-\item ヴァリアントの定義
+\item 代数的データ型の定義
 \item パターンマッチング
 \end{itemize} 
 
@@ -103,7 +108,7 @@ ML としての重要な機能の欠如
 \item リスト
 \item 配列
 \item タプル
-\item ヴァリアント
+\item 代数的データ型
 \end{itemize}
 \end{multicols}
 
@@ -166,12 +171,21 @@ let rec sort xs =
 ひとつのプログラムに複数の型がつく
 
 \begin{lstlisting}
-val fst : 'a * 'b -> 'a
+let fst x, y = x
+val fst: 'a * 'b -> 'a
 \end{lstlisting}
+\begin{tabular}{lcl}
+\lstinline|fst (1, 'a')| &$\Longrightarrow$& \lstinline|1|\\
+\lstinline|fst ([2; 3], (1.0, "str"))| &$\Longrightarrow$&
+	 \lstinline|[2; 3]|
+\end{tabular}
+
+\vspace{1em}
+
 どんな二つ組でも一つ目を返すのはいっしょ
 
-どのような型でも可能なものは, 型変数に置き換わる.\\
-使用するときは実際の型が代入される
+%どのような型でも可能なものは, 型変数に置き換わる.\\
+%使用するときは実際の型が代入される
 
 \vspace{1em}
 
@@ -216,9 +230,9 @@ let fist :: second :: others = xs
 と, 左辺に構造(パターン)を書き, 右辺と同じ造りにする
 
 \newpage
-\subsection{パターンマッチングとヴァリアント}
+\subsection{パターンマッチングと代数的データ型}
 左辺に相当するものを複数書くこともできる \\
-先のヴァリアントと組み合せて
+先の代数的データ型と組み合せて
 \begin{lstlisting}
 match xs with
   | Node (1, tail) ->
@@ -234,24 +248,6 @@ match xs with
 
 \hspace{1em} $\rightarrow$ パターンに漏れがないか検査できる
 
-\newpage
-\subsection{クロージャ}
-関数と, それの実行に必要なものをひとまとまりにしたもの
-関数引数の他に, 外から与えられる自由変数をあわせたもの
-
-\begin{verbatim}
-cf. グローバル変数
-\end{verbatim}
-呼び出したときでなく, 関数の書かれた位置で値が決まる
-
-\begin{lstlisting}
-  let g y =
-    let h z = y + z in
-    h in
-  let h' = g 1 in
-    h' x    (* x+1 *)
-\end{lstlisting}
-関数 \lstinline|g| をでたのに \lstinline|y| の値が参照できる!
 
 \section{コンパイラの構造}
 
@@ -345,6 +341,15 @@ let rec gcd = fun x y ->
 
 スタックフレームの生成と破棄はここで挿入される
 
+\section{まとめ}
+教育用 ML コンパイラ MinCaml を基にし
+\begin{itemize}
+ \item 多相型
+ \item 代数的データ型
+ \item パターンマッチング
+\end{itemize}
+を持つコンパイラの実装を試みた．
+
 \section{付録}
 \subsection{メモリへのデータ構造の割り付け}
 動的なデータの割り付け先
@@ -353,7 +358,7 @@ let rec gcd = fun x y ->
 \item float型を格納するリスト
 \item その他 タプルと配列, クロージャ
 \end{itemize}
-ヴァリアントは基本サイズのリストと同様に割り付け
+代数的データ型は基本サイズのリストと同様に割り付け
 
 多分にGCを搭載することを意識している
 
@@ -369,7 +374,7 @@ struct list {
 
 \vspace{1em}
 
-ヴァリアントは \\
+代数的データ型は \\
 データ部にタグ番号を, ポインタに持つべきデータへの参照
 としてリストと同様に配置
 
@@ -404,5 +409,25 @@ struct list {
 
 クロージャ変数 \\
 関数へのポインタと自由変数のタプル
+
+\newpage
+\subsection{クロージャ}
+関数と, それの実行に必要なものをひとまとまりにしたもの
+関数引数の他に, 外から与えられる自由変数をあわせたもの
+
+\begin{verbatim}
+cf. グローバル変数
+\end{verbatim}
+呼び出したときでなく, 関数の書かれた位置で値が決まる
+
+\begin{lstlisting}
+  let g y =
+    let h z = y + z in
+    h in
+  let h' = g 1 in
+    h' x    (* x+1 *)
+\end{lstlisting}
+関数 \lstinline|g| をでたのに \lstinline|y| の値が参照できる!
+
 
 \end{document}
