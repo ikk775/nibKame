@@ -29,6 +29,10 @@ let arg_type = function
   | O_Fun (a, r) -> a
   | _ -> invalid_arg "arg_type"
 
+let dest_type = function
+  | O_Fun (a, r) -> r
+  | _ -> invalid_arg "dest_type"
+
 let gen_typevar_num = ref 0
 
 let gen_typevar () =

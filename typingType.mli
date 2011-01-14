@@ -43,6 +43,7 @@ type t = typeScheme
 type typeEnv = TypeEnv of (exprVar * typeScheme) list
 type substitution = Substitution of typeVar * oType
 val arg_type : oType -> oType
+val dest_type : oType -> oType
 val gen_typevar_num : int ref
 val gen_typevar : unit -> oType
 val gen_typevars : int -> oType list
