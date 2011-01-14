@@ -16,6 +16,7 @@ SOURCES +=sread.ml
 SOURCES +=typingType.ml
 SOURCES +=typingExpr.ml
 SOURCES +=typing.ml
+SOURCES +=pattern.ml
 SOURCES +=kNormal.ml
 SOURCES +=closure.ml
 SOURCES +=virtualAsm.ml

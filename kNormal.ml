@@ -371,6 +371,14 @@ let rec from_typing_result r =
       let t1 = Typing.result_type e1 in
       let e' = Typing.R_Let((bn, t1), e1, Typing.R_If (Typing.R_Variable (bn, t1), e2, e3)) in
       f env e'
+    | Typing.R_Match (Typing.R_Variable (v, _), [Typing.RP_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
+      let g = function
+        | Some v, t -> v, TT.oType_to_type t
+        | None, t -> Typing.gen_varname (), TT.oType_to_type t in
+      let h = function
+        | Typing.RP_Variable (ov, t) -> g (ov, t)
+        | _ -> failwith "something went wrong." in
+      LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (Typing.result_type expr)
   in
   f Id.Map.empty r
   
