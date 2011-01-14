@@ -6,9 +6,17 @@ type cmp_op =
 type literal =
   | Int_l of int | Char_l of char | Pointer_l of Id.l
 
-type ty =
-  | Int | Float | Char | Pointer of Type.t
+type p_type =
+  | Tuple of ty list
+  | Array of ty
+  | List of ty
+  | Undefined
+and ty =
+  | Char
+  | Int
+  | Float
   | Fun
+  | Pointer of p_type
 
 type mem_op =
   | Direct of Id.t
@@ -16,12 +24,20 @@ type mem_op =
   | Plus_offset of Id.t * id_or_imm
   | Scaled_offset of Id.t * Id.t * int
 
-let to_ty = function
-  | Type.Int -> Int
-  | Type.Float -> Float
-  | Type.Char -> Char
-  | Type.Fun _ -> Fun
-  | _ as t -> Pointer t
+let rec to_ty ty =
+  let to_p_type = function
+    | Type.Tuple l -> Tuple (List.map to_ty l)
+    | Type.List t -> List (to_ty t)
+    | Type.Array t -> Array (to_ty t)
+    | Type.Variant t -> List Int
+    | _ -> Undefined
+  in
+    match ty with
+      | Type.Int -> Int
+      | Type.Float -> Float
+      | Type.Char -> Char
+      | Type.Fun _ -> Fun
+      | t -> Pointer (to_p_type t)
 
 type t =
   | Ans of exp
@@ -205,10 +221,10 @@ let rec compile_exp env = function
   | Closure.ArrayAlloc (typ, num) -> Ans (ArrayAlloc (to_ty typ, num))
   | Closure.ArrayRef (ary, num) ->
       begin match M.find ary env with
-	| Pointer (Type.Array typ) ->
+	| Pointer (Array typ) ->
 	    begin match typ with
-	      | Type.Float -> Ans (FLd (Scaled_offset (ary, num, 8)))
-	      | Type.Char -> Ans (BLd (Plus_offset (ary, V num)))
+	      | Float -> Ans (FLd (Scaled_offset (ary, num, 8)))
+	      | Char -> Ans (BLd (Plus_offset (ary, V num)))
 	      | _ -> Ans (Ld (Scaled_offset (ary, num, 4)))
 	    end
 	| _ -> failwith (Format.sprintf "%s is not an array." ary)
@@ -242,7 +258,7 @@ let compile_fun { Closure.fun_name = (Id.L(label), t);
 	  let e = compile_exp env exp in
 	    { name = Id.L(label); args = List.map to_ty_with_var args; body = e; ret = to_ty t2 }
       | fvs ->
-	  let fv = (genid (), Pointer (Type.Tuple (Type.Unit :: fvs))) in
+	  let fv = (genid (), Pointer (Tuple (Int :: List.map to_ty fvs))) in
 	  let e = compile_exp (M.add (fst fv) (snd fv) env) exp in
 	    { name = Id.L(label); args = fv :: (List.map to_ty_with_var args); body = e; ret = to_ty t2 }
 
