@@ -37,7 +37,7 @@ type t =
   | FCar of Id.t
   | FCdr of Id.t
   | ExtArray of Id.t
-  | ExtFunApply of Id.t * Id.t list
+  | ExtFunApply of (Id.t * Type.t) * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t; }
 type substitution = Substitution of Id.t * Id.t
 
@@ -56,7 +56,7 @@ val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
 val from_typing_result : Typing.result -> (t * Type.t)
 
-val internal_symbol : string -> TypingType.oType -> (t * Type.t)
+val internal_operator : string -> TypingType.oType -> (t * Type.t)
 (** A internal symbol name must begin with the letter '%'. *)
 (** A internal symbol as a function represents a primitive function. *)
 (** A primitive function takes one argument and should not return a function to represent a multi-argument function.
