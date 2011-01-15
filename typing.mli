@@ -21,6 +21,8 @@ and pattern =
   | RP_Not of pattern * TypingType.oType
   | RP_Tuple of pattern list * TypingType.oType
   | RP_Vector of pattern list * TypingType.oType
+and clause = pattern * result option * result
+
 val bindedvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result

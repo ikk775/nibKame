@@ -30,6 +30,7 @@ and pattern =
   | RP_Not of pattern * TypingType.oType
   | RP_Tuple of pattern list * TypingType.oType
   | RP_Vector of pattern list * TypingType.oType
+and clause = pattern * result option * result
 
 let rec map_pattern_leaf f_leaf pat =
   let rec g pat = match pat with
