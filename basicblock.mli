@@ -40,8 +40,6 @@ type ins =
   | FCdr of Id.t
   | TupleAlloc of (Id.t * VirtualAsm.ty) list
   | ArrayAlloc of VirtualAsm.ty * Id.t
-  | Save of Id.t * Id.t
-  | Restore of Id.t * Id.t
 
 type fundef = { name : Id.l; args : (Id.t * VirtualAsm.ty) list; body : ins list; ret : VirtualAsm.ty; block_labels : Id.l list }
 

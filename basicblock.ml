@@ -57,8 +57,6 @@ type ins =
   | TupleAlloc of (Id.t * VA.ty) list
   | ArrayAlloc of VA.ty * Id.t
 
-  | Save of Id.t * Id.t
-  | Restore of Id.t * Id.t
 
 type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty; block_labels : Id.l list }
 
@@ -111,8 +109,6 @@ let to_ins = function
   | VA.TupleAlloc (data) -> TupleAlloc data
   | VA.ArrayAlloc (ty, num) -> ArrayAlloc (ty, num)
 
-  | VA.Save (dst, data) -> Save (dst, data)
-  | VA.Restore (src, dst) -> Restore (src, dst)
 
 let rec linerize blocks stack = function
   | VA.Ans (VA.If (cond, tr, fal)) ->
