@@ -1,4 +1,5 @@
 module VA = VirtualAsm
+module BB = Basicblock
 
 type reg =
   | EAX | EDX | ECX | EBX | ESI | EDI | EBP | ESP | TempR of Id.t
@@ -14,6 +15,7 @@ type mem =
   | Index of int * reg * int 
   | IndexL of Id.l * reg * int
   | RcdAry of reg * reg * int
+  | TempM of Id.t
 
 type imm = VA.literal
 
@@ -29,6 +31,11 @@ type twoOp =
   | RI of reg * imm
   | MI of mem * imm
 
+type cmp_op = Eq | NotEq | LsEq | Ls | Gt | GtEq | Zero | NotZero
+
+let to_cmp = function
+  | VA.Eq -> Eq | VA.NotEq -> NotEq | VA.LsEq -> LsEQ | VA.Ls -> Ls | VA.Gt -> Gt | VA.GtEq -> GtEq
+
 let cnt0 = ref 0
 let tempR () =
   let i = !cnt0 in
@@ -36,9 +43,14 @@ let tempR () =
     TempR (Format.sprintf "tmpr%d" i)
 let cnt1 = ref 0
 let tempF () =
-  let i = !cnt0 in
+  let i = !cnt1 in
     incr cnt1;
     TempF (Format.sprintf "tmpf%d" i)
+let cnt2 = ref 0
+let tempM () =
+  let i = !cnt2 in
+    incr cnt2;
+    TempM (Format.sprintf "tmpm%d" i)
 
 type inst =
   | Mov of reg * reg
@@ -75,6 +87,7 @@ type inst =
   | FMul of freg * freg
   | FDiv of freg * freg
   | Fsqrd of freg * freg
+  | FComp of freg * freg
 
   | F2I of freg * reg
   | I2F of reg * freg
@@ -86,10 +99,11 @@ type inst =
 
   | Cmp of twoOp
   | Test of twoOp
-  | Branch of VA.cmp_op * Id.l
+  | Branch of cmp_op * Id.l
   | Jmp of Id.l
   | Call of Id.l
   | Label of Id.l
+  | Entry (* It is replaced to making stackframe in Register Allocation. *)
   | Leave
   | Ret
 
@@ -129,6 +143,7 @@ let str_of_mem = function
   | IndexL (Id.L disp, index, scale) when isscale scale -> Format.sprintf "%s(%s,%d)" disp (str_of_reg index) scale
   | IndexL _ -> failwith "Index scale is used with 1, 2, 4, 8 only." 
   | RcdAry (base, index, disp) -> Format.sprintf "%d(%s,%s)" disp (str_of_reg base) (str_of_reg index)
+  | TempM s -> failwith (Format.sprintf "Not assigned address, %s" s)
 
 let str_of_imm : imm -> string = function
     | VA.Int_l i -> Format.sprintf "$%d" i
@@ -181,6 +196,7 @@ let str_of_inst = function
   | Fmul (dst, src) -> Format.sprintf "mulsd %s, %s" (str_of_freg src) (str_of_freg dst)
   | Fdiv (dst, src) -> Format.sprintf "divsd %s, %s" (str_of_freg src) (str_of_freg dst)
   | Fsqrt (dst, src) -> Format.sprintf "sqrtsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | FComp (dst, src) -> Format.sprintf "comisd %s, %s" (str_of_freg src) (str_of_freg dst)
 
   | F2I (dst, src) -> Format.sprintf "cvtsi2sd %s, %s" (str_of_freg src) (str_of_reg dst)
   | I2F (dst, src) -> Format.sprintf "cvttsdi2si %s, %s" (str_of_reg src) (str_of_freg dst)
@@ -194,14 +210,72 @@ let str_of_inst = function
   | Test op -> Format.sprintf "testl %s" (str_of_twoOp op)
   | Branch (cond, Id.L label) ->
       Format.sprintf (match cond with
-			| VA.Eq -> "je %s"
-			| VA.NotEq "jne %s"
-			| VA.LsEq -> "jle %s"
-			| VA.Ls -> "jl %s"
-			| VA.Gt -> "jg %s"
-			| VA.GtEq -> "jge %s") label
+			| Eq -> "je %s"
+			| NotEq "jne %s"
+			| LsEq -> "jle %s"
+			| Ls -> "jl %s"
+			| Gt -> "jg %s"
+			| GtEq -> "jge %s"
+			| Zero -> "jz %s"
+			| NotZero -> "jnz %s") label
   | Jmp (Id.L label) -> Format.sprintf "jmp %s" label
   | Call (Id.L label) -> Format.sprintf "call %s" label 
   | Label (Id.L label) -> Format.spintf "%s:" label
   | Leave -> "leave"
   | Ret -> "ret"
+
+
+let twoOp_to_twoOp dst src =
+  match src with
+    | V s -> RR (TempR dst, TempR s)
+    | C s -> RI (TempR dst, VA.Int_l s)
+
+let asmgen' = function
+  | BB.Entry -> Entry, None
+  | BB.Jump l -> Jump l, None
+  | BB.Label l -> Label l, None
+  | BB.Nop -> Nop, None
+
+let rec asmgen = function
+  | [] -> []
+  | BB.Ret :: tail -> Leave :: Ret :: asmgen tail
+
+  (* 複数の命令に対して最適化を行う部分 *)
+
+  (* 複数の命令に変換される場合 *)
+  | BB.Let ((dst, VA.Float), ins) :: tail ->
+
+  | BB.Let ((dst, t), ins) :: tail ->
+      begin match get_dist ins with
+	|
+      end
+
+  | BB.If (ins, b_label) :: tail ->
+      begin match ins with
+	| BB.Comp (op, ty, src1, src2) ->
+	    begin match ty with
+	      | VA.Int | VA.Char ->
+		  (match src2 with
+		     | C 0 when op = VA.Eq -> Test (RI (TempR src1, Temp)) :: Branch (Zero, b_label)
+		     | C 0 when op = VA.NotEq -> Test (RI (TempR src1, Temp)) :: Branch (NotZero, b_label)
+		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: Branch (to_cmp_op op, b_label)) :: asmgen tail
+	      | VA.Float -> let V s2 = src2 in FComp (TempF src1, TempF s2) :: Branch (to_cmp_op op, b_label) :: asmgen tail
+	      | VA.Pointer t when op = VA.Eq -> MyUtil.undefined ()
+	      | VA.Pointer
+	      | VA.Fun -> MyUtil.undefind ()
+	    end
+	| ins ->
+	    let t = BB.temp () in
+	      asmgen (BB.Let ((t, VA.Int), ins) :: BB.If ((BB.Comp (VA.NotEq, VA.Int, t, VA.C 0)) b_label) :: tail)
+      end
+
+  | ApplyCls
+  | ApplyDir
+  | Cons
+  | FCons
+  | TupleAlloc
+  | ArrayAlloc
+
+  (* 一命令のみに対応する部分 *)
+  | single :: tail -> 
+
