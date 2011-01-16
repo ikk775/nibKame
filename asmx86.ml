@@ -230,24 +230,55 @@ let twoOp_to_twoOp dst src =
     | V s -> RR (TempR dst, TempR s)
     | C s -> RI (TempR dst, VA.Int_l s)
 
-let asmgen' = function
-  | BB.Entry -> Entry, None
-  | BB.Jump l -> Jump l, None
-  | BB.Label l -> Label l, None
-  | BB.Nop -> Nop, None
+let get_dst = function
+  | BB.Let _ -> MyUtil.undefined ()
+  | BB.Entry | BB.Ret | BB.Jump _ | BB.Label _ | BB.Nop -> None
+  | BB.Set _ | BB.Mov _ -> None
+  | BB.Neg dst | BB.Add (dst, _) | BB.Sub (dst, _) | BB.Mul (dst, _) | BB.Div (dst, _) | BB.SLL (dst, _) | BB.SLR (dst, _) -> Some dst
+  | BB.Ld _ | BB.St _ -> None
+  | BB.FMov _ -> None
+  | BB.FNeg dst | BB.FAdd (dst, _) | BB.FSub (dst, _)  | BB.FMul (dst, _) | BB.FDiv (dst, _) -> Some dst
+  | BB.FLd _ | BB.FSt _ -> None
+  | BB.BLd _ | BB.BSt _ -> None
+  | BB.Comp _ -> None
+  | BB.If _ -> MyUtil.undefined ()
+  | BB.ApplyCls _ | BB.ApplyDir _ -> None
+  | BB.ArrayRef _ | BB.ArraySet _ -> None
+  | BB.Cons _ | BB.Car _ | BB.Cdr _ | BB.FCons _ | BB.FCar _ | BB.FCdr _ -> None
+  | BB.TupleAlloc _ | BB.ArrayAlloc _ -> None
 
+(* 関数の戻り値の型が必要 *)
+let get_type = function
+  | BB.Let _ | BB.Entry | BB.Ret | BB.Jump _ | BB.Label _ | BB.Nop -> None
+  | BB.Set _ | BB.Mov _ | BB.Neg _ | BB.Add _ | BB.Sub _ | BB.Mul _ | BB.Div _ | BB.SLL _ | BB.SLR _ | BB.Ld _ -> Some VA.Int
+  | BB.St _ -> None
+  | BB.FMov _ | BB.FNeg _ | BB.FAdd _ | BB.FSub _ | BB.FMul _ | BB.FDiv _ | BB.FLd _ -> Some VA.Float
+  | BB.FSt _ -> None
+  | BB.BLd _ -> Some VA.Char
+  | BB.BSt _ -> None
+  | BB.Comp _ -> VA.Int
+  | BB.If _ -> None
+  | BB.ApplyCls _ | BB.ApplyDir _ -> MyUtil.undefined ()
+  | BB.Cons _ | BB.Car _ | BB.Cdr _ -> Some (VA.Pointer (VA.List VA.Int))
+  | BB.FCons _ | BB.FCar _ | BB.FCdr _ -> Some (VA.Pointer (VA.List VA.Float))
+  | BB.TupleAlloc l -> Some (VA.Pointer (VA.Tuple (List.map snd l)))
+  | BB.ArrayAlloc (t, _) -> Some (VA.Pointer (VA.Array t))
+
+(* 演算の値が返る部分は Let の子になるよう調節する．*)
 let rec asmgen = function
   | [] -> []
   | BB.Ret :: tail -> Leave :: Ret :: asmgen tail
+  | BB.Entry :: tail -> Entry :: asmgen tail
+  | BB.Jump l :: tail -> Jump l :: asmgen tail
+  | BB.Label l :: tail -> Label l :: asmgen tail
+  | BB.Nop :: tail -> Nop :: asmgen tail
 
   (* 複数の命令に対して最適化を行う部分 *)
-
-  (* 複数の命令に変換される場合 *)
-  | BB.Let ((dst, VA.Float), ins) :: tail ->
+  (*| BB.Let ((dst, VA.Float), ins) :: tail -> *)
 
   | BB.Let ((dst, t), ins) :: tail ->
-      begin match get_dist ins with
-	|
+      begin match ins with (* 命令選択の本体にあたる *)
+
       end
 
   | BB.If (ins, b_label) :: tail ->
@@ -260,22 +291,22 @@ let rec asmgen = function
 		     | C 0 when op = VA.NotEq -> Test (RI (TempR src1, Temp)) :: Branch (NotZero, b_label)
 		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: Branch (to_cmp_op op, b_label)) :: asmgen tail
 	      | VA.Float -> let V s2 = src2 in FComp (TempF src1, TempF s2) :: Branch (to_cmp_op op, b_label) :: asmgen tail
-	      | VA.Pointer t when op = VA.Eq -> MyUtil.undefined ()
-	      | VA.Pointer
-	      | VA.Fun -> MyUtil.undefind ()
+	      | VA.Pointer t when op = VA.Eq ->
+		  begin match t with
+		    | VA.undefined -> 
+		  end
+	      | VA.Pointer t when op = VA.NotEq ->
+		  begin match t with
+		    | VA.undefined ->
+		  end
+	      | VA.Pointer _ | VA.Fun -> MyUtil.undefind ()
 	    end
 	| ins ->
-	    let t = BB.temp () in
+	    let t = VA.temp () in
 	      asmgen (BB.Let ((t, VA.Int), ins) :: BB.If ((BB.Comp (VA.NotEq, VA.Int, t, VA.C 0)) b_label) :: tail)
       end
 
-  | ApplyCls
-  | ApplyDir
-  | Cons
-  | FCons
-  | TupleAlloc
-  | ArrayAlloc
-
   (* 一命令のみに対応する部分 *)
-  | single :: tail -> 
+  | single :: tail ->
+      asmgen (BB.Let ((VA.temp (), get_type single), single) :: tail)
 
