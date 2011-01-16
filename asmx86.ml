@@ -66,6 +66,8 @@ type inst =
 
   | Push of rmi
   | Pop of reg
+  | FPush of freg
+  | FPop of freg
 
   | Add of twoOp
   | Sub of twoOp
@@ -175,6 +177,8 @@ let str_of_inst = function
   | Lea (dst, mem) -> Format.sprintf "leal %s, %s" (str_of_mem mem) (str_of_reg dst)
   | Push (src) -> Fotmat.sprintf "pushl %s" (str_of_rmi src)
   | Pop (dst) -> Format.sprintf "popl %s" (str_of_reg dst)
+  | FPush (src) -> Fotmat.sprintf "pushl %s" (str_of_freg src)
+  | FPop (dst) -> Format.sprintf "popl %s" (str_of_freg dst)
 
   | Add op -> Format.sprintf "addl %s" (str_of_twoOp op)
   | Sub op -> Format.sprintf "subl %s" (str_of_twoOp op)
@@ -227,8 +231,12 @@ let str_of_inst = function
 
 let twoOp_to_twoOp dst src =
   match src with
-    | V s -> RR (TempR dst, TempR s)
-    | C s -> RI (TempR dst, VA.Int_l s)
+    | VA.V s -> RR (TempR dst, TempR s)
+    | VA.C s -> RI (TempR dst, VA.Int_l s)
+
+let id_or_imm_to_rmi = function
+  | VA.V s -> R (TempR s)
+  | VA.C s -> I (VA.Int_l s)
 
 let get_dst = function
   | BB.Let _ -> MyUtil.undefined ()
@@ -292,14 +300,24 @@ let rec asmgen = function
 		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: Branch (to_cmp_op op, b_label)) :: asmgen tail
 	      | VA.Float -> let V s2 = src2 in FComp (TempF src1, TempF s2) :: Branch (to_cmp_op op, b_label) :: asmgen tail
 	      | VA.Pointer t when op = VA.Eq ->
-		  begin match t with
-		    | VA.undefined -> 
-		  end
+		  let func = match t with
+		    | VA.Array _ -> Id.L "_nibkame_array_compare_"
+		    | VA.List _ -> Id.L "_nibkame_list_compare_"
+		    | VA.Tuple _ -> Id.L "_nibkame_tuple_comare_"
+		    | VA.undefined -> Id.L "_nibkame_generic_comare_"
+		  in
+		    Push (id_or_imm_to_rmi src2) :: Push (TempR src1) :: Call (func)
+		    :: Test (RR (EAX, EAX)) :: Branch (Zero, b_label) :: asmgen tail
 	      | VA.Pointer t when op = VA.NotEq ->
-		  begin match t with
-		    | VA.undefined ->
-		  end
-	      | VA.Pointer _ | VA.Fun -> MyUtil.undefind ()
+		  let func = match t with
+		    | VA.Array _ -> Id.L "_nibkame_array_compare_"
+		    | VA.List _ -> Id.L "_nibkame_list_compare_"
+		    | VA.Tuple _ -> Id.L "_nibkame_tuple_comare_"
+		    | VA.undefined -> Id.L "_nibkame_generic_comare_"
+		  in
+		    Push (id_or_imm_to_rmi src2) :: Push (TempR src1) :: Call (func)
+		    :: Test (RR (EAX, EAX)) :: Branch (NotZero, b_label) :: asmgen tail
+	      | VA.Pointer _ | VA.Fun -> failwith "Not Supported Compare type."
 	    end
 	| ins ->
 	    let t = VA.temp () in
