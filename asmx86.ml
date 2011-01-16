@@ -57,6 +57,7 @@ type inst =
   | Xchg of reg * reg
   | FMov of freg * freg
   | St of mem * reg
+  | BSt of mem * reg
   | FSt of mem *freg
   | Ld of reg * mem
   | FLd of freg * mem
@@ -144,8 +145,16 @@ let str_of_mem = function
   | Index _ -> failwith "Index scale is used with 1, 2, 4, 8 only."
   | IndexL (Id.L disp, index, scale) when isscale scale -> Format.sprintf "%s(%s,%d)" disp (str_of_reg index) scale
   | IndexL _ -> failwith "Index scale is used with 1, 2, 4, 8 only." 
-  | RcdAry (base, index, disp) -> Format.sprintf "%d(%s,%s)" disp (str_of_reg base) (str_of_reg index)
+  | RcdAry (base, index, scale) when isscale scale -> Format.sprintf "(%s,%s,%d)" (str_of_reg base) (str_of_reg index) scale
+  | RcdAry _ -> failwith "Index scale is used with 1, 2, 4, 8 only."
   | TempM s -> failwith (Format.sprintf "Not assigned address, %s" s)
+
+let to_mem = function
+  | VA.Direct r -> Base (TempR r)
+  | VA.Label l -> Direct l
+  | VA.Plus_offset (t1, V t2) -> RcdAry (t1, t2, 1)
+  | VA.Plus_offset (t1, C t2) -> Offset (t1, t2)
+  | VA.Scaled_offset (base, index, scale) -> RcdAry (base, index, scale)
 
 let str_of_imm : imm -> string = function
     | VA.Int_l i -> Format.sprintf "$%d" i
@@ -169,6 +178,7 @@ let str_of_inst = function
   | Xchg (dst, src) -> Format.sprintf "xchgl %s, %s" (str_of_reg src) (str_of_reg dst)
   | FMov (dst, src) -> Format.sprintf "movsd %s, %s" (str_of_freg src) (str_of_freg dst)
   | St (mem, src) -> Format.sprintf "movl %s, %s" (str_of_reg src) (str_of_mem mem)
+  | BSt (mem, src) -> char_store mem src
   | FSt (mem, src) -> Format.sprintf "movsd %s, %s" (str_of_freg src) (str_of_mem mem)
   | Ld (dst, mem) -> Format.sprintf "movl %s, %s" (str_of_mem mem) (str_of_reg dst)
   | FLd (dst, mem) -> Format.sprintf "movsd %s, %s" (str_of_mem mem) (str_of_freg dst)
@@ -324,7 +334,12 @@ let rec asmgen = function
 	      asmgen (BB.Let ((t, VA.Int), ins) :: BB.If ((BB.Comp (VA.NotEq, VA.Int, t, VA.C 0)) b_label) :: tail)
       end
 
-  (* 一命令のみに対応する部分 *)
+  (* 一時変数への副作用を持たないもの *)
+  | BB.St (src, mem) :: tail -> St (to_mem mem, TempR src) :: asmgen tail
+  | BB.FSt (src, mem) :: tail -> FSt (to_mem mem, TempF src) :: asmgen tail
+  | BB.BSt (src, mem) :: tail -> BSt (to_mem mem, TempR src) :: asmgen tail
+
+  (* 全てに代入先を用意 *)
   | single :: tail ->
       asmgen (BB.Let ((VA.temp (), get_type single), single) :: tail)
 
