@@ -44,9 +44,6 @@ type ins =
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
 
-  | ArrayRef of Id.t * Id.t
-  | ArraySet of Id.t * Id.t * Id.t
-
   | Cons of Id.t * Id.t
   | Car of Id.t
   | Cdr of Id.t 
@@ -95,9 +92,6 @@ let to_ins = function
 
   | VA.ApplyCls (cls, args) -> ApplyCls (cls, args)
   | VA.ApplyDir (func, args) -> ApplyDir (func, args)
-
-  | VA.ArrayRef (ary, idx) -> ArrayRef (ary, idx)
-  | VA.ArraySet (ary, idx, data) -> ArraySet (ary, idx, data)
 
   | VA.Cons (h, t) -> Cons (h, t)
   | VA.Car (l) -> Car l

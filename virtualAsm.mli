@@ -44,8 +44,6 @@ and exp =
   | If of exp * t * t
   | ApplyCls of Id.t * Id.t list
   | ApplyDir of Id.l * Id.t list
-  | ArrayRef of Id.t * Id.t
-  | ArraySet of Id.t * Id.t * Id.t
   | Cons of Id.t * Id.t
   | Car of Id.t
   | Cdr of Id.t  | FCons of Id.t * Id.t
