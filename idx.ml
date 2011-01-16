@@ -14,7 +14,8 @@ module Map = struct
   include Map_sub
   let of_assoc map = 
     let l = ref [] in
-    iter (fun k c -> l := (k, c) :: !l) map
+    iter (fun k c -> l := (k, c) :: !l) map;
+    !l
   let add_list xys env = List.fold_left (fun env (x, y) -> add x y env) env xys
   let add_list2 xs ys env = List.fold_left2 (fun env x y -> add x y env) env xs ys
   let compose mx my = fold add my mx

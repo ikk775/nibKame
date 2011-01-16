@@ -13,6 +13,9 @@ type pat =
   | P_Array of pat list
   | P_Variant of Id.t * pat list
   | Any
+  | P_And of pat * pat
+  | P_Or of pat * pat (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
+  | P_Not of pat
 type t =
     Literal of lit
   | Add of t * t

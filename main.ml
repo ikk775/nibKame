@@ -6,6 +6,7 @@ let read_module stm =
 
 let knormalize_module m =
   let m = Module.compose Predefined.perspective m in
+  let m = Pattern.unfold_module m in
   let m = Instantiate.instantiate m in
   let r = Module.gather_expr m in
   fst (KNormal.from_typing_result r)

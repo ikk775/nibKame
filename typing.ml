@@ -30,6 +30,7 @@ and pattern =
   | RP_Not of pattern * TypingType.oType
   | RP_Tuple of pattern list * TypingType.oType
   | RP_Vector of pattern list * TypingType.oType
+and clause = pattern * result option * result
 
 let rec map_pattern_leaf f_leaf pat =
   let rec g pat = match pat with
@@ -511,6 +512,10 @@ let rec substitute_with_expr_subst = fun ss expr ->
       R_Match(subst e, List.map g cls)
   in
   f ss expr
+
+let rec substitute_varname ss expr =
+  let ss' = List.map (function vf, vt -> vf, E_Variable vt) ss in
+  substitute_with_expr_subst ss' expr
 
 let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)

@@ -58,6 +58,11 @@ let rec pattern_of_list = function
       | Sident "list" :: l -> Syntax.P_List (List.map pattern_of_list l)
       | Sident "tuple" :: l -> Syntax.P_Tuple (List.map pattern_of_list l)
       | Sident "array" :: l -> Syntax.P_Array (List.map pattern_of_list l)
+      | [Sident "and"; l] -> pattern_of_list l
+      | Sident "and" :: l :: ls -> Syntax.P_And (pattern_of_list l, pattern_of_list (Sexpr (Sident "and" :: ls)))
+      | [Sident "or"; l] -> pattern_of_list l
+      | Sident "or" :: l :: ls -> Syntax.P_Or (pattern_of_list l, pattern_of_list (Sexpr (Sident "or" :: ls)))
+      | [Sident "not"; l] -> Syntax.P_Not (pattern_of_list l)
       | Sident constructor :: p -> Syntax.P_Variant (constructor, (List.map pattern_of_list p))
       | _ -> invalid_arg "unexpected pattern."
 
@@ -84,7 +89,7 @@ let rec change = function
 			   | Sexpr [Sident i] ->
 			       Variant.add_tag variant i
 			   | Sexpr [Sident i; typeexprs] ->
-			       Variant.add_tag variant i
+			       Variant.add_constructor variant i [Type.of_sexpr typeexprs]
          | _ -> invalid_arg "unexpected token" )
 		        constructors;
 	      Variant.add_variant !variant;

@@ -21,6 +21,8 @@ and pattern =
   | RP_Not of pattern * TypingType.oType
   | RP_Tuple of pattern list * TypingType.oType
   | RP_Vector of pattern list * TypingType.oType
+and clause = pattern * result option * result
+
 val bindedvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
@@ -39,6 +41,7 @@ val typing_with_subst : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.type
 val typing : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.typeScheme * result
 val substitute : substitution list -> result -> result
 val substitute_with_expr_subst : (TypingExpr.exprVar * TypingExpr.expr) list -> result -> result
+val substitute_varname : (TypingExpr.exprVar * TypingExpr.exprVar) list -> result -> result
 val of_sexpr : Sexpr.t -> result
 val gather : resultVar * TypingType.oType * result -> result -> result
 val to_sexpr : result -> Sexpr.t

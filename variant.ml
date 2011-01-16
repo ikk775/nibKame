@@ -5,7 +5,8 @@ let rec uniq = function
   | [] -> []
   | x :: xs -> if List.mem x xs then uniq xs else x :: (uniq xs)
 
-module S = 
+module S = Id.Set
+  (*
   struct
     type key = Id.t
     type t = key list
@@ -19,12 +20,13 @@ module S =
     let elements : t -> key list = fun set ->
       set
   end
+  *)
 
 let empty = M.empty
 
 
 type tag =
-    { tag_number : int; own_variant : Id.t}
+    { tag_number : int; own_variant : Id.t; t: Type.t}
 type tags = Id.t * int * tag M.t
 
 let variants : (tag M.t) M.t ref = ref M.empty
@@ -38,8 +40,12 @@ let empty_tags : Id.t -> tags ref =
 let add_tag : tags ref -> Id.t -> unit =
   fun x tag ->
     let (vname, num, vmap) = !x in
-      x := vname, num + 1, M.add tag {tag_number = num; own_variant = vname} vmap
+      x := vname, num + 1, M.add tag {tag_number = num; own_variant = vname; t = Type.Variant vname} vmap
 
+let add_constructor =
+  fun x tag ts ->
+    let (vname, num, vmap) = !x in
+      x := vname, num + 1, M.add tag {tag_number = num; own_variant = vname; t = Type.Fun (ts, Type.Variant vname)} vmap
 
 let add_variant (variantname, num, vmap) =
   variants := M.add variantname vmap !variants;
@@ -66,4 +72,14 @@ let tag_to_number tag =
   (data_of_tag tag).tag_number
 
 let tag_to_datatype tag =
-  MyUtil.undefined ()
+  (data_of_tag tag).t
+
+let variant_to_exprenv name =
+  let tags = M.find name !variants in
+  let f tag = TypingType.clos_ot (TypingType.oType_of_type tag.t) in
+  TypingExpr.ExprEnv (M.of_assoc (M.map f tags))
+
+let variant_to_module name =
+  let tags = M.find name !variants in
+  let f tag = TypingType.clos_ot (TypingType.oType_of_type tag.t) in
+  TypingExpr.ExprEnv (M.of_assoc (M.map f tags))

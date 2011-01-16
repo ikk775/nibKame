@@ -29,6 +29,10 @@ let arg_type = function
   | O_Fun (a, r) -> a
   | _ -> invalid_arg "arg_type"
 
+let dest_type = function
+  | O_Fun (a, r) -> r
+  | _ -> invalid_arg "dest_type"
+
 let gen_typevar_num = ref 0
 
 let gen_typevar () =
@@ -152,6 +156,12 @@ let clos env ts =
   let freeVars = MyUtil.List.setDiff (freetypevars ts) (freetypevars_env env) in
   QType(freeVars, ts)
 
+let clos_ts ts =
+  QType(freetypevars ts, ts)
+
+let clos_ot ot =
+  clos_ts (OType ot)
+
 let substitute_eqnpair ss pair =
   match pair with
     | x, y -> substitute ss x, substitute ss y
@@ -184,6 +194,10 @@ let rec unify_u eqns substs =
 
 let unify: oType -> oType -> substitution list = fun t1 t2 -> 
   unify_u [(t1, t2)] []
+
+let unifiable t1 t2 =
+  try unify t1 t2; true
+  with Unification_Failure _ -> false
 
 let renew : oType -> oType -> substitution list = fun older newer -> 
   let ss = unify older newer in

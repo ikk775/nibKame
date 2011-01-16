@@ -47,7 +47,7 @@ module Map :
     val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
     val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
     val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
-    val of_assoc : 'a t -> unit
+    val of_assoc : 'a t -> (key * 'a) list
     val add_list : (key * 'a) list -> 'a t -> 'a t
     val add_list2 : key list -> 'a list -> 'a t -> 'a t
     val compose : 'a t -> 'a t -> 'a t
