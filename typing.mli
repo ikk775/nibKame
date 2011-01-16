@@ -41,6 +41,7 @@ val typing_with_subst : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.type
 val typing : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.typeScheme * result
 val substitute : substitution list -> result -> result
 val substitute_with_expr_subst : (TypingExpr.exprVar * TypingExpr.expr) list -> result -> result
+val substitute_varname : (TypingExpr.exprVar * TypingExpr.exprVar) list -> result -> result
 val of_sexpr : Sexpr.t -> result
 val gather : resultVar * TypingType.oType * result -> result -> result
 val to_sexpr : result -> Sexpr.t

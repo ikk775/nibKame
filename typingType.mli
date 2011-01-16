@@ -43,6 +43,7 @@ type t = typeScheme
 type typeEnv = TypeEnv of (exprVar * typeScheme) list
 type substitution = Substitution of typeVar * oType
 val arg_type : oType -> oType
+val dest_type : oType -> oType
 val gen_typevar_num : int ref
 val gen_typevar : unit -> oType
 val gen_typevars : int -> oType list
@@ -67,12 +68,15 @@ val substitute_ts : substitution list -> typeScheme -> typeScheme
 val substitute_env : substitution list -> typeEnv -> typeEnv
 val add_env : typeEnv -> exprVar -> typeScheme -> typeEnv
 val clos : typeEnv -> typeScheme -> typeScheme
+val clos_ot : oType -> typeScheme
+val clos_ts : typeScheme -> typeScheme
 val substitute_eqnpair : substitution list -> oType * oType -> oType * oType
 val substitute_eqnpairs :
   substitution list -> (oType * oType) list -> (oType * oType) list
 exception Unification_Failure of (oType * oType) list * substitution list
 val unify_u : (oType * oType) list -> substitution list -> substitution list
 val unify : oType -> oType -> substitution list
+val unifiable : oType -> oType -> bool
 val renew : oType -> oType -> substitution list
 val oType_of_type : Type.t -> oType
 val oType_to_type : oType -> Type.t

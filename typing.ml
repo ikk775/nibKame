@@ -513,6 +513,10 @@ let rec substitute_with_expr_subst = fun ss expr ->
   in
   f ss expr
 
+let rec substitute_varname ss expr =
+  let ss' = List.map (function vf, vt -> vf, E_Variable vt) ss in
+  substitute_with_expr_subst ss' expr
+
 let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "r:constant"; l; t] -> R_Constant (Syntax.lit_of_sexpr l, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "r:var"; Sexpr.Sident v; t] -> R_Variable (v, TypingType.oType_of_sexpr t)
