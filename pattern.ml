@@ -264,6 +264,74 @@ and branches_type = function
   | [] -> failwith "something went wrong."
   | br :: brs -> branch_type br
 
+let rec implies_branch br1 br2 =
+  match br1 with
+    | TP_Value (TP_Variable _, TP_Leaf _) -> true
+    | TP_Value (TP_Variable _, tr1) ->
+      begin match br2 with
+        | TP_Value (TP_Variable _, TP_Leaf _) -> false
+        | TP_Value (TP_Variable _, tr2)
+        | TP_Value (TP_Constant _, tr2) 
+        | TP_Value (TP_Constructor _, tr2) 
+        | TP_Apply tr2
+        | TP_Tuple tr2
+        | TP_Vector tr2 -> implies_tree tr1 tr2
+      end
+    | TP_Value (TP_Constant _ as c1, tr1) -> 
+      begin match br2 with
+        | TP_Value (TP_Variable _, _) -> false
+        | TP_Value (TP_Constant _ as c2, tr2) when c1 = c2 -> implies_tree tr1 tr2
+        | _ -> false
+      end
+    | TP_Value (TP_Constructor _ as c1, tr1) -> 
+      begin match br2 with
+        | TP_Value (TP_Variable _, _) -> false
+        | TP_Value (TP_Constructor _ as c2, tr2) when c1 = c2 -> implies_tree tr1 tr2
+        | _ -> false
+      end
+    | TP_Apply tr1 -> 
+      begin match br2 with
+        | TP_Value (TP_Variable _, _) -> false
+        | TP_Apply tr2 -> implies_tree tr1 tr2
+        | _ -> false
+      end
+    | TP_Tuple tr1 -> 
+      begin match br2 with
+        | TP_Value (TP_Variable _, _) -> false
+        | TP_Tuple tr2 -> implies_tree tr1 tr2
+        | _ -> false
+      end
+    | TP_Vector tr1 -> 
+      begin match br2 with
+        | TP_Value (TP_Variable _, _) -> false
+        | TP_Vector tr2 -> implies_tree tr1 tr2
+        | _ -> false
+      end
+and implies_tree tr1 tr2 = match tr1, tr2 with
+  | TP_Leaf _, TP_Leaf _ -> true
+  | TP_Node brs1, TP_Node brs2 ->
+    List.for_all (fun br2 -> List.exists (fun br1 -> implies_branch br1 br2) brs1) brs2
+  | _ -> invalid_arg "implies_tree"
+
+let is_unificatable_branch br1 br2 = match br1, br2 with
+  | TP_Value (TP_Variable _, _), _ -> true
+  | _, TP_Value (TP_Variable _, _) -> true
+  | TP_Value (TP_Constant _ as c1, _), TP_Value (TP_Constant _ as c2, _) when c1 = c2 -> true
+  | TP_Value (TP_Constructor _ as c1, _), TP_Value (TP_Constructor _ as c2, _) when c1 = c2 -> true
+  | TP_Apply _, TP_Apply _ -> true
+  | TP_Tuple _, TP_Tuple _ -> true
+  | TP_Vector _, TP_Vector _ -> true
+  | TP_Value (TP_Constant _, _), _
+  | TP_Value (TP_Constructor _, _), _
+  | TP_Apply _, _
+  | TP_Tuple _, _
+  | TP_Vector _, _ -> false
+and is_unificatable_tree tr1 tr2 = match tr1, tr2 with
+  | TP_Leaf _, TP_Leaf _ -> true
+  | TP_Node brs1, TP_Node brs2 ->
+    List.for_all (fun br2 -> List.exists (fun br1 -> implies_branch br1 br2) brs1) brs2
+  | _ -> invalid_arg "implies_tree"
+
 let is_similar_branch br1 br2 = match br1, br2 with
   | TP_Value (TP_Constant _ as c1, _), TP_Value (TP_Constant _ as c2, _) when c1 = c2 -> true
   | TP_Value (TP_Constructor _ as c1, _), TP_Value (TP_Constructor _ as c2, _) when c1 = c2 -> true
@@ -300,14 +368,37 @@ let rec add_exception brs tr' =
     end
 and add_branch brs br' =
   let vs, brs' = List.partition is_variable brs in
+  let f br =
+    if is_similar_branch br br'
+    then merge_branch br br'
+    else br in
   match vs with
     | [] ->
-      let bras = List.filter (is_similar_branch br') brs' in
-      undefined ()
-and merge_branch br br' =
-  undefined ()
+      if List.exists (fun br -> is_similar_branch br br') brs
+      then List.map f brs
+      else brs @ [br']
+    | [v] ->
+      if implies_branch v br'
+      then brs' @ [merge_branch v br']
+      else if List.exists (fun br -> is_similar_branch br br') brs
+      then List.map f brs
+      else brs' @ br' :: [v]
+    | _ -> (undefined ())
+and merge_branch br br' = match br, br' with
+  | TP_Value (TP_Variable _ as c1, tr1), TP_Value (TP_Constructor _ as c2, tr2) -> invalid_arg "merge_branch"
+  | TP_Value (TP_Constant _ as c1, tr1), TP_Value (TP_Constant _ as c2, tr2) when c1 = c2 -> TP_Value (c1, merge_tree tr1 tr2)
+  | TP_Value (TP_Constant _ as c1, tr1), TP_Value (TP_Constant _ as c2, tr2) -> invalid_arg "merge_branch"
+  | TP_Value (TP_Constructor _ as c1, tr1), TP_Value (TP_Constructor _ as c2, tr2) when c1 = c2 -> TP_Value (c1, merge_tree tr1 tr2)
+  | TP_Value (TP_Constructor _ as c1, tr1), TP_Value (TP_Constructor _ as c2, tr2) -> invalid_arg "merge_branch"
+and merge_branches = function
+  | [] -> invalid_arg "merge_branches"
+  | [br] -> br
+  | br :: brs -> 
+    List.fold_left merge_branch br brs
 and merge_tree tr tr' = match tr, tr' with
+  | TP_Node brs, TP_Node brs' -> TP_Node (List.fold_left add_branch brs brs')
   | TP_Node brs, TP_Leaf (guard, leaf) -> TP_Node (add_exception brs tr')
+  | TP_Leaf (guard, leaf), _ -> tr
 
 let add_trees = function
   | [] -> TP_Node []
@@ -341,5 +432,5 @@ let unfold_result venv r =
   (undefined ())
 
 let unfold_module m =
-  (undefined ())
+  m
   
