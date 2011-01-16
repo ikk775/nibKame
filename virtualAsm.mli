@@ -4,7 +4,6 @@ type cmp_op = Eq | NotEq | LsEq | Ls | Gt | GtEq
 
 type literal = Int_l of int | Char_l of char | Pointer_l of Id.l
 
-type ty = Int | Float | Char | Pointer of Type.t | Fun
 type p_type = Tuple of ty list | Array of ty | List of ty | Undefined
 and ty = Char | Int | Float | Fun | Pointer of p_type
 
