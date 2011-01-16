@@ -36,18 +36,25 @@ let perspective =
   let tygfe = [Type.Float] in
   let tygffe = [Type.Float; Type.Float] in
   let tyb = Type.Bool in
+  let tyc = Type.Char in
+  let tygce = [tyc] in
   let tyva = Type.Var "a" in
+  let tygvae = [tyva] in
   let tygvavae = [tyva; tyva] in
   let tylva = Type.List tyva in
   let tyglvae = [Type.List tyva] in
   let tygvalvae = [tyva; Type.List tyva] in
   let tyava = Type.Array tyva in
+  let tyac = Type.Array tyc in
+  let tygace = [tyac] in
   let tygavae = [Type.Array tyva] in
   let tygavaie = [Type.Array tyva; tyi] in
   let tygavaivae = [Type.Array tyva; tyi; tyva] in
   let tyrva = Type.Ref tyva in
   let tygrvae = [Type.Ref tyva] in
   let tygrvavae = [Type.Ref tyva; tyva] in
+  let tygmgvaevblvae =[Type.Fun ([Type.Var "a"], Type.Var "b"); Type.List (Type.Var "a")] in
+  let tylvb = Type.List (Type.Var "b") in
   List.fold_left Module.add_expr Module.empty [
     "~", intop_t "%neg" tygie tyi;
     "+", intop_t "%add" tygiie tyi;
@@ -67,11 +74,19 @@ let perspective =
     ">=", intop_t "%ls-eq" tygvavae tyb;
     "cons", intop_t "%cons" tygvalvae tylva;
     "car", intop_t "%car" tyglvae tyva;
+    "hd", intop_t "%car" tyglvae tyva;
     "cdr", intop_t "%cdr" tyglvae tylva;
+    "tl", intop_t "%cdr" tyglvae tylva;
     "array-alloc", intop_t "%array-alloc" tygie tyava;
     "array-ref", intop_t "%array-ref" tygavaie tyva;
     "array-set", intop_t "%array-set" tygavaivae tyu;
     "ref", intop_t "%ref" tygrvae tyva;
     "set", intop_t "%set" tygrvavae tyu;
+    "ignore", intop_t "%ignore" tygvae tyu;
+    "print_int", intop_t "print_int" tygie tyu;
+    "print_float", intop_t "print_float" tygfe tyu;
+    "print_char", intop_t "print_char" tygce tyu;
+    "print_string", intop_t "print_string" tygace tyu;
+    "map", intop_t "%map" tygmgvaevblvae tylvb;
 ]
  
