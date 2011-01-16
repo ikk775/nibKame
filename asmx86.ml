@@ -173,6 +173,17 @@ let str_of_twoOp = function
   | RI (dst, src) -> Format.sprintf "%s, %s" (str_of_imm src) (str_of_reg dst)
   | MI (dst, src) -> Format.sprintf "%s, %s" (str_of_imm src) (str_of_mem dst)
 
+let char_store mem src =
+  Format.sprintf "movb %s, %s"
+    (match src with
+       | EAX -> "%al"
+       | EBX -> "%bl"
+       | ECX -> "%cl"
+       | EDX -> "%dl"
+       | _ -> failwith "unsupported register to charactor operation")
+    (str_of_mem mem)
+
+
 let str_of_inst = function
   | Mov (dst, src) -> Format.sprintf "movl %s, %s" (str_of_reg src) (str_of_reg dst)
   | Xchg (dst, src) -> Format.sprintf "xchgl %s, %s" (str_of_reg src) (str_of_reg dst)
