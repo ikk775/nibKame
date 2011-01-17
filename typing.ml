@@ -18,7 +18,7 @@ type result =
   | R_If of result * result * result
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
-  | R_Match of result * (pattern * result * result) list
+  | R_Match of result * (pattern * result option * result) list
   | R_External of Id.t * TypingType.oType
 and pattern =
   | RP_Constant of Syntax.lit * TypingType.oType
@@ -97,8 +97,11 @@ let rec bindedvars : result -> (Id.t * TypingType.oType) list = function
   | R_Fix ((v, t), e, t') -> (v, t) :: bindedvars e
   | R_External _ -> []
   | R_Match (e, cls) -> 
-    let g = function pat, guard, expr -> 
-      patternvars pat @ bindedvars guard @ bindedvars expr
+    let g = function
+      | pat, None, expr -> 
+        patternvars pat @ bindedvars expr
+      | pat, Some guard, expr -> 
+        patternvars pat @ bindedvars guard @ bindedvars expr
     in
     bindedvars e @ List.concat (List.map g cls)
     
@@ -115,17 +118,19 @@ let rec freevars : result -> (Id.t * TypingType.oType) list = function
   | R_Fix ((v, t), e, t') -> List.remove_assoc v (freevars e)
   | R_External _ -> []
   | R_Match (e, cls) -> 
-    let f = function pat, guard, expr -> 
-      let rec g = function
-        | RP_Variable (None, t) -> []
-        | RP_Variable (Some v, t) -> [v, t]
-        | RP_Constant _ | RP_Constructor _ -> []
-        | RP_Apply _ | RP_And _ | RP_Or _
-        | RP_Not _
-        | RP_Tuple _ | RP_Vector _ -> failwith "something went wrong."
-      in
-      let pbvs = g pat in
-      List.setDiff (List.unique (freevars guard @ freevars expr)) pbvs
+    let rec g = function
+      | RP_Variable (None, t) -> []
+      | RP_Variable (Some v, t) -> [v, t]
+      | RP_Constant _ | RP_Constructor _ -> []
+      | RP_Apply _ | RP_And _ | RP_Or _
+      | RP_Not _
+      | RP_Tuple _ | RP_Vector _ -> failwith "something went wrong."
+    in
+    let f = function
+      | pat, None, expr -> 
+        List.setDiff (List.unique (freevars expr)) (g pat)
+      | pat, Some guard, expr -> 
+        List.setDiff (List.unique (freevars guard @ freevars expr)) (g pat)
     in
     freevars e @ List.concat (List.map f cls)
 
@@ -145,8 +150,11 @@ let rec typevars : result -> Id.t list = fun r ->
     | R_Fix ((v, t), e, t') -> List.unique (ftv t :: g e)
     | R_External (v, t) -> [ftv t]
     | R_Match (e, cls) -> 
-      let f = function pat, guard, expr -> 
-        List.unique (walk_pattern_leaf_type ftv pat :: g guard @ g expr)
+      let f = function
+        | pat, None, expr -> 
+          List.unique (walk_pattern_leaf_type ftv pat :: g expr)
+        | pat, Some guard, expr -> 
+          List.unique (walk_pattern_leaf_type ftv pat :: g guard @ g expr)
       in
       List.unique (g e @ List.concat (List.map f cls))
   in
@@ -196,8 +204,11 @@ let rec substitute_result_type ss expr =
     | R_Fix((f, t), e, t') -> R_Fix((f, tsubst t), subst e, tsubst t')
     | R_External (v ,t) -> R_External (v, tsubst t)
     | R_Match (e, cls) -> 
-      let g = function pat, guard, expr -> 
-        map_pattern_type tsubst pat, subst guard, subst expr
+      let g = function
+        | pat, None, expr -> 
+          map_pattern_type tsubst pat, None, subst expr
+        | pat, Some guard, expr -> 
+          map_pattern_type tsubst pat, Some (subst guard), subst expr
       in
       R_Match(subst e, List.map g cls)
 and substitute_pattern_type ss pat =
@@ -218,20 +229,23 @@ let rec result_to_expr expr =
     | R_Fix((f, t), e, t') -> E_Fix(f, to_expr e)
     | R_External (v, t) -> E_External (v, t)
     | R_Match (e, cls) -> 
-      let f = function pat, guard, expr -> 
-        let rec g = function
-          | RP_Variable (None, _) -> EP_Variable None
-          | RP_Variable (Some v, _) -> EP_Variable (Some v)
-          | RP_Constant (lit, _) -> EP_Constant lit
-          | RP_Constructor (v, _) -> EP_Constructor v
-          | RP_Apply ((p1, p2), _) -> EP_Apply (g p1, g p2)
-          | RP_And ((p1, p2), _) -> EP_And (g p1, g p2)
-          | RP_Or ((p1, p2), _) -> EP_Or (g p1, g p2)
-          | RP_Not (p, _) -> EP_Not (g p)
-          | RP_Tuple (ps, _) -> EP_Tuple (List.map g ps)
-          | RP_Vector (ps, _) -> EP_Vector (List.map g ps)
-        in
-        g pat, to_expr guard, to_expr expr
+      let rec g = function
+        | RP_Variable (None, _) -> EP_Variable None
+        | RP_Variable (Some v, _) -> EP_Variable (Some v)
+        | RP_Constant (lit, _) -> EP_Constant lit
+        | RP_Constructor (v, _) -> EP_Constructor v
+        | RP_Apply ((p1, p2), _) -> EP_Apply (g p1, g p2)
+        | RP_And ((p1, p2), _) -> EP_And (g p1, g p2)
+        | RP_Or ((p1, p2), _) -> EP_Or (g p1, g p2)
+        | RP_Not (p, _) -> EP_Not (g p)
+        | RP_Tuple (ps, _) -> EP_Tuple (List.map g ps)
+        | RP_Vector (ps, _) -> EP_Vector (List.map g ps)
+      in
+      let f = function
+        | pat, None, expr -> 
+          g pat, None, to_expr expr
+        | pat, Some guard, expr -> 
+          g pat, Some (to_expr guard), to_expr expr
       in
       E_Match (to_expr e, List.map f cls)
 
@@ -328,7 +342,9 @@ let rec w env expr =
       let t'' = substitute s' t' in
       compose s' s, t'', e'
     | E_Match (e, cls) ->
-      let f = function (ss, env, tpat, texpr), cls -> function pat, guard, expr -> 
+      let f = function (ss, env, tpat, texpr), cls ->
+        let g = function
+          | pat, Some guard, expr -> 
         let sps, tp, p' = w_pattern env pat in
         let sps' = unify tp tpat in
         let tpat' = T.substitute sps' tp in
@@ -350,7 +366,9 @@ let rec w env expr =
         let texpr' = T.substitute ses' te in
         let e'' = substitute_result_type ses' e' in
         let ss = T.compose_substs [ses'; ses; sgs'; sgs; sps'; sps; ss] in
-        (ss, E.substitute_env ss env, tpat', texpr'), (p'', g'', e'') :: cls
+        (ss, E.substitute_env ss env, tpat', texpr'), (p'', Some g'', e'') :: cls
+        in
+        g
       in
       let ses, te, e' = w env e in
       let env' = E.substitute_env ses env in
@@ -478,9 +496,13 @@ let rec substitute : substitution list -> result -> result = fun ss expr ->
     | R_Fix((f, t), e, t') -> R_Fix((f, t), subst' f e, t')
     | R_External (v ,t) as e -> e
     | R_Match (e, cls) ->
-      let g = function pat, guard, expr -> 
-        let pvs = List.map fst (patternvars pat) in
-        pat, subst'' pvs guard, subst'' pvs expr
+      let g = function
+        | pat, None, expr -> 
+          let pvs = List.map fst (patternvars pat) in
+          pat, None, subst'' pvs expr
+        | pat, Some guard, expr -> 
+          let pvs = List.map fst (patternvars pat) in
+          pat, Some (subst'' pvs guard), subst'' pvs expr
       in
       R_Match(subst e, List.map g cls)
 
@@ -505,9 +527,13 @@ let rec substitute_with_expr_subst = fun ss expr ->
     | R_Fix((f, t), e, t') -> R_Fix((f, t), subst' f e, t')
     | R_External (v ,t) as e -> e
     | R_Match (e, cls) ->
-      let g = function pat, guard, expr -> 
-        let pvs = List.map fst (patternvars pat) in
-        pat, subst'' pvs guard, subst'' pvs expr
+      let g = function
+        | pat, None, expr -> 
+          let pvs = List.map fst (patternvars pat) in
+          pat, None, subst'' pvs expr
+        | pat, Some guard, expr -> 
+          let pvs = List.map fst (patternvars pat) in
+          pat, Some (subst'' pvs guard), subst'' pvs expr
       in
       R_Match(subst e, List.map g cls)
   in
@@ -555,6 +581,15 @@ let rec of_sexpr = function
       | R_Variable(v, t) -> R_Fix((v, t), of_sexpr e, TypingType.oType_of_sexpr t')
       | _ -> invalid_arg "unexpected token.")
   | Sexpr.Sexpr [Sexpr.Sident "r:external-symbol"; Sexpr.Sident v; t] -> R_External (v, TypingType.oType_of_sexpr t)
+  | Sexpr.Sexpr (Sexpr.Sident "r:match" :: e :: cls) -> 
+    let f = function
+      | Sexpr.Sexpr [pat; e] ->
+        pattern_of_sexpr pat, None, of_sexpr e
+      | Sexpr.Sexpr [pat; Sexpr.Sident ":"; guard; e] ->
+        pattern_of_sexpr pat, Some (of_sexpr guard), of_sexpr e
+      | _ -> invalid_arg "unexpected token."
+    in
+    R_Match (of_sexpr e, List.map f cls)
   | _ -> invalid_arg "unexpected token."
 and pattern_of_sexpr =
   let nest f initial list =
@@ -601,7 +636,13 @@ let rec to_sexpr = function
   | R_Let ((v, t), e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "r:let"; to_sexpr (R_Variable(v, t)); to_sexpr e1; to_sexpr e2]
   | R_Fix ((v, t), e, t') -> Sexpr.Sexpr [Sexpr.Sident "r:fix"; to_sexpr (R_Variable(v, t)); to_sexpr e; oType_to_sexpr t']
   | R_Match(e, cls) ->
-    Sexpr.tagged_sexpr "r:match" (List.map (function p, g, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr g; to_sexpr e]) cls)
+    let f = function
+      | p, None, e ->
+        Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]
+      | p, Some g, e ->
+        Sexpr.Sexpr [pattern_to_sexpr p; Sexpr.Sident ":"; to_sexpr g; to_sexpr e]
+    in
+    Sexpr.tagged_sexpr "r:match" (List.map f cls)
   | R_External (v, t) -> Sexpr.Sexpr [Sexpr.Sident "r:external-symbol"; Sexpr.Sident v; TypingType.oType_to_sexpr t]
 and pattern_to_sexpr = function
   | RP_Constant (lit, t) -> Sexpr.tagged_sexpr "rp:constant" [Syntax.lit_to_sexpr lit; TypingType.oType_to_sexpr t]

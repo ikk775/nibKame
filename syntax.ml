@@ -53,7 +53,7 @@ type t =
   | Tuple of t list
   | Array of t list
   | List of t list
-  | Match of t * (pat * t * t) list
+  | Match of t * (pat * t option * t) list
 
 let lit_to_sexpr = function
   | Unit -> Sexpr.Sident "unit"

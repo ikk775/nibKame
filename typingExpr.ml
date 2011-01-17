@@ -12,7 +12,7 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
-  | E_Match of expr * (pattern * expr * expr) list 
+  | E_Match of expr * (pattern * expr option * expr) list 
   | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr
@@ -198,7 +198,9 @@ let rec substitute_expr ss expr =
         | EP_Tuple ps -> EP_Tuple (List.map f ps)
         | EP_Vector ps -> EP_Vector (List.map f ps)
       in
-      let g = function p, guard, e -> f p, subst guard, subst e in
+      let g = function
+        | p, Some guard, e -> f p, Some (subst guard), subst e
+        | p, None, e -> f p, None, subst e in
       E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
@@ -231,7 +233,9 @@ let rec substitute_expr_type ss expr =
         | EP_Tuple ps -> EP_Tuple (List.map f ps)
         | EP_Vector ps -> EP_Vector (List.map f ps)
       in
-      let g = function p, guard, e -> f p, subst guard, subst e in
+      let g = function
+        | p, Some guard, e -> f p, Some (subst guard), subst e
+        | p, None, e -> f p, None, subst e in
       E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, TypingType.substitute ss t)
     | E_Declare(v, t, e) -> E_Declare(v, TypingType.substitute ss t, subst e)
@@ -298,12 +302,15 @@ let rec from_syntax = function
     E_Vector(List.map from_syntax es)
   | Syntax.Fix ((v, t), e) -> E_Fix(v, from_syntax e)
   | Syntax.Match (e, cls) -> 
-    let f = function pat, guard, expr ->
-      pattern_from_syntax_pattern pat, from_syntax guard, from_syntax expr
+    let f = function
+      | pat, Some guard, expr ->
+        pattern_from_syntax_pattern pat, Some (from_syntax guard), from_syntax expr
+      | pat, None, expr ->
+        pattern_from_syntax_pattern pat, None, from_syntax expr
     in
     E_Match (from_syntax e, List.map f cls)
   | Syntax.Let (Syntax.P_Ident v, e1, e2) -> E_Let (v, from_syntax e1, from_syntax e2)
-  | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, E_Constant (Syntax.Bool true), from_syntax e2])
+  | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, None, from_syntax e2])
   | Syntax.Variant v -> E_Variable v
   | Syntax.TopLet _ | Syntax.TopLetRec _ | Syntax.TopLetSimp _ -> invalid_arg "from_syntax"
   | Syntax.LetRec _ -> failwith "let rec is not supported yet."
@@ -344,7 +351,11 @@ let rec to_sexpr = function
     in
     Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
   | E_Match(e, cls) ->
-    Sexpr.tagged_sexpr "e:match" (List.map (function p, g, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr g; to_sexpr e]) cls)
+    let f = function
+      | p, None, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]
+      | p, Some g, e -> Sexpr.Sexpr [pattern_to_sexpr p; Sexpr.Sident ":"; to_sexpr g; to_sexpr e]
+    in
+    Sexpr.tagged_sexpr "e:match" (List.map f cls)
   | E_External(s, t) ->
     Sexpr.Sexpr[Sexpr.Sident "e:extenal"; Sexpr.Sident s; TypingType.oType_to_sexpr t]
   | E_Type(e, t) ->
@@ -406,7 +417,8 @@ let rec of_sexpr = function
     apply_nest (e1 :: e2 :: es)
   | Sexpr.Sexpr (Sexpr.Sident "e:match" :: e :: cls) ->
     let f = function
-      | Sexpr.Sexpr [p; g; e] -> pattern_of_sexpr p, of_sexpr g, of_sexpr e
+      | Sexpr.Sexpr [p; e] -> pattern_of_sexpr p, None, of_sexpr e
+      | Sexpr.Sexpr [p; Sexpr.Sident ":"; g; e] -> pattern_of_sexpr p, Some (of_sexpr g), of_sexpr e
       | _ -> invalid_arg "of_sexpr"
     in
     E_Match (of_sexpr e, List.map f cls)

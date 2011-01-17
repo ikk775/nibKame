@@ -35,6 +35,25 @@ type refCategory =
   | R_Tuple
   | R_Ref
   | R_Variant
+(*
+type pointer =
+  | P_List of mType
+  | P_Array of mType
+  | P_Tuple of mType list
+  | P_Ref of mType
+
+type mType =
+  | C_Unit
+  | C_Int
+  | C_Float
+  | C_Char
+  | C_List
+  | C_FList
+  | C_Array
+  | C_CArray
+  | C_FArray
+  | C_Ref
+*)
 
 type accCategory =
   | A_Unit
@@ -82,6 +101,7 @@ let rec to_ec = function
   | _ -> undefined ()
 
 type mType = C_Unit | C_Int | C_Float | C_Char | C_Tuple | C_Ref | C_Variant
+
 let rec to_mt = function
   | Unit -> C_Unit
   | Bool -> C_Variant

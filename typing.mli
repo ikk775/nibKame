@@ -9,7 +9,7 @@ type result =
   | R_If of result * result * result
   | R_Let of (resultVar * TypingType.oType) * result * result
   | R_Fix of (resultVar * TypingType.oType) * result * TypingType.oType
-  | R_Match of result * (pattern * result * result) list
+  | R_Match of result * (pattern * result option * result) list
   | R_External of Id.t * TypingType.oType
 and pattern =
   | RP_Constant of Syntax.lit * TypingType.oType

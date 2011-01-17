@@ -10,7 +10,7 @@ type expr =
   | E_If of expr * expr * expr
   | E_Let of exprVar * expr * expr
   | E_Fix of exprVar * expr
-  | E_Match of expr * (pattern * expr * expr) list
+  | E_Match of expr * (pattern * expr option * expr) list
   | E_External of exprVar * TypingType.oType
   | E_Type of expr * TypingType.oType
   | E_Declare of exprVar * TypingType.oType * expr

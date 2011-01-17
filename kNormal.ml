@@ -43,7 +43,7 @@ type t =
   | FCar of Id.t
   | FCdr of Id.t
   | ExtArray of Id.t
-  | ExtFunApply of Id.t * Id.t list
+  | ExtFunApply of (Id.t * Type.t) * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
 type substitution =
@@ -115,7 +115,7 @@ let rec to_sexpr = function
   | FCar (v) -> Sexpr.Sexpr [Sexpr.Sident "k:car"; Sexpr.Sident v]
   | FCdr (v) -> Sexpr.Sexpr [Sexpr.Sident "k:cdr"; Sexpr.Sident v]
   | ExtArray v -> Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v]
-  | ExtFunApply (v, vs) -> Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sident v :: List.map (fun x -> Sexpr.Sident x) vs)
+  | ExtFunApply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
 and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt_to_sexpr x.name; Sexpr.Sexpr (List.map vt_to_sexpr x.args); to_sexpr x.body]
 
 let rec of_sexpr = function
@@ -157,7 +157,7 @@ let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:array-ref"; Sexpr.Sident v1; Sexpr.Sident v2] -> ArrayRef(v1, v2)
   | Sexpr.Sexpr [Sexpr.Sident "k:array-set"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3] -> ArraySet(v1, v2, v3)
   | Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v] -> ExtArray v
-  | Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sident v :: vs) -> ExtFunApply(v, List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
+  | Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sexpr [Sexpr.Sident v; t] :: vs) -> ExtFunApply((v, Type.of_sexpr t), List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
   | _ -> invalid_arg "unexpected token."
 and fundef_of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt; Sexpr.Sexpr args; body] -> 
@@ -232,7 +232,7 @@ let rec substitute_map sm = function
   | FCdr(v) -> (undefined ())
 and fundef_to_sexpr x = (undefined ())
 
-let internal_symbol name t =
+let internal_operator name t =
   let operator name ts t f =
     let vs = gen_varnames (List.length ts) in
     let v = gen_varname () in
@@ -283,13 +283,13 @@ let internal_symbol name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
     | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
-    | _ -> invalid_arg "internal_symbol"
+    | _ -> invalid_arg "internal_operator"
       
-let is_valid_internal_symbol name t =
+let is_valid_internal_operator name t =
   try
-    ignore (internal_symbol name t); true
+    ignore (internal_operator name t); true
   with
-    | Invalid_argument "internal_symbol"-> false
+    | Invalid_argument "internal_operator"-> false
 
 let rec from_typing_result r =
   let rec f env r =
@@ -302,7 +302,7 @@ let rec from_typing_result r =
     | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
     | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
     | Typing.R_Constant (_, _) -> failwith "invalid constant type."
-    | Typing.R_External (v, t) when v.[0] = '%' -> internal_symbol v t
+    | Typing.R_External (v, t) when v.[0] = '%' -> internal_operator v t
     | Typing.R_External (v, t) -> failwith "external function is not supported yet."
     | Typing.R_Let ((v, t), e1, e2) ->
       let e1', t1' = f env e1 in
@@ -329,7 +329,10 @@ let rec from_typing_result r =
       invalid_arg "from_typing_result"
     | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
       Apply (v1, [v2]), TT.oType_to_type t2
-    | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e) ->
+    | Typing.R_Apply(Typing.R_External (v1, t1), Typing.R_Variable (v2, t2)) when is_valid_internal_operator v1 t1 ->
+      ExtFunApply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
+    | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e)
+    | Typing.R_Apply(Typing.R_External (v, t) as rv, e) ->
       let bn = Typing.gen_varname () in
       let t = Typing.result_type e in
       let e' = Typing.R_Let((bn, t), e, Typing.R_Apply (rv, Typing.R_Variable (bn, t))) in
@@ -368,6 +371,14 @@ let rec from_typing_result r =
       let t1 = Typing.result_type e1 in
       let e' = Typing.R_Let((bn, t1), e1, Typing.R_If (Typing.R_Variable (bn, t1), e2, e3)) in
       f env e'
+    | Typing.R_Match (Typing.R_Variable (v, _), [Typing.RP_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
+      let g = function
+        | Some v, t -> v, TT.oType_to_type t
+        | None, t -> Typing.gen_varname (), TT.oType_to_type t in
+      let h = function
+        | Typing.RP_Variable (ov, t) -> g (ov, t)
+        | _ -> failwith "something went wrong." in
+      LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (Typing.result_type expr)
   in
   f Id.Map.empty r
   
