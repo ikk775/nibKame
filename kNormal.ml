@@ -244,6 +244,17 @@ let internal_operator name t =
       let v = gen_varname () in
       LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
   in
+  let ext_func ts' t' qualifiers prefix name tg =
+    let mname = Syntax.mangle qualifiers prefix name tg in
+    let ts = List.map TT.oType_to_type ts' in
+    let t = TT.oType_to_type t' in
+    match ts with
+      | [] -> invalid_arg "ext_func"
+      | [tf] -> 
+        operator mname ts t (fun vs -> ExtFunApply ((mname, Type.Fun ([tf], t)), vs))
+      | _ -> 
+        operator mname ts t (fun vs -> ExtFunApply ((mname, Type.Fun ([Type.Tuple ts], t)), vs))
+  in
   let int = Type.Int in
   let float = Type.Int in
   let bool = Type.Bool in
@@ -289,9 +300,16 @@ let internal_operator name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
     | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
-    | "map", t -> (undefined ())
+    | "map", TT.O_Fun (TT.O_Tuple ([TT.O_Fun (a, b); TT.O_Variant (a', TT.O_Constant Type.Variant "list")] as ts), (TT.O_Variant (b', TT.O_Constant Type.Variant "list") as t)) -> 
+      let tg a b =TT.O_Fun (TT.O_Tuple [TT.O_Fun (a, b); TT.O_Variant (a, TT.O_Constant (Type.Variant "list"))], TT.O_Variant (b, TT.O_Constant (Type.Variant "list"))) in
+      let a'', b'' = match a, b with
+        | TT.O_Constant Type.Float, TT.O_Constant Type.Float -> a, b
+        | TT.O_Constant Type.Float, _ -> a, TT.O_Variable "a"
+        | _, TT.O_Constant Type.Float -> TT.O_Variable "a", b
+        | _, _ -> TT.O_Variable "a", TT.O_Variable "b"
+      in
+      ext_func ts t ["List"] "" "map" (TT.oType_to_type (tg a'' b'')), TypingType.oType_to_type t
     | _ -> invalid_arg "internal_operator"
-      
 let is_valid_internal_operator name t =
   try
     ignore (internal_operator name t); true
