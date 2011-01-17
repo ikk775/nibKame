@@ -61,4 +61,5 @@ val of_sexpr : Sexpr.t -> t
 val to_sexpr : t -> Sexpr.t
 
 val to_string : t -> string
+val read_from_stream : char Stream.t -> t
 val of_string : string -> t

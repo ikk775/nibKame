@@ -197,6 +197,9 @@ let rec g stm =
   in
   h ()
 
+let read_from_stream stm =
+  g stm
+
 let of_string str =
   g (Stream.of_string str)
 
