@@ -82,7 +82,7 @@ let perspective =
     "array-set", intop_t "%array-set" tygavaivae tyu;
     "ref", intop_t "%ref" tygrvae tyva;
     "set", intop_t "%set" tygrvavae tyu;
-    "ignore", intop_t "%ignore" tygvae tyu;
+    "ignore", TE.E_Fun ("x", TE.E_Constant Syntax.Unit);
     "print_int", intop_t "print_int" tygie tyu;
     "print_float", intop_t "print_float" tygfe tyu;
     "print_char", intop_t "print_char" tygce tyu;

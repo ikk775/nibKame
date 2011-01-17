@@ -283,7 +283,6 @@ let internal_symbol name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
     | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
-    | "%ignore", t -> (undefined ())
     | "map", t -> (undefined ())
     | _ -> invalid_arg "internal_symbol"
       
