@@ -233,10 +233,16 @@ let rec substitute_map sm = function
 and fundef_to_sexpr x = (undefined ())
 
 let internal_symbol name t =
-  let operator name ts t f =
-    let vs = gen_varnames (List.length ts) in
-    let v = gen_varname () in
-    LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
+  let operator name ts t f = match ts with
+    | [] -> 
+      f []
+    | [tf] -> 
+      let v = gen_varname () in
+      LetFun ({ name = name, Type.Fun ([tf], t); args = [v, tf]; body =  f [v] }, Var name)
+    | _ -> 
+      let vs = gen_varnames (List.length ts) in
+      let v = gen_varname () in
+      LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
   in
   let int = Type.Int in
   let float = Type.Int in
