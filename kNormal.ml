@@ -233,10 +233,16 @@ let rec substitute_map sm = function
 and fundef_to_sexpr x = (undefined ())
 
 let internal_operator name t =
-  let operator name ts t f =
-    let vs = gen_varnames (List.length ts) in
-    let v = gen_varname () in
-    LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
+  let operator name ts t f = match ts with
+    | [] -> 
+      f []
+    | [tf] -> 
+      let v = gen_varname () in
+      LetFun ({ name = name, Type.Fun ([tf], t); args = [v, tf]; body =  f [v] }, Var name)
+    | _ -> 
+      let vs = gen_varnames (List.length ts) in
+      let v = gen_varname () in
+      LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
   in
   let int = Type.Int in
   let float = Type.Int in
@@ -283,6 +289,7 @@ let internal_operator name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
     | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
+    | "map", t -> (undefined ())
     | _ -> invalid_arg "internal_operator"
       
 let is_valid_internal_operator name t =
