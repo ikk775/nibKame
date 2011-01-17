@@ -34,7 +34,7 @@ type twoOp =
 type cmp_op = Eq | NotEq | LsEq | Ls | Gt | GtEq | Zero | NotZero
 
 let to_cmp = function
-  | VA.Eq -> Eq | VA.NotEq -> NotEq | VA.LsEq -> LsEQ | VA.Ls -> Ls | VA.Gt -> Gt | VA.GtEq -> GtEq
+  | VA.Eq -> Eq | VA.NotEq -> NotEq | VA.LsEq -> LsEq | VA.Ls -> Ls | VA.Gt -> Gt | VA.GtEq -> GtEq
 
 let cnt0 = ref 0
 let tempR () =
@@ -92,8 +92,8 @@ type inst =
   | Fsqrd of freg * freg
   | FComp of freg * freg
 
-  | F2I of freg * reg
-  | I2F of reg * freg
+  | F2I of reg * freg
+  | I2F of freg * reg
 
   | SAL of twoOp (* Shift Arithmetic Left *)
   | SHL of twoOp
@@ -152,9 +152,9 @@ let str_of_mem = function
 let to_mem = function
   | VA.Direct r -> Base (TempR r)
   | VA.Label l -> Direct l
-  | VA.Plus_offset (t1, V t2) -> RcdAry (t1, t2, 1)
-  | VA.Plus_offset (t1, C t2) -> Offset (t1, t2)
-  | VA.Scaled_offset (base, index, scale) -> RcdAry (base, index, scale)
+  | VA.Plus_offset (t1, VA.V t2) -> RcdAry (TempR t1, TempR t2, 1)
+  | VA.Plus_offset (t1, VA.C t2) -> Offset (TempR t1, t2)
+  | VA.Scaled_offset (base, index, scale) -> RcdAry (TempR base, TempR index, scale)
 
 let str_of_imm : imm -> string = function
     | VA.Int_l i -> Format.sprintf "$%d" i
@@ -196,14 +196,14 @@ let str_of_inst = function
   | Set (dst, imm) -> Format.sprintf "movl %s, %s" (str_of_imm imm) (str_of_reg dst)
   | SetM (mem, imm) -> Format.sprintf "movl %s, %s" (str_of_imm imm) (str_of_mem mem)
   | Lea (dst, mem) -> Format.sprintf "leal %s, %s" (str_of_mem mem) (str_of_reg dst)
-  | Push (src) -> Fotmat.sprintf "pushl %s" (str_of_rmi src)
+  | Push (src) -> Format.sprintf "pushl %s" (str_of_rmi src)
   | Pop (dst) -> Format.sprintf "popl %s" (str_of_reg dst)
-  | FPush (src) -> Fotmat.sprintf "pushl %s" (str_of_freg src)
+  | FPush (src) -> Format.sprintf "pushl %s" (str_of_freg src)
   | FPop (dst) -> Format.sprintf "popl %s" (str_of_freg dst)
 
   | Add op -> Format.sprintf "addl %s" (str_of_twoOp op)
   | Sub op -> Format.sprintf "subl %s" (str_of_twoOp op)
-  | Mul (dst, src) -> Format.sprintf "imul %s, %s" (str_of_reg src) (str_of_rmi dst)
+  | Mul (dst, src) -> Format.sprintf "imul %s, %s" (str_of_rmi src) (str_of_reg dst)
   | CDQ -> "cdq"
   | Div reg -> Format.sprintf "idiv %s" (str_of_reg reg)
 
@@ -216,11 +216,11 @@ let str_of_inst = function
   | NEG reg -> Format.sprintf "negl %s" (str_of_reg reg)
   | NOT reg -> Format.sprintf "notl %s" (str_of_reg reg)
 
-  | Fadd (dst, src) -> Format.sprintf "addsd %s, %s" (str_of_freg src) (str_of_freg dst)
-  | Fsub (dst, src) -> Format.sprintf "subsd %s, %s" (str_of_freg src) (str_of_freg dst)
-  | Fmul (dst, src) -> Format.sprintf "mulsd %s, %s" (str_of_freg src) (str_of_freg dst)
-  | Fdiv (dst, src) -> Format.sprintf "divsd %s, %s" (str_of_freg src) (str_of_freg dst)
-  | Fsqrt (dst, src) -> Format.sprintf "sqrtsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | FAdd (dst, src) -> Format.sprintf "addsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | FSub (dst, src) -> Format.sprintf "subsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | FMul (dst, src) -> Format.sprintf "mulsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | FDiv (dst, src) -> Format.sprintf "divsd %s, %s" (str_of_freg src) (str_of_freg dst)
+  | Fsqrd (dst, src) -> Format.sprintf "sqrtsd %s, %s" (str_of_freg src) (str_of_freg dst)
   | FComp (dst, src) -> Format.sprintf "comisd %s, %s" (str_of_freg src) (str_of_freg dst)
 
   | F2I (dst, src) -> Format.sprintf "cvtsi2sd %s, %s" (str_of_freg src) (str_of_reg dst)
@@ -235,14 +235,14 @@ let str_of_inst = function
   | Test op -> Format.sprintf "testl %s" (str_of_twoOp op)
   | Branch (cond, Id.L label) ->
       Format.sprintf (match cond with
-			| Eq -> "je %s"
-			| NotEq "jne %s"
-			| LsEq -> "jle %s"
-			| Ls -> "jl %s"
-			| Gt -> "jg %s"
-			| GtEq -> "jge %s"
-			| Zero -> "jz %s"
-			| NotZero -> "jnz %s") label
+			| Eq -> "je %s" label
+			| NotEq -> "jne %s" label
+			| LsEq -> "jle %s" label
+			| Ls -> "jl %s" label
+			| Gt -> "jg %s" label
+			| GtEq -> "jge %s" label
+			| Zero -> "jz %s" label
+			| NotZero -> "jnz %s" label)
   | Jmp (Id.L label) -> Format.sprintf "jmp %s" label
   | Call (Id.L label) -> Format.sprintf "call %s" label 
   | Label (Id.L label) -> Format.spintf "%s:" label
@@ -272,7 +272,6 @@ let get_dst = function
   | BB.Comp _ -> None
   | BB.If _ -> MyUtil.undefined ()
   | BB.ApplyCls _ | BB.ApplyDir _ -> None
-  | BB.ArrayRef _ | BB.ArraySet _ -> None
   | BB.Cons _ | BB.Car _ | BB.Cdr _ | BB.FCons _ | BB.FCar _ | BB.FCdr _ -> None
   | BB.TupleAlloc _ | BB.ArrayAlloc _ -> None
 
@@ -285,7 +284,7 @@ let get_type = function
   | BB.FSt _ -> None
   | BB.BLd _ -> Some VA.Char
   | BB.BSt _ -> None
-  | BB.Comp _ -> VA.Int
+  | BB.Comp _ -> Some VA.Int
   | BB.If _ -> None
   | BB.ApplyCls _ | BB.ApplyDir _ -> MyUtil.undefined ()
   | BB.Cons _ | BB.Car _ | BB.Cdr _ -> Some (VA.Pointer (VA.List VA.Int))
