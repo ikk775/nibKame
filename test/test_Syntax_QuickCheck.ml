@@ -53,12 +53,17 @@ module Arbitrary_pat = struct
       else
         Arbitrary_string.arbitrary >>= fun s ->
         sized choose_int0 >>= vector (arb_sub (depth - 1)) >>= fun ps ->
+        arb_sub (depth - 1) >>= fun p1 ->
+        arb_sub (depth - 1) >>= fun p2 ->
         oneof[
           arb_sub 0;
           ret_gen (Syntax.P_Tuple ps);
           ret_gen (Syntax.P_List ps);
           ret_gen (Syntax.P_Array ps);
           ret_gen (Syntax.P_Variant (s, ps));
+          ret_gen (Syntax.P_And (p1, p2));
+          ret_gen (Syntax.P_Or (p1, p2));
+          ret_gen (Syntax.P_Not (p1));
           ]
     in
     sized (fun i ->
