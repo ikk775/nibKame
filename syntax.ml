@@ -97,3 +97,24 @@ let rec of_sexpr = function
  
 let rec to_sexpr = function
   | lit -> lit_of_sexpr lit
+
+let mangle qualifiers prefix name t =
+  "_nk" ^ "_N" ^ Mangle.write_seq Mangle.write_id qualifiers ^ Mangle.write_id prefix ^ Mangle.write_id name ^ "_T" ^ Type.to_string t
+
+let demangle stm =
+  match Stream.npeek 3 stm with
+    | ['_'; 'n'; 'k'] -> 
+      begin match Stream.npeek 2 stm with
+        | ['_'; 'N'] ->
+          let qualifiers = Mangle.read_seq stm Mangle.read_id in
+          let prefix = Mangle.read_id stm in
+          let name = Mangle.read_id stm in
+          begin match Stream.npeek 2 stm with
+            | ['_'; 'T'] ->
+              let t = Type.read_from_stream stm in
+              qualifiers, prefix, name, t
+            | _ -> invalid_arg "demangle"
+          end
+        | _ -> invalid_arg "demangle"
+      end
+    | _ -> invalid_arg "demangle"

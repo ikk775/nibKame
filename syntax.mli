@@ -14,7 +14,7 @@ type pat =
   | P_Variant of Id.t * pat list
   | Any
   | P_And of pat * pat
-  | P_Or of pat * pat (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
+  | P_Or of pat * pat
   | P_Not of pat
 type t =
     Literal of lit
@@ -58,3 +58,5 @@ val pat_to_sexpr : pat -> Sexpr.t
 val pat_of_sexpr : Sexpr.t -> pat
 val of_sexpr : t -> Sexpr.t
 val to_sexpr : Sexpr.t -> lit
+val mangle : string list -> string -> string -> Type.t -> string
+val demangle : char Stream.t -> string list * string * string * Type.t
