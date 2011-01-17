@@ -352,5 +352,8 @@ let rec asmgen = function
 
   (* 全てに代入先を用意 *)
   | single :: tail ->
-      asmgen (BB.Let ((VA.temp (), get_type single), single) :: tail)
+      begin match get_type single with
+	| Some t -> asmgen (BB.Let ((VA.temp (), t), single) :: tail)
+	| None -> MyUtil.undefined () (* 全て対応したので到達しない筈． *)
+      end
 
