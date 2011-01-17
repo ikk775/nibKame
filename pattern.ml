@@ -434,3 +434,12 @@ let unfold_result venv r =
 let unfold_module m =
   m
   
+let is_rp_variable = function
+  | R.RP_Variable _ -> true
+  | _ -> false
+
+let is_tuple_normal = function
+  | R.RP_Tuple (ps, t) -> List.for_all is_rp_variable ps
+  | _ -> false
+
+let is_pattern_normal pat = undefined ()
