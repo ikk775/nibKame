@@ -20,8 +20,8 @@ type t =
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | MakeCls of (Id.t * Type.t) * closure * t
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
+  | ApplyCls of (Id.t * Type.t) * Id.t list
+  | ApplyDir of (Id.l * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
   | Ref of Id.t

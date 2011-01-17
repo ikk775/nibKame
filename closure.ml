@@ -22,8 +22,8 @@ type t =
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | MakeCls of (Id.t * Type.t) * closure * t (* let rec 相当 *)
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
+  | ApplyCls of (Id.t * Type.t) * Id.t list
+  | ApplyDir of (Id.l * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
   | Ref of Id.t
@@ -64,7 +64,7 @@ let rec fv = function
   | Seq(e1, e2) -> Id.Set.union (fv e1) (fv e2)
   | Var(x) -> Id.Set.singleton x
   | MakeCls((x, t), { entry = l; actual_fv = ys }, e) -> Id.Set.remove x (Id.Set.union (Id.Set.of_list ys) (fv e))
-  | ApplyCls(x, ys) -> Id.Set.of_list (x :: ys)
+  | ApplyCls((x, t), ys) -> Id.Set.of_list (x :: ys)
   | ApplyDir(_, xs) | Tuple(xs) -> Id.Set.of_list xs
   | LetTuple(xts, y, e) -> Id.Set.add y (Id.Set.diff (fv e) (Id.Set.of_list (List.map fst xts)))
   | ArrayAlloc(t, n) -> Id.Set.singleton n
@@ -126,10 +126,10 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2
       else
     (Format.eprintf "eliminating closure(s) %s@." x;
      e2') (* 出現しなければMakeClsを削除 *)
-  | KNormal.Apply(x, ys) when Id.Set.mem x known -> (* 関数適用の場合 (caml2html: closure_app) *)
+  | KNormal.Apply((x, t), ys) when Id.Set.mem x known -> (* 関数適用の場合 (caml2html: closure_app) *)
       Format.eprintf "directly applying %s@." x;
-      ApplyDir(Id.L(x), ys)
-  | KNormal.Apply(f, xs) -> ApplyCls(f, xs)
+      ApplyDir((Id.L(x), t), ys)
+  | KNormal.Apply((f, t), xs) -> ApplyCls((f, t), xs)
   | KNormal.Tuple(xs) -> Tuple(xs)
   | KNormal.LetTuple(xts, y, e) -> LetTuple(xts, y, g (Id.Map.add_list xts env) known e)
   | KNormal.Cons(x, y) -> Cons(x, y)
@@ -144,7 +144,7 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2
   | KNormal.ArrayRef(x, y) -> ArrayRef(x, y)
   | KNormal.ArraySet(x, y, z) -> ArraySet(x, y, z)
   | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
-  | KNormal.ExtFunApply((x, t), ys) -> ApplyDir(Id.L("_nibkame_" ^ x), ys)
+  | KNormal.ExtFunApply((x, t), ys) -> ApplyDir((Id.L("_nibkame_" ^ x), t), ys)
 
 let f e =
   topDecls := [];

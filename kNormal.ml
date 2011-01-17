@@ -28,7 +28,7 @@ type t =
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | LetFun of fundef * t (* like let rec *)
-  | Apply of Id.t * Id.t list
+  | Apply of (Id.t * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
   | Ref of Id.t
@@ -99,7 +99,7 @@ let rec to_sexpr = function
   | Let (vt, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:let"; vt_to_sexpr vt; to_sexpr e1; to_sexpr e2]
   | Var v -> Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v]
   | LetFun (fd, e) -> Sexpr.Sexpr [Sexpr.Sident "k:letfun"; fundef_to_sexpr fd; to_sexpr e]
-  | Apply (v, vs) -> Sexpr.Sexpr (Sexpr.Sident "k:apply" :: Sexpr.Sident v :: List.map (fun x -> Sexpr.Sident x) vs)
+  | Apply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
   | Tuple vs -> Sexpr.Sexpr (Sexpr.Sident "k:tuple" :: List.map (fun x -> Sexpr.Sident x) vs)
   | LetTuple (vts, v, e) ->
     Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr (List.map vt_to_sexpr vts); Sexpr.Sident v; to_sexpr e]
@@ -142,7 +142,7 @@ let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:let"; vt; e1; e2] -> Let (vt_of_sexpr vt, of_sexpr e1, of_sexpr e2)
   | Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v] -> Var (v)
   | Sexpr.Sexpr [Sexpr.Sident "k:letfun"; fd; e] -> LetFun (fundef_of_sexpr fd, of_sexpr e)
-  | Sexpr.Sexpr [Sexpr.Sident "k:apply"; Sexpr.Sident v; Sexpr.Sexpr vs] -> Apply (v, List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
+  | Sexpr.Sexpr [Sexpr.Sident "k:apply"; Sexpr.Sexpr [Sexpr.Sident v; t]; Sexpr.Sexpr vs] -> Apply ((v, Type.of_sexpr t), List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
   | Sexpr.Sexpr [Sexpr.Sident "k:tuple"; Sexpr.Sexpr vs] -> Tuple (List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
   | Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr vts; Sexpr.Sident v; e] -> LetTuple (List.map vt_of_sexpr vts, v, of_sexpr e)
   | Sexpr.Sexpr [Sexpr.Sident "k:ref"; Sexpr.Sident v] -> Ref(v)
@@ -175,7 +175,7 @@ let rec freevars_set = function
   | Var(x) -> Id.Set.singleton x
   | LetFun({name = (x, t); args = yts; body = e1}, e2) ->
     Id.Set.diff (Id.Set.union (freevars_set e2) (Id.Set.diff (freevars_set e1) (Id.Set.of_list (List.map fst yts)))) (Id.Set.singleton x)
-  | Apply(x, ys) -> Id.Set.of_list (x :: ys)
+  | Apply((x, t), ys) -> Id.Set.of_list (x :: ys)
   | Tuple(xs) -> Id.Set.of_list xs
   | LetTuple(xts, y, e) -> 
     Id.Set.add y (Id.Set.diff (freevars_set e) (Id.Set.of_list (List.map fst xts)))
@@ -353,7 +353,7 @@ let rec from_typing_result r =
     | Typing.R_Fix ((v, t), _, tw) ->
       invalid_arg "from_typing_result"
     | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
-      Apply (v1, [v2]), TT.oType_to_type t2
+      Apply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type t2
     | Typing.R_Apply(Typing.R_External (v1, t1), Typing.R_Variable (v2, t2)) when is_valid_internal_operator v1 t1 ->
       ExtFunApply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
     | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e)
@@ -404,6 +404,11 @@ let rec from_typing_result r =
         | Typing.RP_Variable (ov, t) -> g (ov, t)
         | _ -> failwith "something went wrong." in
       LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (Typing.result_type expr)
+    | Typing.R_Match (e, cls) when (match e with T.R_Variable _ -> false | _ -> true) ->
+      let te = Typing.result_type e in
+      let b = Typing.gen_var te in
+      let bn = Typing.varname b in
+      f env (Typing.R_Let ((bn, te), e, Typing.R_Match (b, cls)))
   in
   f Id.Map.empty r
   
