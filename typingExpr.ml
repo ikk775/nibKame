@@ -296,8 +296,8 @@ let rec from_syntax = function
     E_Tuple(List.map from_syntax es)
   | Syntax.Cons (e1, e2) -> E_Apply(E_Variable "::", E_Tuple[from_syntax e1; from_syntax e2])
   | Syntax.List es -> 
-    let f e acc= E_Apply(E_Variable "Cons", E_Tuple[from_syntax e;acc]) in
-    List.fold_right f es (E_Variable "Nil")
+    let f e acc= E_Apply(E_Variable "cons", E_Tuple[from_syntax e;acc]) in
+    List.fold_right f es (E_Variable "nil")
   | Syntax.Array es -> 
     E_Vector(List.map from_syntax es)
   | Syntax.Fix ((v, t), e) -> E_Fix(v, from_syntax e)
