@@ -1,3 +1,7 @@
+exception Unexpected_token of Sexpr.t
+exception Unexpected_pattern of Sexpr.t
+exception Unrecognized_type of Sexpr.t
+
 val list_of_char : string -> char list
 val list_of_Char : string -> Syntax.t list
 val list_of_pChar : string -> Syntax.pat list

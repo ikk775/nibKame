@@ -30,6 +30,14 @@ let list_of_pChar str =
 
 open Sexpr
 
+exception Unexpected_token of Sexpr.t
+exception Unexpected_pattern of Sexpr.t
+exception Unrecognized_type of Sexpr.t
+
+let unexpected_token s = raise (Unexpected_token s)
+let unexpected_pattern s = raise (Unexpected_pattern s)
+let unrecognized_type s = raise (Unrecognized_type s)
+
 let rec read_type = function
   | Sident "unit" -> Type.Unit
   | Sident "bool" -> Type.Bool
@@ -64,7 +72,7 @@ let rec pattern_of_list = function
       | Sident "or" :: l :: ls -> Syntax.P_Or (pattern_of_list l, pattern_of_list (Sexpr (Sident "or" :: ls)))
       | [Sident "not"; l] -> Syntax.P_Not (pattern_of_list l)
       | Sident constructor :: p -> Syntax.P_Variant (constructor, (List.map pattern_of_list p))
-      | _ -> invalid_arg "unexpected pattern."
+      | _ -> unexpected_pattern (Sexpr l)
 
 (*
   val change : Sexpr.t -> Syntax.t
@@ -141,5 +149,5 @@ let rec change = function
 	| Sident "apply" :: a :: args ->
 	    Syntax.Apply (change a, List.map change args)
 	
-	| any -> invalid_arg "unexpected token."
+	| any -> unexpected_token (Sexpr any)
       )
