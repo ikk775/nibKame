@@ -73,6 +73,7 @@ let perspective =
     ">", intop_t "%ls" tygvavae tyb;
     ">=", intop_t "%ls-eq" tygvavae tyb;
     "cons", intop_t "%cons" tygvalvae tylva;
+    "::", intop_t "%cons" tygvalvae tylva;
     "car", intop_t "%car" tyglvae tyva;
     "hd", intop_t "%car" tyglvae tyva;
     "cdr", intop_t "%cdr" tyglvae tylva;
@@ -87,5 +88,7 @@ let perspective =
     "print_float", intop_t "print_float" tygfe tyu;
     "print_char", intop_t "print_char" tygce tyu;
     "print_string", intop_t "print_string" tygace tyu;
+    ":", TE.E_Fun("x", TE.E_Fun("y", TE.E_Variable "y"));
+    "null", intop_t "%null" tyglvae tyb;
 ]
  
