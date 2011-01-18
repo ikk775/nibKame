@@ -17,6 +17,8 @@ let read_sexprs : char Stream.t -> Sexpr.t list = fun stm ->
   List.rev (g [])
 
 let add_def teenv m = function
+  | Syntax.TopLet (Syntax.P_Ident x, e) ->
+    Module.add_expr_with_env teenv m (x, (TypingExpr.from_syntax e))
   | Syntax.TopLet (pat, e) ->
     undefined ()
   | Syntax.TopLetSimp ((x, t), e) ->
