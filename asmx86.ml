@@ -234,18 +234,19 @@ let str_of_inst = function
   | Cmp op -> Format.sprintf "cmp %s" (str_of_twoOp op)
   | Test op -> Format.sprintf "testl %s" (str_of_twoOp op)
   | Branch (cond, Id.L label) ->
-      Format.sprintf (match cond with
-			| Eq -> "je %s" label
-			| NotEq -> "jne %s" label
-			| LsEq -> "jle %s" label
-			| Ls -> "jl %s" label
-			| Gt -> "jg %s" label
-			| GtEq -> "jge %s" label
-			| Zero -> "jz %s" label
-			| NotZero -> "jnz %s" label)
+      begin match cond with
+	| Eq -> Format.sprintf "je %s" label
+	| NotEq -> Format.sprintf "jne %s" label
+	| LsEq -> Format.sprintf "jle %s" label
+	| Ls -> Format.sprintf "jl %s" label
+	| Gt -> Format.sprintf "jg %s" label
+	| GtEq -> Format.sprintf "jge %s" label
+	| Zero -> Format.sprintf "jz %s" label
+	| NotZero -> Format.sprintf "jnz %s" label
+      end
   | Jmp (Id.L label) -> Format.sprintf "jmp %s" label
   | Call (Id.L label) -> Format.sprintf "call %s" label 
-  | Label (Id.L label) -> Format.spintf "%s:" label
+  | Label (Id.L label) -> Format.sprintf "%s:" label
   | Leave -> "leave"
   | Ret -> "ret"
 
