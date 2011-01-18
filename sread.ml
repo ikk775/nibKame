@@ -148,6 +148,7 @@ let rec change = function
 			change a)
 	| Sident "apply" :: a :: args ->
 	    Syntax.Apply (change a, List.map change args)
-	
+	| f :: (arg' :: args' as args) ->
+	    Syntax.Apply (change f, List.map change args)
 	| any -> unexpected_token (Sexpr any)
       )
