@@ -41,8 +41,8 @@ type ins =
   | Comp of VA.cmp_op * VA.ty * Id.t * VA.id_or_imm
   | If of ins * Id.l (* 真のときのジャンプ先 *)
 
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
+  | ApplyCls of (Id.t * VA.ty) * Id.t list
+  | ApplyDir of (Id.l * VA.ty)* Id.t list
 
   | Cons of Id.t * Id.t
   | Car of Id.t

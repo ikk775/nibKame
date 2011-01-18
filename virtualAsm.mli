@@ -5,7 +5,7 @@ type cmp_op = Eq | NotEq | LsEq | Ls | Gt | GtEq
 type literal = Int_l of int | Char_l of char | Pointer_l of Id.l
 
 type p_type = Tuple of ty list | Array of ty | List of ty | Undefined
-and ty = Char | Int | Float | Fun | Pointer of p_type
+and ty = Char | Int | Float | Fun of ty list * ty | Pointer of p_type
 
 type mem_op =
   | Direct of Id.t
@@ -42,8 +42,8 @@ and exp =
   | BSt of Id.t * mem_op
   | Comp of cmp_op * ty * Id.t * id_or_imm
   | If of exp * t * t
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
+  | ApplyCls of (Id.t * ty) * Id.t list
+  | ApplyDir of (Id.l * ty) * Id.t list
   | Cons of Id.t * Id.t
   | Car of Id.t
   | Cdr of Id.t  | FCons of Id.t * Id.t

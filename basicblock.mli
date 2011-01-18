@@ -28,8 +28,8 @@ type ins =
   | BSt of Id.t * VirtualAsm.mem_op
   | Comp of VirtualAsm.cmp_op * VirtualAsm.ty * Id.t * VirtualAsm.id_or_imm
   | If of ins * Id.l
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
+  | ApplyCls of (Id.t * VirtualAsm.ty) * Id.t list
+  | ApplyDir of (Id.l * VirtualAsm.ty) * Id.t list
   | Cons of Id.t * Id.t
   | Car of Id.t
   | Cdr of Id.t 

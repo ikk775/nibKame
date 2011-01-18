@@ -15,7 +15,7 @@ and ty =
   | Char
   | Int
   | Float
-  | Fun
+  | Fun of ty list * ty
   | Pointer of p_type
 
 type mem_op =
@@ -36,7 +36,7 @@ let rec to_ty ty =
       | Type.Int -> Int
       | Type.Float -> Float
       | Type.Char -> Char
-      | Type.Fun _ -> Fun
+      | Type.Fun (arg, ret) -> Fun (List.map to_ty arg, to_ty ret)
       | t -> Pointer (to_p_type t)
 
 type t =
@@ -71,8 +71,8 @@ and exp =
   | Comp of cmp_op * ty * Id.t * id_or_imm
   | If of exp * t * t
 
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
+  | ApplyCls of (Id.t * ty) * Id.t list
+  | ApplyDir of (Id.l * ty) * Id.t list
 
   | Cons of Id.t * Id.t
   | Car of Id.t
@@ -187,8 +187,8 @@ let rec compile_exp env = function
       let tuple = TupleAlloc((t, Int) :: List.map (var_with_type env) fv) in
 	Let ((t, Int), Set (Pointer_l label),
 	     Ans tuple)
-  | Closure.ApplyCls (cls, vars) -> Ans (ApplyCls (cls, vars))
-  | Closure.ApplyDir (label, vars) -> Ans (ApplyDir (label, vars))
+  | Closure.ApplyCls ((cls, t), vars) -> Ans (ApplyCls ((cls, to_ty t), vars))
+  | Closure.ApplyDir ((label, t), vars) -> Ans (ApplyDir ((label, to_ty t), vars))
   | Closure.Tuple vars -> Ans(TupleAlloc(List.map (var_with_type env) vars))
   | Closure.LetTuple (dsts, tuple, e) ->
       let tuple_store list var dst e =

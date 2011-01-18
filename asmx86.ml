@@ -289,7 +289,7 @@ let get_type = function
   | BB.BSt _ -> None
   | BB.Comp _ -> Some VA.Int
   | BB.If _ -> None
-  | BB.ApplyCls _ | BB.ApplyDir _ -> MyUtil.undefined ()
+  | BB.ApplyCls ((_, VA.Fun (arg, ret)), _) | BB.ApplyDir ((_, VA.Fun (arg, ret)), _) -> ret
   | BB.Cons _ | BB.Car _ | BB.Cdr _ -> Some (VA.Pointer (VA.List VA.Int))
   | BB.FCons _ | BB.FCar _ | BB.FCdr _ -> Some (VA.Pointer (VA.List VA.Float))
   | BB.TupleAlloc l -> Some (VA.Pointer (VA.Tuple (List.map snd l)))
@@ -343,15 +343,15 @@ let rec asmgen = function
 
 	| BB.Comp _ -> MyUtil.undefined ()
 	| BB.If _ -> failwith "unreconized instruction."
-	| BB.ApplyCls (f, args) -> 
+	| BB.ApplyCls ((f, VA.Fun (t_args, ret)), args) -> 
 	    begin match t with
-	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I f :: Mov (TempF dst, XMM0) :: asmgen tail) arg
-	      | _ ->  List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I f :: Mov (TempR dst, EAX) :: asmgen tail) arg
+	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I f :: Mov (TempF dst, XMM0) :: asmgen tail) args
+	      | _ ->  List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I f :: Mov (TempR dst, EAX) :: asmgen tail) args
 	    end
-	| BB.ApplyDir (f, args) -> 
+	| BB.ApplyDir ((f, VA.Fun (t_args, ret)), args) -> 
 	    begin match t with
-	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Mov (TempF dst, XMM0) :: asmgen tail) arg
-	      | _ -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Mov (TempR dst, EAX) :: asmgen tail) arg
+	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Mov (TempF dst, XMM0) :: asmgen tail) args
+	      | _ -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Mov (TempR dst, EAX) :: asmgen tail) args
 	    end
 	| BB.Cons (h, t) -> Push (R (TempR t)) :: Push (R (TempR h)) :: Call (Id.L "_nibkame_cons_") :: Add (RI (ESP, 8)) :: Mov (TempR dst, EAX) :: asmgen tail
 	| BB.Car l -> Ld (TempR dst, Base (TempR l)) :: asmgen tail
