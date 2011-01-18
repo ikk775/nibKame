@@ -87,6 +87,5 @@ let perspective =
     "print_float", intop_t "print_float" tygfe tyu;
     "print_char", intop_t "print_char" tygce tyu;
     "print_string", intop_t "print_string" tygace tyu;
-    "map", intop_t "%map" tygmgvaevblvae tylvb;
 ]
  

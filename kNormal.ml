@@ -304,15 +304,6 @@ let internal_operator name t =
       ext_func [tl] t ["List"] "" "null" (TT.oType_to_type t), TypingType.oType_to_type t
     | "%null", (TypingType.O_Fun (TT.O_Variant (te, TT.O_Constant (Type.Variant "list")) as tl, tb) as t) ->
       ext_func [tl] t ["List"] "" "null" (TT.oType_to_type (TypingType.O_Fun (TT.O_Variant (TT.O_Variable "a", TT.O_Constant (Type.Variant "list")) , ob))), TypingType.oType_to_type t
-    | "map", TT.O_Fun (TT.O_Tuple ([TT.O_Fun (a, b); TT.O_Variant (a', TT.O_Constant Type.Variant "list")] as ts), (TT.O_Variant (b', TT.O_Constant Type.Variant "list") as t)) -> 
-      let tg a b =TT.O_Fun (TT.O_Tuple [TT.O_Fun (a, b); TT.O_Variant (a, TT.O_Constant (Type.Variant "list"))], TT.O_Variant (b, TT.O_Constant (Type.Variant "list"))) in
-      let a'', b'' = match a, b with
-        | TT.O_Constant Type.Float, TT.O_Constant Type.Float -> a, b
-        | TT.O_Constant Type.Float, _ -> a, TT.O_Variable "a"
-        | _, TT.O_Constant Type.Float -> TT.O_Variable "a", b
-        | _, _ -> TT.O_Variable "a", TT.O_Variable "b"
-      in
-      ext_func ts t ["List"] "" "map" (TT.oType_to_type (tg a'' b'')), TypingType.oType_to_type t
     | _ -> invalid_arg "internal_operator"
 let is_valid_internal_operator name t =
   try
