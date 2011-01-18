@@ -93,13 +93,13 @@ let tuple_size types =
     (fun s -> function 
        | Float -> s + 8
        | _ -> s + 4)
-    4
+    0
     types
 
 let array_size len = function
-  | Float -> 4 + 8 * len
-  | Char -> 4 + 1 * len
-  | _ -> 4 + 4 * len
+  | Float -> 8 * len
+  | Char -> 1 * len
+  | _ -> 4 * len
 
 module M = 
   struct
