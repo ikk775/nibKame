@@ -359,13 +359,14 @@ let rec asmgen = function
 	| BB.FCons (h, t) -> Push (R (TempR t)) :: FPush (TempF h) :: Call (Id.L "_nibkame_fcons_") :: Add (RI (ESP, 12)) :: Mov (TempF dst, XMM0) :: asmgen tail
 	| BB.FCar l -> Ld (TempF dst, Base (TempR l)) :: asmgen tail
 	| BB.FCdr l -> Ld (TempR dst, Offset (TempR l, 8)) :: asmgen tail
-	| BB.TupleAlloc l -> 
-	    [Push (I (VA.tuple_size (List.map snd l))); Call (Id.L "_nibkame_tuple_alloc_"); Add (RI (ESP, 4))]
-	    @ List.fold_left (fun a b ->
-				let src = fst b in
-				  match snd b with
-				    | VA.Float -> FSt (TempF src, RcdAry (EAX, snd a, 1)) :: fst a, 8 + snd a
-				    | _ -> St (TempR src, RcdAry (EAX, snd a, 1)) :: fst a, 4 + snd a)  (Mov (TempR dst, EAX) :: asmgen tail, 0) l
+	| BB.TupleAlloc l ->
+	    let stores, _ = List.fold_left (fun b a -> (* 確保したタプルにデータをストア．snd aはストア先のオフセット． *)
+					      let src = fst b in
+						match snd b with
+						  | VA.Float -> FSt (TempF src, RcdAry (EAX, snd a, 1)) :: fst a, 8 + snd a
+						  | _ -> St (TempR src, RcdAry (EAX, snd a, 1)) :: fst a, 4 + snd a) ([], 0) l in
+	      [Push (I (VA.tuple_size (List.map snd l))); Call (Id.L "_nibkame_tuple_alloc_"); Add (RI (ESP, 4))]
+	      @ (List.rev stores) @ Mov (TempR dst, EAX) :: asmgen tail
 	| BB.ArrayAlloc (t, n) -> Push (I (array_size n t)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, 4)) :: Mov (TempR dst, EAX) :: asmgen tail
       end
 	
