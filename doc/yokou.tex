@@ -36,8 +36,8 @@
    }{\endgroup\hspace{2ex plus 5ex minus 0.2ex}\linebreak[3]}%
 \makeatother
 \topmargin=-0.5in
-\advance\topmargin -10mm
-\advance\textheight 1in
+\advance\topmargin -15mm
+\advance\textheight 1.5in
 %\advance\oddsidemargin -0.5in
 %\advance\evensidemargin -0.5in
 %\advance\textwidth 1in
@@ -57,6 +57,7 @@
 我々はプログラムの生産性に大きな差が生じると考えられる以下の機能を追加す
 ることとした．
 \begin{inlineenummerate}
+\item[\emph{トップレベル}]
 \item[\emph{多相関数}]
 %\item[関数の\emph{部分適用}]
 \item[\emph{代数型データ型}]
@@ -72,11 +73,19 @@
 
 \section{nibKameの言語仕様}
 追加した機能について概説する
-\paragraph{多相関数}
-\paragraph{代数型データ型}
+\paragraph{トップレベル}
+MinCamlでは複数の式の宣言は許されない．
+nibkameでは複数の式を宣言することができるようにした．
 \paragraph{モジュール}
+複数の式と型を一つの名前空間にまとめて扱える．
+\paragraph{多相関数}
+「全ての型$\alpha$に対して，$\alpha$のリストの長さを返す関数」というような関数が書ける．
+\paragraph{代数型データ型}
+直和型ともいう．安全な共用体として扱える．
 \paragraph{パターンマッチング}
-%nibKameは以下の特徴を持つ. 
+Cでいうところのswitch文に相当する．
+データを分解して変数に束縛することができる．
+%nibKameは以下の特徴を持つ．
 %\begin{inlineenummerate}
 %\item[\emph{値呼び}]
 %\item[暗な多相型]
@@ -86,41 +95,40 @@
 %\end{inlineenummerate}
 
 \section{nibKameのコンパイラの仕様}
-コンパイラはいくつかのフェーズに分かれている. 
-以下, 特に改良を加えたところのみを
-解説する. 
+コンパイラはいくつかのフェーズに分かれている．
+以下，特に改良を加えたところのみを
+解説する．
 \begin{description}
 \item[構文解析]
-ソースコードを読み込み\emph{抽象構文木}（\emph{S式}）に変換する. 
-\emph{解析表現文法}（\emph{Parsing Expression Grammar}, PEG）で解析する. 
+ソースコードを読み込み\emph{抽象構文木}（\emph{S式}）に変換する．
+\emph{解析表現文法}（\emph{Parsing Expression Grammar}，PEG）で解析する．
 \item[抽象構文木の読み込み] 
-抽象構文木(S式)を読み込み, 
-%中間言語(\texttt{Syntax.t})に変換する. 
+抽象構文木(S式)を読み込み，
+中間言語に変換する．
 \item[\emph{カリー化}] 
-複数引数の関数をカリー化する. 
-%中間言語(\texttt{Syntax.t})を中間言語(\texttt{TypingExpr.t})に変換する. 
+複数引数の関数をカリー化（Currying）する．
+%中間言語(\texttt{Syntax.t})を中間言語(\texttt{TypingExpr.t})に変換する．
 \item[\emph{型推論}] 
-式に現れる変数全てに正しい型をつける. 
-%中間言語(\texttt{TypingExpr.t})を中間言語(\texttt{Typing.t})に変換する. 
+式に現れる変数全てに正しい型をつける．
+%中間言語(\texttt{TypingExpr.t})を中間言語(\texttt{Typing.t})に変換する．
 \item[パターンマッチの展開]
-パターンマッチの網羅性を検査し, 
-複雑なパターンマッチをより簡単にする. 
-%Wright\footnote{Andrew K. Wright \url{wright@research.nj.nec.com}}
-%の書いたScheme向けのパターンマッチングライブラリの機能を参考にした. 
+パターンマッチの網羅性を検査し，
+複雑なパターンマッチをより簡単にする．
+%Wright\footnote{Andrew K．Wright \url{wright@research.nj.nec.com}}
+%の書いたScheme向けのパターンマッチングライブラリの機能を参考にした．
 %\item[K正規形に変換] 
 %\item[K正規形に対する最適化] 
 %\item[クロージャ変換] 
 \item[仮想機械語に変換] 
 \item[直線変換]
-木構造となっている仮想機械語の命令を線形リストに変換する. 
+木構造となっている仮想機械語の命令を線形リストに変換する．
 \item[機械語に変換]
-レジスタが無限にあるとして機械語に変換. 
+レジスタが無限にあるとして機械語に変換する．
 \item[レジスタ割り当て]
-実際に使用するレジスタを割り当てる. 
+実際に使用するレジスタを割り当てる．
 \item[アセンブリで出力] 
-x86アセンブリで出力する. 
 \end{description}
-また, その後\emph{GNUアセンブラ}と
+また，その後\emph{GNUアセンブラ}と
 \emph{GNUリンカ}を用いて
 実行ファイルを生成する．
 
@@ -130,28 +138,28 @@ x86アセンブリで出力する.
 
 \section{実装}
 構文解析部は\emph{Lisp}系言語の\emph{Scheme}の処理系である
-\emph{Gauche}用に書かれており, 
-それ以外は\emph{Objective Caml} (O'Caml)で書かれている. 
-2011年1月12日時点でのソースコードの全行数は6320行であり，
-ソースソードの目的別言語別行数内訳は以下のようになっている. 
+\emph{Gauche}用に書かれており，
+それ以外は\emph{Objective Caml} (O'Caml)で書かれている．
+2011年1月12日時点でのソースコードの全行数は7001行であり，
+ソースソードの目的別言語別行数内訳は以下のようになっている．
 
 \begin{itemize}
     \item 本体
     \begin{description}
-    \item[O'Caml 実装] 4175行
-    \item[O'Caml インターフェース\footnote{C言語で言うところのヘッダファイルに相当}] 760行 %手動footnoteする！
+    \item[O'Caml 実装] 4820行
+    \item[O'Caml インターフェース] 781行
     \item[Scheme] 337行
     \end{description}
 
     \item 単体テスト
     \begin{description}
-    \item[O'Caml 実装部分] 1058行
+    \item[O'Caml 実装部分] 1063行
     \end{description}
 \end{itemize}
 
 %\texthline
 %キーワード:
-%Objective Caml, MinCaml, 解析表現文法, パターンマッチング, 型理論.
+%Objective Caml，MinCaml, 解析表現文法, パターンマッチング, 型理論.
 
 \bibliographystyle{jplain}
 \bibliography{reference}
