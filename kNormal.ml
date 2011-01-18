@@ -300,6 +300,10 @@ let internal_operator name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
     | "%array-alloc", TypingType.O_Fun (tnum, ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
+    | "%null", (TypingType.O_Fun (TT.O_Variant (te, TT.O_Constant (Type.Variant "list")) as tl, tb) as t) when te = TT.O_Constant Type.Float ->
+      ext_func [tl] t ["List"] "" "null" (TT.oType_to_type t), TypingType.oType_to_type t
+    | "%null", (TypingType.O_Fun (TT.O_Variant (te, TT.O_Constant (Type.Variant "list")) as tl, tb) as t) ->
+      ext_func [tl] t ["List"] "" "null" (TT.oType_to_type (TypingType.O_Fun (TT.O_Variant (TT.O_Variable "a", TT.O_Constant (Type.Variant "list")) , ob))), TypingType.oType_to_type t
     | "map", TT.O_Fun (TT.O_Tuple ([TT.O_Fun (a, b); TT.O_Variant (a', TT.O_Constant Type.Variant "list")] as ts), (TT.O_Variant (b', TT.O_Constant Type.Variant "list") as t)) -> 
       let tg a b =TT.O_Fun (TT.O_Tuple [TT.O_Fun (a, b); TT.O_Variant (a, TT.O_Constant (Type.Variant "list"))], TT.O_Variant (b, TT.O_Constant (Type.Variant "list"))) in
       let a'', b'' = match a, b with
