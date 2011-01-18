@@ -1,11 +1,16 @@
 open MyUtil
 
 let perspective_module_name = "perspective.snkl"
+let _ = Debug.set_dbglevel 10
 
 let perspective =
+  Debug.dbgprint "open Perspective module.";
   let ch = open_in perspective_module_name in
+  Debug.dbgprint "opened channel to Perspective module.";
   let syntaxs = TranslationUnit.read (Stream.of_channel ch) in
+  Debug.dbgprint "read syntaxes of Perspective module.";
   let m = TranslationUnit.modulize (Module.expr_env Predefined.perspective) syntaxs in
+  Debug.dbgprint "modulized Perspective module.";
   Module.compose Predefined.perspective m
   
 let read_module stm =
