@@ -299,7 +299,7 @@ let rec from_syntax = function
     let f e acc= E_Apply(E_Variable "cons", E_Tuple[from_syntax e;acc]) in
     List.fold_right f es (E_Variable "nil")
   | Syntax.Array es -> 
-    E_Vector(List.map from_syntax es)
+    E_Apply(E_Variable "array_from_list", from_syntax (Syntax.List es))
   | Syntax.Fix ((v, t), e) -> E_Fix(v, from_syntax e)
   | Syntax.Match (e, cls) -> 
     let f = function
