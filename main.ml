@@ -9,13 +9,13 @@ let perspective =
   Debug.dbgprint "opened channel to Perspective module.";
   let syntaxs = TranslationUnit.read (Stream.of_channel ch) in
   Debug.dbgprint "read syntaxes of Perspective module.";
-  let m = TranslationUnit.modulize (Module.expr_env Predefined.perspective) syntaxs in
+  let m = TranslationUnit.modulize (Module.ext_expr_env Predefined.perspective) syntaxs in
   Debug.dbgprint "modulized Perspective module.";
   Module.compose Predefined.perspective m
   
 let read_module stm =
   let syntaxs = TranslationUnit.read stm in
-  TranslationUnit.modulize (Module.expr_env perspective) syntaxs
+  TranslationUnit.modulize (Module.ext_expr_env perspective) syntaxs
 
 let knormalize_module m =
   let m = Module.compose perspective m in
