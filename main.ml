@@ -1,11 +1,19 @@
 open MyUtil
 
+let perspective_module_name = "perspective.snkl"
+
+let perspective =
+  let ch = open_in perspective_module_name in
+  let syntaxs = TranslationUnit.read (Stream.of_channel ch) in
+  let m = TranslationUnit.modulize (Module.expr_env Predefined.perspective) syntaxs in
+  Module.compose Predefined.perspective m
+  
 let read_module stm =
   let syntaxs = TranslationUnit.read stm in
-  TranslationUnit.modulize (Module.expr_env Predefined.perspective) syntaxs
+  TranslationUnit.modulize (Module.expr_env perspective) syntaxs
 
 let knormalize_module m =
-  let m = Module.compose Predefined.perspective m in
+  let m = Module.compose perspective m in
   let m = Pattern.unfold_module m in
   let m = Instantiate.instantiate m in
   let r = Module.gather_expr m in

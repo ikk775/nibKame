@@ -293,22 +293,17 @@ let internal_operator name t =
     | "%car", t when t = omlff -> operator "%fcar" [Type.List float] float (function [v] -> FCar (v) | _ -> fail ()), float
     | "%cdr", t when t = omlflf -> operator "%fcdr" [Type.List float] (Type.List float) (function [v] -> FCdr (v) | _ -> fail ()), Type.List float
     | "%cons", TypingType.O_Fun (TypingType.O_Tuple [te; tl], tl') -> operator "%cons" (List.map TypingType.oType_to_type [te; tl]) (TypingType.oType_to_type tl') (function [v1; v2] -> Cons (v1, v2) | _ -> fail ()), TypingType.oType_to_type tl'
-    | "%car", TypingType.O_Fun (TypingType.O_Tuple [tl], te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ()), TypingType.oType_to_type te
-    | "%cdr", TypingType.O_Fun (TypingType.O_Tuple [tl], tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ()), TypingType.oType_to_type tl'
+    | "%car", TypingType.O_Fun (tl, te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ()), TypingType.oType_to_type te
+    | "%cdr", TypingType.O_Fun (tl, tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ()), TypingType.oType_to_type tl'
     | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ()),  TypingType.oType_to_type tt
     | "%set", TypingType.O_Fun (TypingType.O_Tuple [tr; te], tt) -> operator "%set" (List.map TypingType.oType_to_type [tr; te]) (TypingType.oType_to_type tt) (function [v1; v2] -> Set (v1, v2) | _ -> fail ()), TypingType.oType_to_type tt
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
-    | "%array-alloc", TypingType.O_Fun (TypingType.O_Tuple [tnum], ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
-    | "map", TT.O_Fun (TT.O_Tuple ([TT.O_Fun (a, b); TT.O_Variant (a', TT.O_Constant Type.Variant "list")] as ts), (TT.O_Variant (b', TT.O_Constant Type.Variant "list") as t)) -> 
-      let tg a b =TT.O_Fun (TT.O_Tuple [TT.O_Fun (a, b); TT.O_Variant (a, TT.O_Constant (Type.Variant "list"))], TT.O_Variant (b, TT.O_Constant (Type.Variant "list"))) in
-      let a'', b'' = match a, b with
-        | TT.O_Constant Type.Float, TT.O_Constant Type.Float -> a, b
-        | TT.O_Constant Type.Float, _ -> a, TT.O_Variable "a"
-        | _, TT.O_Constant Type.Float -> TT.O_Variable "a", b
-        | _, _ -> TT.O_Variable "a", TT.O_Variable "b"
-      in
-      ext_func ts t ["List"] "" "map" (TT.oType_to_type (tg a'' b'')), TypingType.oType_to_type t
+    | "%array-alloc", TypingType.O_Fun (tnum, ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
+    | "%null", (TypingType.O_Fun (TT.O_Variant (te, TT.O_Constant (Type.Variant "list")) as tl, tb) as t) when te = TT.O_Constant Type.Float ->
+      ext_func [tl] t ["List"] "" "null" (TT.oType_to_type t), TypingType.oType_to_type t
+    | "%null", (TypingType.O_Fun (TT.O_Variant (te, TT.O_Constant (Type.Variant "list")) as tl, tb) as t) ->
+      ext_func [tl] t ["List"] "" "null" (TT.oType_to_type (TypingType.O_Fun (TT.O_Variant (TT.O_Variable "a", TT.O_Constant (Type.Variant "list")) , ob))), TypingType.oType_to_type t
     | _ -> invalid_arg "internal_operator"
 let is_valid_internal_operator name t =
   try
