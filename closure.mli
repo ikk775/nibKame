@@ -2,6 +2,7 @@ type closure = { entry : Id.l; actual_fv : Id.t list; }
 type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
   | Unit
+  | Nil
   | Int of int
   | Char of char
   | Float of float
