@@ -313,8 +313,9 @@ let rec from_syntax = function
   | Syntax.Let (Syntax.P_Ident v, e1, e2) -> E_Let (v, from_syntax e1, from_syntax e2)
   | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, None, from_syntax e2])
   | Syntax.Variant v -> E_Variable v
+  | Syntax.LetRec ((v, t), e1, e2) ->
+    E_Let(v, E_Fix (v, from_syntax e1), from_syntax e2)
   | Syntax.TopLet _ | Syntax.TopLetRec _ | Syntax.TopLetSimp _ -> invalid_arg "from_syntax"
-  | Syntax.LetRec _ -> failwith "let rec is not supported yet."
 and pattern_from_syntax_pattern = function
   | Syntax.P_Ident v -> EP_Variable (Some v)
   | Syntax.P_Literal lit -> EP_Constant lit 
