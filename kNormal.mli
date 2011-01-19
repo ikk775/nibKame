@@ -1,6 +1,6 @@
 type t =
     Unit
-  | Nil
+  | Nil of Type.listCategory
   | Int of int
   | Char of char
   | Float of float

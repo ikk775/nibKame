@@ -4,7 +4,7 @@ type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 
 type t =
   | Unit
-  | Nil
+  | Nil of Type.listCategory
   | Int of int
   | Char of char
   | Float of float
@@ -57,7 +57,7 @@ type topDecl =
 let topDecls : topDecl list ref = ref []
 
 let rec fv = function
-  | Unit | Nil | Int(_) | Float(_) | Char(_) | ExtArray(_) -> Id.Set.empty
+  | Unit | Nil (_) | Int(_) | Float(_) | Char(_) | ExtArray(_) -> Id.Set.empty
   | Neg(x) | FNeg(x) -> Id.Set.singleton x
   | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | ArrayRef(x, y) -> Id.Set.of_list [x; y]
   | If(_, x, y, e1, e2) -> Id.Set.add x (Id.Set.add y (Id.Set.union (fv e1) (fv e2)))
@@ -77,7 +77,7 @@ let rec fv = function
 
 let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
   | KNormal.Unit -> Unit
-  | KNormal.Nil -> Nil
+  | KNormal.Nil(tlc) -> Nil(tlc)
   | KNormal.Int(i) -> Int(i)
   | KNormal.Char(c) -> Char(c)
   | KNormal.Float(d) -> Float(d)
