@@ -139,7 +139,7 @@ type substitution = ((resultVar * TypingType.oType) * result) (* 置換元と置
 let rec typevars : result -> Id.t list = fun r -> 
   let ftv t = TypingType.freetypevars (TypingType.OType t) in
   let rec g = function
-    | R_Constant (l, t) -> []
+    | R_Constant (l, t) -> [ftv t]
     | R_Variable (v, t) -> [ftv t]
     | R_Fun((v, t), e) -> List.unique (ftv t :: g e)
     | R_Apply(e1, e2) -> List.unique (List.append (g e1) (g e2))
