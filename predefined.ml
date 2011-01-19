@@ -79,10 +79,10 @@ let pervasives =
     "ref", intop_t "%ref" tygrvae tyva;
     "set", intop_t "%set" tygrvavae tyu;
     "ignore", TE.E_Fun ("x", TE.E_Constant Syntax.Unit);
-    "print_int", intop_t "print_int" tygie tyu;
-    "print_float", intop_t "print_float" tygfe tyu;
-    "print_char", intop_t "print_char" tygce tyu;
-    "print_string", intop_t "print_string" tygace tyu;
+    "print-int", intop_t "print_int" tygie tyu;
+    "print-float", intop_t "print_float" tygfe tyu;
+    "print-char", intop_t "print_char" tygce tyu;
+    "print-string", intop_t "print_string" tygace tyu;
     ":", TE.E_Fun("x", TE.E_Fun("y", TE.E_Variable "y"));
 ]
  

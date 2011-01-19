@@ -2,15 +2,15 @@
   (fun (x)
     (= x nil)))
 
-(letrec rev_append
+(letrec rev-append
   (fun (xs ys)
 	(if (null xs)
 	  ys
-	  (rev_append (cdr xs) (cons (car xs) ys)))))
+	  (rev-append (cdr xs) (cons (car xs) ys)))))
 
 (let rev
   (fun (xs)
-	 (rev_append xs nil)))
+	 (rev-append xs nil)))
 
 (letrec map
   (fun (f xs)
@@ -21,10 +21,10 @@
 
 (let length
   (fun (xs)
-  	(letrec length_sub
+  	(letrec length-sub
 	  (fun (i xs)
 	    (if (null xs)
 		  i
-		  (length_sub (+ i 1) (cdr xs))))
-	  (length_sub 0 xs))))
+		  (length-sub (+ i 1) (cdr xs))))
+	  (length-sub 0 xs))))
 
