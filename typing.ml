@@ -180,13 +180,16 @@ let varname = function
 let rec result_freetypevars : (Id.t * TypingType.oType) list -> Id.t list = fun vts -> 
   List.concat (List.map (function x, t -> TypingType.freetypevars (TypingType.OType t)) vts)
 
-let rec value_restrict : result -> TypingType.oType -> TypingType.typeScheme = fun r t -> 
+let rec safe_typevars r =
   let rec f = function
     | R_Fun ((v, t), r) -> t :: f r
-    | _ -> []
-  in
+    | R_Fix ((v, t), r, t') -> f r
+    | _ -> [] in
   let ots = f r in
-  let rec ftv = MyUtil.List.unique (List.concat (List.map (fun ot -> TypingType.freetypevars (TypingType.OType ot)) ots)) in
+  MyUtil.List.unique (List.concat (List.map (fun ot -> TypingType.freetypevars (TypingType.OType ot)) ots))
+  
+let rec value_restrict : result -> TypingType.oType -> TypingType.typeScheme = fun r t -> 
+  let ftv = safe_typevars r in
   TypingType.QType (ftv, TypingType.OType t)
 
 let rec substitute_result_type ss expr =
