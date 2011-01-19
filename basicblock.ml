@@ -61,7 +61,7 @@ let counter : int ref = ref 0
 let mkblockname () =
   let i = !counter in
     counter := !counter + 1;
-    Id.L (Format.sprintf "block:%d" i)
+    Id.L (Format.sprintf "block%d" i)
 
 let to_ins = function
   | VA.Nop -> Nop
