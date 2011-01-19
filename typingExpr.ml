@@ -288,7 +288,7 @@ let rec from_syntax = function
   | Syntax.Fun (vts, e) -> 
     let f acc v = E_Fun(v, acc) in
     let vs = fst (List.split vts) in
-    List.fold_left f (from_syntax e) vs
+    List.fold_left f (from_syntax e) (List.rev vs)
   | Syntax.Var v -> E_Variable v
   | Syntax.Apply (f, es) -> 
     let g acc e = E_Apply(acc, from_syntax e) in
