@@ -25,6 +25,10 @@ type usingCategory = (* how to use the datum *)
   | U_Array of usingCategory
   | U_Variant of Id.t
 
+type listCategory =
+  | List_Float
+  | List_Other
+
 type refCategory = (* how to point the datum on the memory *)
   | R_Unit
   | R_Int
@@ -63,3 +67,6 @@ val to_sexpr : t -> Sexpr.t
 val to_string : t -> string
 val read_from_stream : char Stream.t -> t
 val of_string : string -> t
+
+val listCategory_to_sexpr : listCategory -> Sexpr.t
+val listCategory_of_sexpr : Sexpr.t -> listCategory

@@ -14,6 +14,10 @@ type t =
   | Variant of Id.t
   | Var of Id.t
  
+type listCategory =
+  | List_Float
+  | List_Other
+
 type usingCategory =
   | U_Unit
   | U_Bool
@@ -246,4 +250,11 @@ let rec to_sexpr = function
     Sexpr.Sexpr [Sexpr.Sident "t:variant";  Sexpr.Sident t]
   | Var x -> 
     Sexpr.Sexpr [Sexpr.Sident "t:var";  Sexpr.Sident x]
+   
+let rec listCategory_to_sexpr = function
+  | List_Float -> Sexpr.Sident "lc:float"
+  | List_Other -> Sexpr.Sident "lc:other"
 
+let rec listCategory_of_sexpr = function
+  | Sexpr.Sident "lc:float" -> List_Float
+  | Sexpr.Sident "lc:other" -> List_Other
