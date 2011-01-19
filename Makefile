@@ -26,6 +26,8 @@ SOURCES +=asmx86.ml
 SOURCES +=instantiate.ml
 SOURCES +=translationUnit.ml
 SOURCES +=predefined.ml
+SOURCES +=alpha.ml
+SOURCES +=asmx86.ml
 SOURCES +=main.ml
 
 # the name of the resulting executable
@@ -34,6 +36,7 @@ RESULT  = executable.exe
 # generate type information (.annot files)
 ANNOTATE = yes
 
+LDFLAGS+=-static
 OCAMLFLAGS= -g
 
 # make target (see manual) : byte-code, debug-code, native-code, ...
