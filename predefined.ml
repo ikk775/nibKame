@@ -83,6 +83,6 @@ let pervasives =
     "print-float", intop_t "print_float" tygfe tyu;
     "print-char", intop_t "print_char" tygce tyu;
     "print-string", intop_t "print_string" tygace tyu;
-    ":", TE.E_Fun("x", TE.E_Fun("y", TE.E_Variable "y"));
+    ";", TE.E_Fun("x", TE.E_Fun("y", TE.E_Variable "y"));
 ]
  
