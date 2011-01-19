@@ -377,8 +377,8 @@ let rec asmgen = function
 	    begin match ty with
 	      | VA.Int | VA.Char ->
 		  (match src2 with
-		     | C 0 when op = VA.Eq -> Test (RI (TempR src1, Temp)) :: Branch (Zero, b_label)
-		     | C 0 when op = VA.NotEq -> Test (RI (TempR src1, Temp)) :: Branch (NotZero, b_label)
+		     | C 0 when op = VA.Eq -> Test (RI (TempR src1, Temp)) :: Branch (Zero, b_label) :: asngen tail
+		     | C 0 when op = VA.NotEq -> Test (RI (TempR src1, Temp)) :: Branch (NotZero, b_label) :: asmgen tail
 		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: Branch (to_cmp_op op, b_label)) :: asmgen tail
 	      | VA.Float -> let V s2 = src2 in FComp (TempF src1, TempF s2) :: Branch (to_cmp_op op, b_label) :: asmgen tail
 	      | VA.Pointer t when op = VA.Eq ->
