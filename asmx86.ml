@@ -424,7 +424,7 @@ let rec asmgen = function
 		([], 0) l in
 	      [Push (I (VA.Int_l (VA.tuple_size (List.map snd l)))); Call (Id.L "_nibkame_tuple_alloc_"); Add (RI (ESP, VA.Int_l 4))]
 	      @ (List.rev stores) @ Mov (TempR dst, EAX) :: asmgen tail
-	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l 4(*(VA.sizeof t)*))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
+	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l (VA.sizeof t))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
       end
 	
   | BB.If (ins, b_label) :: tail ->
