@@ -478,6 +478,6 @@ let generate_function { BB.name = name; BB.body = body; BB.block_labels = labels
   { name = name; body = asmgen body }
 
 let output_function chan { name = Id.L label; body = body } =
-  output_string chan (Format.printf ".global %s\n" label);
+  output_string chan (Format.sprintf ".global %s\n" label);
   List.iter (fun ins -> output_char chan '\n'; output_string chan (str_of_inst ins)) body;
   output_char chan '\n'

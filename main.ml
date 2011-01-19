@@ -33,7 +33,7 @@ let compile_knormal k =
 
 let emit_asm ch (funcs, fp_table) =
   let f = List.map Asmx86.generate_function (Basicblock.f funcs) in
-    List.iter Asmx86.output_function f
+    List.iter (Asmx86.output_function ch) f
   
 
 let compile ch stm =
@@ -52,7 +52,7 @@ let file f =
   try
     compile outchan (Stream.of_channel inchan);
     close_in inchan;
-    close_out outchan;
+    close_out outchan
   with e -> (close_in inchan; close_out outchan; raise e)
 
 let () = 
