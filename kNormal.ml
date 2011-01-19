@@ -316,6 +316,10 @@ let rec from_typing_result r =
     Debug.dbgprintsexpr (Typing.to_sexpr r);
     match r with
     | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
+    | Typing.R_Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
+      Nil Type.List_Float, TypingType.oType_to_type t
+    | Typing.R_Constant (Syntax.Nil, t) ->
+      Nil Type.List_Other, TypingType.oType_to_type t
     | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
     | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
     | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
