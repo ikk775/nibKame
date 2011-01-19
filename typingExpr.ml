@@ -119,6 +119,7 @@ let get_constant_type = function
   | E_Constant c ->
     (match c with
       | Syntax.Unit -> TypingType.O_Constant Type.Unit
+      | Syntax.Nil -> TypingType.O_Variant (TypingType.gen_typevar (), TypingType.O_Constant (Type.Variant "list"))
       | Syntax.Bool _ -> TypingType.O_Constant Type.Bool
       | Syntax.Int _ -> TypingType.O_Constant Type.Int
       | Syntax.Float _ -> TypingType.O_Constant Type.Float

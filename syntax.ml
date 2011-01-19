@@ -1,5 +1,6 @@
 type lit =
   | Unit
+  | Nil
   | Bool of bool
   | Int of int
   | Float of float
@@ -57,6 +58,7 @@ type t =
 
 let lit_to_sexpr = function
   | Unit -> Sexpr.Sident "unit"
+  | Nil -> Sexpr.Sident "unit"
   | Bool true -> Sexpr.Sident "true"
   | Bool false -> Sexpr.Sident "false"
   | Int i -> Sexpr.Sint i
@@ -66,6 +68,7 @@ let lit_to_sexpr = function
 
 let lit_of_sexpr = function
   | Sexpr.Sident "unit" -> Unit
+  | Sexpr.Sident "nil" -> Nil
   | Sexpr.Sident "true" -> Bool true
   | Sexpr.Sident "false" -> Bool false
   | Sexpr.Sint i -> Int i
@@ -80,6 +83,9 @@ let rec pat_to_sexpr = function
   | P_Tuple ps ->  Sexpr.Sexpr (Sexpr.Sident "tuple" :: List.map pat_to_sexpr ps)
   | P_List ps ->  Sexpr.Sexpr (Sexpr.Sident "list" :: List.map pat_to_sexpr ps)
   | P_Array ps ->  Sexpr.Sexpr (Sexpr.Sident "array" :: List.map pat_to_sexpr ps)
+  | P_And (p1, p2) -> Sexpr.Sexpr [Sexpr.Sident "and"; pat_to_sexpr p1; pat_to_sexpr p2]
+  | P_Or (p1, p2) -> Sexpr.Sexpr [Sexpr.Sident "or"; pat_to_sexpr p1; pat_to_sexpr p2]
+  | P_Not p -> Sexpr.Sexpr [Sexpr.Sident "not"; pat_to_sexpr p]
   | P_Variant (id, ps) -> Sexpr.Sexpr (Sexpr.Sident id :: List.map pat_to_sexpr ps)
   | Any -> Sexpr.Sident "_"
 
@@ -87,6 +93,9 @@ let rec pat_of_sexpr = function
   | Sexpr.Sexpr (Sexpr.Sident "tuple" :: ps) -> P_Tuple(List.map pat_of_sexpr ps)
   | Sexpr.Sexpr (Sexpr.Sident "list" :: ps) -> P_List(List.map pat_of_sexpr ps)
   | Sexpr.Sexpr (Sexpr.Sident "array" :: ps) -> P_Array(List.map pat_of_sexpr ps)
+  | Sexpr.Sexpr (Sexpr.Sident "and" :: p1 :: p2 :: []) -> P_And(pat_of_sexpr p1, pat_of_sexpr p2)
+  | Sexpr.Sexpr (Sexpr.Sident "or" :: p1 :: p2 :: []) -> P_Or(pat_of_sexpr p1, pat_of_sexpr p2)
+  | Sexpr.Sexpr (Sexpr.Sident "not" :: p :: []) -> P_Not(pat_of_sexpr p)
   | Sexpr.Sexpr (Sexpr.Sident id :: ps) -> P_Variant(id, List.map pat_of_sexpr ps)
   | Sexpr.Sident "_" -> Any
   | Sexpr.Sident a -> P_Ident a
