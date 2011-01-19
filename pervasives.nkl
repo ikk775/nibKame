@@ -28,14 +28,18 @@
 		  (length-sub (+ i 1) (cdr xs))))
 	  (length-sub 0 xs))))
 
+(let array-from-list-with-length
+  (fun (len xs)
+    (let array (array-alloc len)
+      (letrec f
+        (fun (i xs)
+          (if (null xs)
+            unit
+            (seq (array-set array i (car xs))
+                 (f (+ i 1) (cdr xs)))))
+        (f 0 xs)))))
+
 (let array-from-list
   (fun (xs)
     (let len (length xs)
-      (let array (array-alloc len)
-        (letrec f
-          (fun (i xs)
-            (if (null xs)
-              unit
-              (seq (array-set array i (car xs))
-                   (f (+ i 1) (cdr xs)))))
-          (f 0 xs))))))
+      (array-from-list-with-length len xs))))
