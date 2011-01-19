@@ -294,3 +294,8 @@ let f declears =
   let e = List.fold_right iter declears M.empty in
   let start = { name = Id.L("nibkame_entry"); args = []; body = !main; ret = Int } in
     (start :: !fundefs), !float_literal_list
+
+let sizeof = function
+  | Float -> 8
+  | Char -> 1
+  | _ -> 4
