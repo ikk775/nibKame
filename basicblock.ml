@@ -61,7 +61,7 @@ let counter : int ref = ref 0
 let mkblockname () =
   let i = !counter in
     counter := !counter + 1;
-    Id.L (Format.sprintf "block:%d" i)
+    Id.L (Format.sprintf "block%d" i)
 
 let to_ins = function
   | VA.Nop -> Nop
@@ -131,11 +131,12 @@ let rec add_ret = function
 let linerize_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
   let blocks = ref M.empty in
   let insts = linerize blocks [] body in
+  let insts' = add_ret insts in
   let blocknames, inst = M.fold (fun key ins ret ->
 				   let block, inst = ret in
-				     key :: block, ins @ inst)
+				     key :: block, add_ret ins @ inst)
                                 !blocks ([], []) in
-    { name = func_label; args = args; body = Label func_label :: insts @ inst; ret = ret; block_labels = blocknames }
+    { name = func_label; args = args; body = Label func_label :: Entry :: insts' @ inst; ret = ret; block_labels = blocknames }
 
 let f funs =
   List.map linerize_func funs

@@ -477,7 +477,7 @@ let rec asmgen = function
 let generate_function { BB.name = name; BB.body = body; BB.block_labels = labels } =
   { name = name; body = asmgen body }
 
-let output_function { name = Id.L label; body = body } =
-  Format.printf ".global %s" label;
-  List.iter (fun ins -> print_newline (); print_string (str_of_inst ins)) body;
-  print_newline ()
+let output_function chan { name = Id.L label; body = body } =
+  output_string chan (Format.sprintf ".global %s\n" label);
+  List.iter (fun ins -> output_char chan '\n'; output_string chan (str_of_inst ins)) body;
+  output_char chan '\n'

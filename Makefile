@@ -10,18 +10,23 @@ SOURCES +=id.ml
 SOURCES +=debug.ml
 SOURCES +=mangle.ml
 SOURCES +=type.ml
-SOURCES +=variant.ml
-SOURCES +=syntax.ml
-SOURCES +=sread.ml
 SOURCES +=typingType.ml
+SOURCES +=syntax.ml
+SOURCES +=variant.ml
+SOURCES +=sread.ml
 SOURCES +=typingExpr.ml
 SOURCES +=typing.ml
+SOURCES +=module.ml
 SOURCES +=pattern.ml
 SOURCES +=kNormal.ml
 SOURCES +=closure.ml
 SOURCES +=virtualAsm.ml
-SOURCES +=module.ml
+SOURCES +=basicblock.ml
+SOURCES +=asmx86.ml
 SOURCES +=instantiate.ml
+SOURCES +=translationUnit.ml
+SOURCES +=predefined.ml
+SOURCES +=main.ml
 
 # the name of the resulting executable
 RESULT  = executable.exe
