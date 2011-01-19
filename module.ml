@@ -276,6 +276,12 @@ let gather_expr = fun m ->
   let vtes = List.map (function v, (qtvs, ts, e) -> v, TypingType.remove_quantifier ts, e) elts' in
   List.fold_right Typing.gather vtes (Typing.R_Constant (Syntax.Unit, TypingType.O_Constant (Type.Unit)))
 
+let elt_to_sexpr = function
+  | Type (name, (qtvs, ot)) ->
+    Sexpr.tagged_sexpr "type" [Sexpr.Sident name; Sexpr.Sexpr [Sexpr.Sexpr (List.map Sexpr.ident qtvs); TypingType.oType_to_sexpr ot]]
+  | Expr (name, (qtvs, ts, r)) ->
+    Sexpr.tagged_sexpr "expr" [Sexpr.Sident name; Sexpr.Sexpr [Sexpr.Sexpr (List.map Sexpr.ident qtvs); TypingType.typeScheme_to_sexpr ts; Typing.to_sexpr r]]
+
 let to_sexpr m =
   let seim = Sexpr.Sexpr [
     Sexpr.Sident "ext->int-map";
@@ -286,9 +292,10 @@ let to_sexpr m =
     Sexpr.Sident "int->ext-map";
     Sexpr.Sexpr [Sexpr.Sident "id"; Id.substitutions_to_sexpr m.iem];
   ] in
-  let sdefs = Sexpr.Sexpr [
-    Sexpr.Sident "defines";
-  ] in
+  let sdefs = Sexpr.Sexpr (
+    Sexpr.Sident "defines" ::
+    List.map elt_to_sexpr m.defs
+  ) in
   Sexpr.Sexpr [seim; siem; sdefs]
  
 let compose m1 m2 =
