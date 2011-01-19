@@ -115,6 +115,8 @@ type inst =
   (* 以下特殊な命令 *)
   | SETcc of VA.cmp_op * reg
 
+type fundef = { name : Id.l; body : inst list }
+
 let str_of_reg = function
   | EAX -> "%eax"
   | EDX -> "%edx"
@@ -264,6 +266,7 @@ let str_of_inst = function
   | Call (Id.L label) -> Format.sprintf "call %s" label 
   | Call_I adr -> Format.sprintf "call (%s)" (str_of_reg adr)
   | Label (Id.L label) -> Format.sprintf "%s:" label
+  | Entry -> "# function entry."
   | Leave -> "leave"
   | Ret -> "ret"
 
@@ -320,7 +323,8 @@ let get_type = function
   | BB.ArrayAlloc (t, _) -> Some (VA.Pointer (VA.Array t))
 
 let is_power2 n =
-  n land (n - 1) = 0
+  let n = abs n in
+    n land (n - 1) = 0
 
 (* 演算の値が返る部分は Let の子になるよう調節する．*)
 let rec asmgen = function
@@ -420,7 +424,7 @@ let rec asmgen = function
 		([], 0) l in
 	      [Push (I (VA.Int_l (VA.tuple_size (List.map snd l)))); Call (Id.L "_nibkame_tuple_alloc_"); Add (RI (ESP, VA.Int_l 4))]
 	      @ (List.rev stores) @ Mov (TempR dst, EAX) :: asmgen tail
-	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l 4(*(VA.sizeof t)*))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
+	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l (VA.sizeof t))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
       end
 	
   | BB.If (ins, b_label) :: tail ->
@@ -470,3 +474,10 @@ let rec asmgen = function
 	| None -> MyUtil.undefined () (* 全て対応したので到達しない筈． *)
       end
 
+let generate_function { BB.name = name; BB.body = body; BB.block_labels = labels } =
+  { name = name; body = asmgen body }
+
+let output_function { name = Id.L label; body = body } =
+  Format.printf ".global %s" label;
+  List.iter (fun ins -> print_newline (); print_string (str_of_inst ins)) body;
+  print_newline ()
