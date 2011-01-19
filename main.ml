@@ -31,15 +31,18 @@ let compile_knormal k =
   let va = VirtualAsm.f c in
   va
 
-let emit_asm ch va =
-  (undefined ())
+let emit_asm ch (funcs, fp_table) =
+  let f = List.map Asmx86.generate_function (Basicblock.f funcs) in
+    List.iter Asmx86.output_function f
+  
 
 let compile ch stm =
   let m = read_module stm in
   let k = knormalize_module m in
   let k' = optimize_knormal k in
   let va = compile_knormal k' in
-  (undefined ())
+    emit_asm ch va;
+    (undefined ())
 
 let string str = compile stdout (Stream.of_string str)
 
