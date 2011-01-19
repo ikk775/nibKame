@@ -18,16 +18,22 @@ let read_module stm =
   TranslationUnit.modulize (Module.ext_expr_env pervasives) syntaxs
 
 let knormalize_module m =
+  Debug.dbgprint "compose modules.";
   let m = Module.compose pervasives m in
+  Debug.dbgprint "unfold pattern.";
   let m = Pattern.unfold_module m in
+  Debug.dbgprint "instantiate general functions.";
   let m = Instantiate.instantiate m in
+  Debug.dbgprint "convert module to single expr.";
   let r = Module.gather_expr m in
+  Debug.dbgprint "convert expr to K-normal.";
   fst (KNormal.from_typing_result r)
 
 let optimize_knormal k = k
 
 let compile_knormal k =
   let c = Closure.from_knormal k in
+  Debug.dbgprint "compile to asm.";
   let va = VirtualAsm.f c in
   va
 
@@ -41,13 +47,12 @@ let compile ch stm =
   let k = knormalize_module m in
   let k' = optimize_knormal k in
   let va = compile_knormal k' in
-    emit_asm ch va;
-    (undefined ())
+  emit_asm ch va
 
 let string str = compile stdout (Stream.of_string str)
 
 let file f =
-  let inchan = open_in (f ^ ".ml") in
+  let inchan = open_in (f ^ ".nkl") in
   let outchan = open_out (f ^ ".s") in
   try
     compile outchan (Stream.of_channel inchan);
@@ -61,7 +66,7 @@ let () =
     [ ]
       (fun s -> files := !files @ [s])
       ("GuNCT nibKame Compiler\n" ^
-       Printf.sprintf "usage: %s filenames without \".ml\"..." Sys.argv.(0));
+       Printf.sprintf "usage: %s filenames without \".nkl\"..." Sys.argv.(0));
   List.iter
     (fun f -> ignore (file f))
     !files
