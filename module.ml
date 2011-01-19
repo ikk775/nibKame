@@ -288,7 +288,7 @@ let elt_to_sexpr = function
 
 let gather_expr = fun m -> 
   let elts = defs_expr_cont m in
-  let elts' = List.rev elts in
+  let elts' = elts in
   let vtes = List.map (function v, (qtvs, ts, e) -> v, TypingType.remove_quantifier ts, e) elts' in
   List.fold_right Typing.gather vtes (Typing.R_Constant (Syntax.Unit, TypingType.O_Constant (Type.Unit)))
 

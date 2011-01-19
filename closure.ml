@@ -75,7 +75,9 @@ let rec fv = function
   | Set(x, y) -> Id.Set.of_list [x; y]
   | Ref(x) -> Id.Set.singleton x
 
-let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
+let rec g env known k =
+  Debug.dbgprintsexpr (KNormal.to_sexpr k);
+  match k with (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
   | KNormal.Unit -> Unit
   | KNormal.Nil(tlc) -> Nil(tlc)
   | KNormal.Int(i) -> Int(i)
@@ -103,6 +105,7 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2
       (* 関数定義let rec x y1 ... yn = e1 in e2の場合は、
      xに自由変数がない(closureを介さずdirectに呼び出せる)
      と仮定し、knownに追加してe1をクロージャ変換してみる *)
+    Debug.dbgprintsexpr (Sexpr.tagged_sexpr x [Type.to_sexpr t]);
       let topdecls_backup = !topDecls in
       let env' = Id.Map.add x t env in
       let known' = Id.Set.add x known in

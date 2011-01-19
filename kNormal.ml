@@ -346,7 +346,7 @@ let rec from_typing_result r =
       assert (t' = TT.oType_to_type t);
       begin match ew' with
         | LetFun ({args = [vf, ta]; body = e'}, Var _) -> 
-            LetFun ({name = (v, t'); args = [vf, ta]; body = e'}, Var bn), t'
+            LetFun ({name = (v, t'); args = [vf, ta]; body = e'}, Var v), t'
         | _ -> invalid_arg "from_typing_result"
       end
     | Typing.R_Fix ((v, t), _, tw) ->
@@ -409,6 +409,7 @@ let rec from_typing_result r =
       let bn = Typing.varname b in
       f env (Typing.R_Let ((bn, te), e, Typing.R_Match (b, cls)))
   in
-  f Id.Map.empty r
+  let k, t = f Id.Map.empty r in
+  Let (("%true", Type.Int), Int 1, k), t
   
 

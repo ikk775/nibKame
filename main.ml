@@ -24,15 +24,21 @@ let knormalize_module m =
   let m = Pattern.unfold_module m in
   Debug.dbgprint "instantiate general functions.";
   let m = Instantiate.instantiate m in
+  Debug.dbgprint "coerce typevar to unit.";
+  let m = Module.coerce_typevars (TypingType.O_Constant Type.Unit) m in
   Debug.dbgprint "convert module to single expr.";
   let r = Module.gather_expr m in
   Debug.dbgprint "convert expr to K-normal.";
-  fst (KNormal.from_typing_result r)
+  let k = fst (KNormal.from_typing_result r) in
+  Debug.dbgprint "Alpha transform.";
+  Alpha.f k
 
 let optimize_knormal k = k
 
 let compile_knormal k =
-  let c = Closure.from_knormal k in
+  let c = try
+  Closure.from_knormal k
+  with Not_found -> failwith "end closure" in
   Debug.dbgprint "compile to asm.";
   let va = VirtualAsm.f c in
   va
@@ -46,6 +52,7 @@ let compile ch stm =
   let m = read_module stm in
   let k = knormalize_module m in
   let k' = optimize_knormal k in
+  Sexpr.write (Format.formatter_of_out_channel ch) (KNormal.to_sexpr k');
   let va = compile_knormal k' in
   emit_asm ch va
 
