@@ -313,7 +313,7 @@ let is_valid_internal_operator name t =
 
 let rec from_typing_result r =
   let rec f env r =
-    Debug.dbgprintsexpr (Typing.to_sexpr r);
+(*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
     match r with
     | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
     | Typing.R_Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
@@ -353,7 +353,7 @@ let rec from_typing_result r =
       invalid_arg "from_typing_result"
     | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
       Apply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type t2
-    | Typing.R_Apply(Typing.R_External (v1, t1), Typing.R_Variable (v2, t2)) when is_valid_internal_operator v1 t1 ->
+    | Typing.R_Apply(Typing.R_External (v1, t1), Typing.R_Variable (v2, t2)) ->
       ExtFunApply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
     | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e)
     | Typing.R_Apply(Typing.R_External (v, t) as rv, e) ->
