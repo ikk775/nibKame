@@ -31,7 +31,11 @@ let of_module : Module.t -> ev_usage = fun m ->
 let usage : Module.t -> ev_usage -> tv_usage = fun m eum -> 
   Debug.dbgprint "called Module.usage";
   let f = function v, ts -> 
+      Debug.dbgprint "called Inst.usage.f";
+      Debug.dbgprintsexpr (Sexpr.Sexpr [Sexpr.Sident v; Sexpr.Sexpr (List.map TypingType.oType_to_sexpr ts)]);
       let _, (qtvs', t', _) = (Module.def_expr m v) in
+      Debug.dbgprintsexpr (Sexpr.tagged_sexpr "qtvs'" (List.map Sexpr.ident qtvs'));
+      Debug.dbgprintsexpr (Sexpr.tagged_sexpr "t'" [TypingType.typeScheme_to_sexpr t']);
       let g t = 
         let ss = TypingType.unify t (TypingType.remove_quantifier t') in
         List.append (TypingType.domain_restrict ss qtvs') (List.filter (function TypingType.Substitution (_, TypingType.O_Variable x) when List.mem x qtvs' -> true | _ -> false) ss)
@@ -48,7 +52,10 @@ let usage_isvalid : tv_usage -> bool = fun tum ->
 let usage_expand_prototype : tv_usage -> tv_usage = fun tum -> 
   Debug.dbgprint "called Module.usage_expand_prototype";
   let e tv =
+    Debug.dbgprintsexpr (Sexpr.tagged_sexpr "Module.usage_expand_prototype.e" [Sexpr.Sident tv]);
     let rec f tv =
+      Debug.dbgprintsexpr (Sexpr.tagged_sexpr "Module.usage_expand_prototype.f" [Sexpr.Sident tv]);
+      try
       let us = List.assoc tv tum in
       let rec g t = 
         let ftvs = TypingType.typevars t in
@@ -57,6 +64,7 @@ let usage_expand_prototype : tv_usage -> tv_usage = fun tum ->
         rslt
       in
       List.concat (List.map (fun t -> if TypingType.typevars t <> [] then g t else [t]) us)
+      with Not_found -> []
     in
   tv, f tv
   in
