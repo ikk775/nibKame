@@ -295,7 +295,7 @@ let rec from_syntax = function
     List.fold_left g (from_syntax f) es
   | Syntax.Tuple es -> 
     E_Tuple(List.map from_syntax es)
-  | Syntax.Cons (e1, e2) -> E_Apply(E_Variable "::", E_Tuple[from_syntax e1; from_syntax e2])
+  | Syntax.Cons (e1, e2) -> E_Apply(E_Apply(E_Variable "::", from_syntax e1), from_syntax e2)
   | Syntax.List es -> 
     let f e acc= E_Apply(E_Variable "cons", E_Tuple[from_syntax e;acc]) in
     List.fold_right f es (E_Variable "nil")
