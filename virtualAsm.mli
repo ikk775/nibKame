@@ -2,10 +2,10 @@
 type id_or_imm = V of Id.t | C of int
 type cmp_op = Eq | NotEq | LsEq | Ls | Gt | GtEq
 
-type literal = Int_l of int | Char_l of char | Pointer_l of Id.l
+type literal = Int_l of int | Char_l of char | Pointer_l of Id.l | Nil of Type.listCategory
 
 type p_type = Tuple of ty list | Array of ty | List of ty | Undefined
-and ty = Char | Int | Float | Fun | Pointer of p_type
+and ty = Char | Int | Float | Fun of ty list * ty | Pointer of p_type
 
 type mem_op =
   | Direct of Id.t
@@ -42,10 +42,8 @@ and exp =
   | BSt of Id.t * mem_op
   | Comp of cmp_op * ty * Id.t * id_or_imm
   | If of exp * t * t
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
-  | ArrayRef of Id.t * Id.t
-  | ArraySet of Id.t * Id.t * Id.t
+  | ApplyCls of (Id.t * ty) * Id.t list
+  | ApplyDir of (Id.l * ty) * Id.t list
   | Cons of Id.t * Id.t
   | Car of Id.t
   | Cdr of Id.t  | FCons of Id.t * Id.t
@@ -53,11 +51,13 @@ and exp =
   | FCdr of Id.t
   | TupleAlloc of (Id.t * ty) list
   | ArrayAlloc of ty * Id.t
-  | Save of Id.t * Id.t
-  | Restore of Id.t * Id.t
+
 
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 val genid : unit -> Id.t
 val temp : unit -> Id.t
+val tuple_size : ty list -> int
+val array_size : int -> ty -> int
+val sizeof : ty -> int
 val f: Closure.topDecl list -> fundef list * (float * Id.l) list
 val var_labels: Id.Set.t ref

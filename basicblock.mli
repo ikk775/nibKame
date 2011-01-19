@@ -28,10 +28,8 @@ type ins =
   | BSt of Id.t * VirtualAsm.mem_op
   | Comp of VirtualAsm.cmp_op * VirtualAsm.ty * Id.t * VirtualAsm.id_or_imm
   | If of ins * Id.l
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
-  | ArrayRef of Id.t * Id.t
-  | ArraySet of Id.t * Id.t * Id.t
+  | ApplyCls of (Id.t * VirtualAsm.ty) * Id.t list
+  | ApplyDir of (Id.l * VirtualAsm.ty) * Id.t list
   | Cons of Id.t * Id.t
   | Car of Id.t
   | Cdr of Id.t 
@@ -40,8 +38,6 @@ type ins =
   | FCdr of Id.t
   | TupleAlloc of (Id.t * VirtualAsm.ty) list
   | ArrayAlloc of VirtualAsm.ty * Id.t
-  | Save of Id.t * Id.t
-  | Restore of Id.t * Id.t
 
 type fundef = { name : Id.l; args : (Id.t * VirtualAsm.ty) list; body : ins list; ret : VirtualAsm.ty; block_labels : Id.l list }
 

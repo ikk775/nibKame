@@ -1,5 +1,6 @@
 type t =
     Unit
+  | Nil of Type.listCategory
   | Int of int
   | Char of char
   | Float of float
@@ -22,7 +23,7 @@ type t =
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | LetFun of fundef * t
-  | Apply of Id.t * Id.t list
+  | Apply of (Id.t * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
   | Ref of Id.t
