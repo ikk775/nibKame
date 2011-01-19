@@ -1,6 +1,6 @@
 open MyUtil
 
-let pervasives_module_name = "pervasives.snkl"
+let pervasives_module_name = "pervasives.nkl"
 let _ = Debug.set_dbglevel 10
 
 let pervasives =
