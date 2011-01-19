@@ -4,7 +4,7 @@ type cmp_op =
   | Eq | NotEq | LsEq | Ls | Gt | GtEq
 
 type literal =
-  | Int_l of int | Char_l of char | Pointer_l of Id.l
+  | Int_l of int | Char_l of char | Pointer_l of Id.l | Nil of Type.listCategory
 
 type p_type =
   | Tuple of ty list
@@ -153,6 +153,7 @@ let to_ty_with_var (v, t)  =
 
 let rec compile_exp env = function
   | Closure.Unit -> Ans(Nop)
+  | Closure.Nil (lc) -> Ans(Set(Nil lc))
   | Closure.Int i -> Ans(Set(Int_l i))
   | Closure.Char c -> Ans(Set(Char_l c))
   | Closure.Float f -> let l = add_float_table f in Ans(Set(Pointer_l l))

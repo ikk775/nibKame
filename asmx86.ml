@@ -161,6 +161,7 @@ let str_of_imm : imm -> string = function
     | VA.Int_l i -> Format.sprintf "$%d" i
     | VA.Char_l c -> Format.sprintf "\'%c\'" c
     | VA.Pointer_l (Id.L label) -> label
+    | VA.Nil _ -> "0"
 
 let str_of_rmi = function
   | R reg -> str_of_reg reg

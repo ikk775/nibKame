@@ -2,7 +2,7 @@
 type id_or_imm = V of Id.t | C of int
 type cmp_op = Eq | NotEq | LsEq | Ls | Gt | GtEq
 
-type literal = Int_l of int | Char_l of char | Pointer_l of Id.l
+type literal = Int_l of int | Char_l of char | Pointer_l of Id.l | Nil of Type.listCategory
 
 type p_type = Tuple of ty list | Array of ty | List of ty | Undefined
 and ty = Char | Int | Float | Fun of ty list * ty | Pointer of p_type
