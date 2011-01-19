@@ -26,7 +26,7 @@ let compile ch stm =
   let k = knormalize_module m in
   let k' = optimize_knormal k in
   let va = compile_knormal k' in
-  Printf.fprintf ch "%s" (Std.dump va)
+  (undefined ())
 
 let string str = compile stdout (Stream.of_string str)
 
