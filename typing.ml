@@ -347,29 +347,48 @@ let rec w env expr =
     | E_Match (e, cls) ->
       let f = function (ss, env, tpat, texpr), cls ->
         let g = function
+          | pat, None, expr -> 
+            let sps, tp, p' = w_pattern env pat in
+            let sps' = unify tp tpat in
+            let tpat' = T.substitute sps' tp in
+            let p'' = substitute_pattern_type (T.compose sps' sps) p' in
+            let vts = patternvars p'' in
+            let vs = List.map fst vts in
+            if List.length vs <> List.length (List.unique vs)
+            then failwith "Variable names must be unique in the pattern."
+            else ();
+            let env' = E.combine_env env (E.ExprEnv (List.map (function v, t -> v, T.OType t) vts)) in
+            Debug.dbgprint "env':";
+            Debug.dbgprintsexpr (E.exprEnv_to_sexpr env');
+            let ses, te, e' = w env' expr in
+            let ses' = unify te texpr in
+            let texpr' = T.substitute ses' te in
+            let e'' = substitute_result_type ses' e' in
+            let ss = T.compose_substs [ses'; ses; sps'; sps; ss] in
+            (ss, E.substitute_env ss env, tpat', texpr'), (p'', None, e'') :: cls
           | pat, Some guard, expr -> 
-        let sps, tp, p' = w_pattern env pat in
-        let sps' = unify tp tpat in
-        let tpat' = T.substitute sps' tp in
-        let p'' = substitute_pattern_type (T.compose sps' sps) p' in
-        let vts = patternvars p'' in
-        let vs = List.map fst vts in
-        if List.length vs <> List.length (List.unique vs)
-        then failwith "Variable names must be unique in the pattern."
-        else ();
-        let env' = E.combine_env env (E.ExprEnv (List.map (function v, t -> v, T.OType t) vts)) in
-        Debug.dbgprint "env':";
-        Debug.dbgprintsexpr (E.exprEnv_to_sexpr env');
-        let sgs, tg, g' = w env' guard in
-        let sgs' = unify tg (O_Constant Type.Bool) in
-        let g'' = substitute_result_type sgs' g' in
-        let env'' = E.substitute_env (T.compose sgs' sgs) env' in
-        let ses, te, e' = w env'' expr in
-        let ses' = unify te texpr in
-        let texpr' = T.substitute ses' te in
-        let e'' = substitute_result_type ses' e' in
-        let ss = T.compose_substs [ses'; ses; sgs'; sgs; sps'; sps; ss] in
-        (ss, E.substitute_env ss env, tpat', texpr'), (p'', Some g'', e'') :: cls
+            let sps, tp, p' = w_pattern env pat in
+            let sps' = unify tp tpat in
+            let tpat' = T.substitute sps' tp in
+            let p'' = substitute_pattern_type (T.compose sps' sps) p' in
+            let vts = patternvars p'' in
+            let vs = List.map fst vts in
+            if List.length vs <> List.length (List.unique vs)
+            then failwith "Variable names must be unique in the pattern."
+            else ();
+            let env' = E.combine_env env (E.ExprEnv (List.map (function v, t -> v, T.OType t) vts)) in
+            Debug.dbgprint "env':";
+            Debug.dbgprintsexpr (E.exprEnv_to_sexpr env');
+            let sgs, tg, g' = w env' guard in
+            let sgs' = unify tg (O_Constant Type.Bool) in
+            let g'' = substitute_result_type sgs' g' in
+            let env'' = E.substitute_env (T.compose sgs' sgs) env' in
+            let ses, te, e' = w env'' expr in
+            let ses' = unify te texpr in
+            let texpr' = T.substitute ses' te in
+            let e'' = substitute_result_type ses' e' in
+            let ss = T.compose_substs [ses'; ses; sgs'; sgs; sps'; sps; ss] in
+            (ss, E.substitute_env ss env, tpat', texpr'), (p'', Some g'', e'') :: cls
         in
         g
       in
