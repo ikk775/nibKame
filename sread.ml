@@ -125,7 +125,7 @@ let rec change = function
 	| Sident ">=" :: a :: b :: [] -> Syntax.GtEq (change a, change b)
 
 	| Sident "cons" :: a :: b :: [] -> Syntax.Cons (change a, change b)
-	| Sident ";" :: a :: b :: [] -> Syntax.Seq (change a, change b)
+	| Sident "seq" :: a :: b :: [] -> Syntax.Seq (change a, change b)
 	    
 	| Sident "&&" :: a :: b :: [] -> Syntax.And (change a, change b)
 	| Sident "||" :: a :: b :: [] -> Syntax.Or (change a, change b)
