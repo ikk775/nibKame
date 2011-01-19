@@ -49,6 +49,7 @@ val add_expr_instance :
 val freeexprvars : t -> (Typing.resultVar * TypingType.oType) list
 val freetypevars : t -> TypingType.typeVar list
 val coerce_freetypevars : TypingType.oType -> t -> t
+val coerce_typevars : TypingType.oType -> t -> t
 val unused_exprvars : t -> Id.t list
 val remove_expr : t -> Id.t list -> t
 val elt_to_sexpr : elt -> Sexpr.t

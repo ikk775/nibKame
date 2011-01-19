@@ -249,6 +249,22 @@ let coerce_freetypevars :TypingType.oType -> t -> t = fun ot m ->
   let ss = List.map (fun x -> TypingType.Substitution (x, ot)) ftvs in
   subst {emptysubst with s_Type = ss} m
 
+let coerce_typevars :TypingType.oType -> t -> t = fun ot m ->
+  let ss vs  = List.map (fun x -> TypingType.Substitution (x, ot)) vs in
+  let f = function
+    | Type (name, (qtvs, ot)) ->
+      let ftv = TypingType.freetypevars (TypingType.OType ot) in
+      Type (name, ([], TypingType.substitute (ss ftv) ot))
+    | Expr (name, (ftvs, ts, r)) -> 
+      let ot = TypingType.remove_quantifier ts in
+      let ttv = TypingType.freetypevars (TypingType.OType ot) in
+      let ts' = TypingType.OType (TypingType.substitute (ss ttv) ot) in
+      let rtv = Typing.typevars r in
+      let r' = Typing.substitute_result_type (ss rtv) r in
+      Expr (name, ([], ts', r'))
+  in
+  {m with defs = List.map f m.defs}
+
 let unused_exprvars m =
   List.setDiff (List.map (function v, t -> v) (defs_expr_cont m)) (List.map (function v, t -> v) (freeexprvars m))
 
