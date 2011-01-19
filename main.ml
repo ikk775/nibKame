@@ -1,24 +1,24 @@
 open MyUtil
 
-let perspective_module_name = "perspective.snkl"
+let pervasives_module_name = "pervasives.snkl"
 let _ = Debug.set_dbglevel 10
 
-let perspective =
-  Debug.dbgprint "open Perspective module.";
-  let ch = open_in perspective_module_name in
-  Debug.dbgprint "opened channel to Perspective module.";
+let pervasives =
+  Debug.dbgprint "open Pervasives module.";
+  let ch = open_in pervasives_module_name in
+  Debug.dbgprint "opened channel to Pervasives module.";
   let syntaxs = TranslationUnit.read (Stream.of_channel ch) in
-  Debug.dbgprint "read syntaxes of Perspective module.";
-  let m = TranslationUnit.modulize (Module.ext_expr_env Predefined.perspective) syntaxs in
-  Debug.dbgprint "modulized Perspective module.";
-  Module.compose Predefined.perspective m
+  Debug.dbgprint "read syntaxes of Pervasives module.";
+  let m = TranslationUnit.modulize (Module.ext_expr_env Predefined.pervasives) syntaxs in
+  Debug.dbgprint "modulized Pervasives module.";
+  Module.compose Predefined.pervasives m
   
 let read_module stm =
   let syntaxs = TranslationUnit.read stm in
-  TranslationUnit.modulize (Module.ext_expr_env perspective) syntaxs
+  TranslationUnit.modulize (Module.ext_expr_env pervasives) syntaxs
 
 let knormalize_module m =
-  let m = Module.compose perspective m in
+  let m = Module.compose pervasives m in
   let m = Pattern.unfold_module m in
   let m = Instantiate.instantiate m in
   let r = Module.gather_expr m in
