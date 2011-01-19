@@ -1,0 +1,45 @@
+(let null
+  (fun (x)
+    (= x nil)))
+
+(letrec rev-append
+  (fun (xs ys)
+	(if (null xs)
+	  ys
+	  (rev-append (cdr xs) (cons (car xs) ys)))))
+
+(let rev
+  (fun (xs)
+	 (rev-append xs nil)))
+
+(letrec map
+  (fun (f xs)
+	(if (null xs)
+	  nil
+	  (cons (f (car xs))
+			(map f (cdr xs))))))
+
+(let length
+  (fun (xs)
+  	(letrec length-sub
+	  (fun (i xs)
+	    (if (null xs)
+		  i
+		  (length-sub (+ i 1) (cdr xs))))
+	  (length-sub 0 xs))))
+
+(let array-from-list-with-length
+  (fun (len xs)
+    (let array (array-alloc len)
+      (letrec f
+        (fun (i xs)
+          (if (null xs)
+            unit
+            (seq (array-set array i (car xs))
+                 (f (+ i 1) (cdr xs)))))
+        (f 0 xs)))))
+
+(let array-from-list
+  (fun (xs)
+    (let len (length xs)
+      (array-from-list-with-length len xs))))

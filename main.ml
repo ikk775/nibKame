@@ -1,11 +1,24 @@
 open MyUtil
 
+let pervasives_module_name = "pervasives.nkl"
+let _ = Debug.set_dbglevel 10
+
+let pervasives =
+  Debug.dbgprint "open Pervasives module.";
+  let ch = open_in pervasives_module_name in
+  Debug.dbgprint "opened channel to Pervasives module.";
+  let syntaxs = TranslationUnit.read (Stream.of_channel ch) in
+  Debug.dbgprint "read syntaxes of Pervasives module.";
+  let m = TranslationUnit.modulize (Module.ext_expr_env Predefined.pervasives) syntaxs in
+  Debug.dbgprint "modulized Pervasives module.";
+  Module.compose Predefined.pervasives m
+  
 let read_module stm =
   let syntaxs = TranslationUnit.read stm in
-  TranslationUnit.modulize (Module.expr_env Predefined.perspective) syntaxs
+  TranslationUnit.modulize (Module.ext_expr_env pervasives) syntaxs
 
 let knormalize_module m =
-  let m = Module.compose Predefined.perspective m in
+  let m = Module.compose pervasives m in
   let m = Pattern.unfold_module m in
   let m = Instantiate.instantiate m in
   let r = Module.gather_expr m in
@@ -26,7 +39,7 @@ let compile ch stm =
   let k = knormalize_module m in
   let k' = optimize_knormal k in
   let va = compile_knormal k' in
-  Printf.fprintf ch "%s" (Std.dump va)
+  (undefined ())
 
 let string str = compile stdout (Stream.of_string str)
 

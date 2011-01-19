@@ -119,6 +119,7 @@ let get_constant_type = function
   | E_Constant c ->
     (match c with
       | Syntax.Unit -> TypingType.O_Constant Type.Unit
+      | Syntax.Nil -> TypingType.O_Variant (TypingType.gen_typevar (), TypingType.O_Constant (Type.Variant "list"))
       | Syntax.Bool _ -> TypingType.O_Constant Type.Bool
       | Syntax.Int _ -> TypingType.O_Constant Type.Int
       | Syntax.Float _ -> TypingType.O_Constant Type.Float
@@ -287,19 +288,19 @@ let rec from_syntax = function
   | Syntax.Fun (vts, e) -> 
     let f acc v = E_Fun(v, acc) in
     let vs = fst (List.split vts) in
-    List.fold_left f (from_syntax e) vs
+    List.fold_left f (from_syntax e) (List.rev vs)
   | Syntax.Var v -> E_Variable v
   | Syntax.Apply (f, es) -> 
     let g acc e = E_Apply(acc, from_syntax e) in
     List.fold_left g (from_syntax f) es
   | Syntax.Tuple es -> 
     E_Tuple(List.map from_syntax es)
-  | Syntax.Cons (e1, e2) -> E_Apply(E_Variable "::", E_Tuple[from_syntax e1; from_syntax e2])
+  | Syntax.Cons (e1, e2) -> E_Apply(E_Apply(E_Variable "::", from_syntax e1), from_syntax e2)
   | Syntax.List es -> 
-    let f e acc= E_Apply(E_Variable "Cons", E_Tuple[from_syntax e;acc]) in
-    List.fold_right f es (E_Variable "Nil")
+    let f e acc= E_Apply(E_Apply(E_Variable "cons", from_syntax e), acc) in
+    List.fold_right f es (E_Constant Syntax.Nil)
   | Syntax.Array es -> 
-    E_Vector(List.map from_syntax es)
+    E_Apply(E_Apply(E_Variable "array-from-list-with-length", E_Constant (Syntax.Int (List.length es))), from_syntax (Syntax.List es))
   | Syntax.Fix ((v, t), e) -> E_Fix(v, from_syntax e)
   | Syntax.Match (e, cls) -> 
     let f = function
@@ -312,8 +313,9 @@ let rec from_syntax = function
   | Syntax.Let (Syntax.P_Ident v, e1, e2) -> E_Let (v, from_syntax e1, from_syntax e2)
   | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, None, from_syntax e2])
   | Syntax.Variant v -> E_Variable v
+  | Syntax.LetRec ((v, t), e1, e2) ->
+    E_Let(v, E_Fix (v, from_syntax e1), from_syntax e2)
   | Syntax.TopLet _ | Syntax.TopLetRec _ | Syntax.TopLetSimp _ -> invalid_arg "from_syntax"
-  | Syntax.LetRec _ -> failwith "let rec is not supported yet."
 and pattern_from_syntax_pattern = function
   | Syntax.P_Ident v -> EP_Variable (Some v)
   | Syntax.P_Literal lit -> EP_Constant lit 
@@ -344,12 +346,12 @@ let rec to_sexpr = function
     let vs, e' = fun_flatten [] e in
     let vs' = List.map (fun x -> E_Variable x) (v :: vs) in
     Sexpr.Sexpr [Sexpr.Sident "e:fun"; Sexpr.Sexpr(List.map to_sexpr vs'); to_sexpr e']
-  | E_Apply(e1, e2) -> 
-    let rec apply_flatten = function
-      | E_Apply(e1, e2) ->  e1 :: apply_flatten e2
-      | e -> [e]
+  | E_Apply(e1, e2) as e-> 
+    let rec apply_flatten es = function
+      | E_Apply(e1, e2) ->  apply_flatten (e2 :: es) e1
+      | e -> e :: es
     in
-    Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
+    Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  List.map to_sexpr (apply_flatten [] e))
   | E_Match(e, cls) ->
     let f = function
       | p, None, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]
@@ -409,12 +411,12 @@ let rec of_sexpr = function
     in
     fun_nest e vs
   | Sexpr.Sexpr (Sexpr.Sident "e:apply" :: e1 :: e2 :: es) -> 
-    let rec apply_nest = function
-      | e1 :: e2 :: []->  E_Apply(of_sexpr e1, of_sexpr e2)
-      | e :: es -> E_Apply(of_sexpr e, apply_nest es)
+    let rec apply_nest e = function
+      | e' :: []->  E_Apply(e, of_sexpr e')
+      | e' :: es' -> apply_nest (E_Apply(e, of_sexpr e')) es'
       | _ -> invalid_arg "unexpected token."
     in
-    apply_nest (e1 :: e2 :: es)
+    apply_nest (of_sexpr e1) (e2 :: es)
   | Sexpr.Sexpr (Sexpr.Sident "e:match" :: e :: cls) ->
     let f = function
       | Sexpr.Sexpr [p; e] -> pattern_of_sexpr p, None, of_sexpr e

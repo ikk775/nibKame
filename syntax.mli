@@ -1,5 +1,6 @@
 type lit =
     Unit
+  | Nil
   | Bool of bool
   | Int of int
   | Float of float

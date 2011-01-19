@@ -41,11 +41,8 @@ type ins =
   | Comp of VA.cmp_op * VA.ty * Id.t * VA.id_or_imm
   | If of ins * Id.l (* 真のときのジャンプ先 *)
 
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
-
-  | ArrayRef of Id.t * Id.t
-  | ArraySet of Id.t * Id.t * Id.t
+  | ApplyCls of (Id.t * VA.ty) * Id.t list
+  | ApplyDir of (Id.l * VA.ty)* Id.t list
 
   | Cons of Id.t * Id.t
   | Car of Id.t
@@ -57,8 +54,6 @@ type ins =
   | TupleAlloc of (Id.t * VA.ty) list
   | ArrayAlloc of VA.ty * Id.t
 
-  | Save of Id.t * Id.t
-  | Restore of Id.t * Id.t
 
 type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty; block_labels : Id.l list }
 
@@ -98,9 +93,6 @@ let to_ins = function
   | VA.ApplyCls (cls, args) -> ApplyCls (cls, args)
   | VA.ApplyDir (func, args) -> ApplyDir (func, args)
 
-  | VA.ArrayRef (ary, idx) -> ArrayRef (ary, idx)
-  | VA.ArraySet (ary, idx, data) -> ArraySet (ary, idx, data)
-
   | VA.Cons (h, t) -> Cons (h, t)
   | VA.Car (l) -> Car l
   | VA.Cdr (l) -> Cdr l
@@ -111,8 +103,6 @@ let to_ins = function
   | VA.TupleAlloc (data) -> TupleAlloc data
   | VA.ArrayAlloc (ty, num) -> ArrayAlloc (ty, num)
 
-  | VA.Save (dst, data) -> Save (dst, data)
-  | VA.Restore (src, dst) -> Restore (src, dst)
 
 let rec linerize blocks stack = function
   | VA.Ans (VA.If (cond, tr, fal)) ->

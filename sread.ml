@@ -30,6 +30,14 @@ let list_of_pChar str =
 
 open Sexpr
 
+exception Unexpected_token of Sexpr.t
+exception Unexpected_pattern of Sexpr.t
+exception Unrecognized_type of Sexpr.t
+
+let unexpected_token s = raise (Unexpected_token s)
+let unexpected_pattern s = raise (Unexpected_pattern s)
+let unrecognized_type s = raise (Unrecognized_type s)
+
 let rec read_type = function
   | Sident "unit" -> Type.Unit
   | Sident "bool" -> Type.Bool
@@ -64,7 +72,7 @@ let rec pattern_of_list = function
       | Sident "or" :: l :: ls -> Syntax.P_Or (pattern_of_list l, pattern_of_list (Sexpr (Sident "or" :: ls)))
       | [Sident "not"; l] -> Syntax.P_Not (pattern_of_list l)
       | Sident constructor :: p -> Syntax.P_Variant (constructor, (List.map pattern_of_list p))
-      | _ -> invalid_arg "unexpected pattern."
+      | _ -> unexpected_pattern (Sexpr l)
 
 (*
   val change : Sexpr.t -> Syntax.t
@@ -77,6 +85,7 @@ let rec change = function
 	 | "true" -> Syntax.Literal (Syntax.Bool true)
 	 | "false" -> Syntax.Literal (Syntax.Bool false)
 	 | "unit" -> Syntax.Literal Syntax.Unit
+	 | "nil" -> Syntax.Literal Syntax.Nil
 	 | any -> Syntax.Var any)
   | Sint i -> Syntax.Literal (Syntax.Int i)
   | Sfloat f -> Syntax.Literal (Syntax.Float f)
@@ -116,7 +125,7 @@ let rec change = function
 	| Sident ">=" :: a :: b :: [] -> Syntax.GtEq (change a, change b)
 
 	| Sident "cons" :: a :: b :: [] -> Syntax.Cons (change a, change b)
-	| Sident ";" :: a :: b :: [] -> Syntax.Seq (change a, change b)
+	| Sident "seq" :: a :: b :: [] -> Syntax.Seq (change a, change b)
 	    
 	| Sident "&&" :: a :: b :: [] -> Syntax.And (change a, change b)
 	| Sident "||" :: a :: b :: [] -> Syntax.Or (change a, change b)
@@ -125,11 +134,11 @@ let rec change = function
 	    Syntax.If (change a, change b, change c)
 	| Sident "let" :: pat :: a :: b :: [] ->
 	    Syntax.Let (pattern_of_list pat, change a, change b)
-	| Sident "toplec" :: pat :: a :: [] ->
+	| Sident "let" :: pat :: a :: [] ->
 	    Syntax.TopLet (pattern_of_list pat, change a)
 	| Sident "letrec" :: Sident name :: a :: b :: [] ->
 	    Syntax.LetRec ((name, Type.gentype()), change a, change b)
-	| Sident "topletrec" :: Sident name :: a :: [] ->
+	| Sident "letrec" :: Sident name :: a :: [] ->
 	    Syntax.TopLetRec ((name, Type.gentype()), change a)
 	| Sident "fun" :: Sexpr l :: a :: [] ->
 	    Syntax.Fun (List.map 
@@ -140,6 +149,7 @@ let rec change = function
 			change a)
 	| Sident "apply" :: a :: args ->
 	    Syntax.Apply (change a, List.map change args)
-	
-	| any -> invalid_arg "unexpected token."
+	| f :: (arg' :: args' as args) ->
+	    Syntax.Apply (change f, List.map change args)
+	| any -> unexpected_token (Sexpr any)
       )

@@ -4,7 +4,7 @@ type cmp_op =
   | Eq | NotEq | LsEq | Ls | Gt | GtEq
 
 type literal =
-  | Int_l of int | Char_l of char | Pointer_l of Id.l
+  | Int_l of int | Char_l of char | Pointer_l of Id.l | Nil of Type.listCategory
 
 type p_type =
   | Tuple of ty list
@@ -15,7 +15,7 @@ and ty =
   | Char
   | Int
   | Float
-  | Fun
+  | Fun of ty list * ty
   | Pointer of p_type
 
 type mem_op =
@@ -36,7 +36,7 @@ let rec to_ty ty =
       | Type.Int -> Int
       | Type.Float -> Float
       | Type.Char -> Char
-      | Type.Fun _ -> Fun
+      | Type.Fun (arg, ret) -> Fun (List.map to_ty arg, to_ty ret)
       | t -> Pointer (to_p_type t)
 
 type t =
@@ -71,11 +71,8 @@ and exp =
   | Comp of cmp_op * ty * Id.t * id_or_imm
   | If of exp * t * t
 
-  | ApplyCls of Id.t * Id.t list
-  | ApplyDir of Id.l * Id.t list
-
-  | ArrayRef of Id.t * Id.t
-  | ArraySet of Id.t * Id.t * Id.t
+  | ApplyCls of (Id.t * ty) * Id.t list
+  | ApplyDir of (Id.l * ty) * Id.t list
 
   | Cons of Id.t * Id.t
   | Car of Id.t
@@ -87,9 +84,6 @@ and exp =
   | TupleAlloc of (Id.t * ty) list
   | ArrayAlloc of ty * Id.t
 
-  | Save of Id.t * Id.t
-  | Restore of Id.t * Id.t
-
 type fundef = { name: Id.l; args: (Id.t * ty) list; body: t; ret: ty }
 
 let float_literal_list : (float * Id.l) list ref = ref []
@@ -99,13 +93,13 @@ let tuple_size types =
     (fun s -> function 
        | Float -> s + 8
        | _ -> s + 4)
-    4
+    0
     types
 
 let array_size len = function
-  | Float -> 4 + 8 * len
-  | Char -> 4 + 1 * len
-  | _ -> 4 + 4 * len
+  | Float -> 8 * len
+  | Char -> 1 * len
+  | _ -> 4 * len
 
 module M = 
   struct
@@ -159,6 +153,7 @@ let to_ty_with_var (v, t)  =
 
 let rec compile_exp env = function
   | Closure.Unit -> Ans(Nop)
+  | Closure.Nil (lc) -> Ans(Set(Nil lc))
   | Closure.Int i -> Ans(Set(Int_l i))
   | Closure.Char c -> Ans(Set(Char_l c))
   | Closure.Float f -> let l = add_float_table f in Ans(Set(Pointer_l l))
@@ -193,8 +188,8 @@ let rec compile_exp env = function
       let tuple = TupleAlloc((t, Int) :: List.map (var_with_type env) fv) in
 	Let ((t, Int), Set (Pointer_l label),
 	     Ans tuple)
-  | Closure.ApplyCls (cls, vars) -> Ans (ApplyCls (cls, vars))
-  | Closure.ApplyDir (label, vars) -> Ans (ApplyDir (label, vars))
+  | Closure.ApplyCls ((cls, t), vars) -> Ans (ApplyCls ((cls, to_ty t), vars))
+  | Closure.ApplyDir ((label, t), vars) -> Ans (ApplyDir ((label, to_ty t), vars))
   | Closure.Tuple vars -> Ans(TupleAlloc(List.map (var_with_type env) vars))
   | Closure.LetTuple (dsts, tuple, e) ->
       let tuple_store list var dst e =
@@ -299,3 +294,8 @@ let f declears =
   let e = List.fold_right iter declears M.empty in
   let start = { name = Id.L("nibkame_entry"); args = []; body = !main; ret = Int } in
     (start :: !fundefs), !float_literal_list
+
+let sizeof = function
+  | Float -> 8
+  | Char -> 1
+  | _ -> 4

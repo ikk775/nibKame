@@ -27,7 +27,7 @@ let intop name tfs tt =
 let intop_t name tfs tt =
   intop name (List.map TT.oType_of_type tfs) (TT.oType_of_type tt)
 
-let perspective =
+let pervasives =
   let tyu = Type.Unit in
   let tyi = Type.Int in
   let tygie = [Type.Int] in
@@ -39,7 +39,6 @@ let perspective =
   let tyc = Type.Char in
   let tygce = [tyc] in
   let tyva = Type.Var "a" in
-  let tygvae = [tyva] in
   let tygvavae = [tyva; tyva] in
   let tylva = Type.List tyva in
   let tyglvae = [Type.List tyva] in
@@ -47,14 +46,10 @@ let perspective =
   let tyava = Type.Array tyva in
   let tyac = Type.Array tyc in
   let tygace = [tyac] in
-  let tygavae = [Type.Array tyva] in
   let tygavaie = [Type.Array tyva; tyi] in
   let tygavaivae = [Type.Array tyva; tyi; tyva] in
-  let tyrva = Type.Ref tyva in
   let tygrvae = [Type.Ref tyva] in
   let tygrvavae = [Type.Ref tyva; tyva] in
-  let tygmgvaevblvae =[Type.Fun ([Type.Var "a"], Type.Var "b"); Type.List (Type.Var "a")] in
-  let tylvb = Type.List (Type.Var "b") in
   List.fold_left Module.add_expr Module.empty [
     "~", intop_t "%neg" tygie tyi;
     "+", intop_t "%add" tygiie tyi;
@@ -73,6 +68,7 @@ let perspective =
     ">", intop_t "%ls" tygvavae tyb;
     ">=", intop_t "%ls-eq" tygvavae tyb;
     "cons", intop_t "%cons" tygvalvae tylva;
+    "::", intop_t "%cons" tygvalvae tylva;
     "car", intop_t "%car" tyglvae tyva;
     "hd", intop_t "%car" tyglvae tyva;
     "cdr", intop_t "%cdr" tyglvae tylva;
@@ -83,10 +79,10 @@ let perspective =
     "ref", intop_t "%ref" tygrvae tyva;
     "set", intop_t "%set" tygrvavae tyu;
     "ignore", TE.E_Fun ("x", TE.E_Constant Syntax.Unit);
-    "print_int", intop_t "print_int" tygie tyu;
-    "print_float", intop_t "print_float" tygfe tyu;
-    "print_char", intop_t "print_char" tygce tyu;
-    "print_string", intop_t "print_string" tygace tyu;
-    "map", intop_t "%map" tygmgvaevblvae tylvb;
+    "print-int", intop_t "print_int" tygie tyu;
+    "print-float", intop_t "print_float" tygfe tyu;
+    "print-char", intop_t "print_char" tygce tyu;
+    "print-string", intop_t "print_string" tygace tyu;
+    ";", TE.E_Fun("x", TE.E_Fun("y", TE.E_Variable "y"));
 ]
  
