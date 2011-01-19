@@ -346,12 +346,12 @@ let rec to_sexpr = function
     let vs, e' = fun_flatten [] e in
     let vs' = List.map (fun x -> E_Variable x) (v :: vs) in
     Sexpr.Sexpr [Sexpr.Sident "e:fun"; Sexpr.Sexpr(List.map to_sexpr vs'); to_sexpr e']
-  | E_Apply(e1, e2) -> 
-    let rec apply_flatten = function
-      | E_Apply(e1, e2) ->  e1 :: apply_flatten e2
-      | e -> [e]
+  | E_Apply(e1, e2) as e-> 
+    let rec apply_flatten es = function
+      | E_Apply(e1, e2) ->  apply_flatten (e2 :: es) e1
+      | e -> e :: es
     in
-    Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  to_sexpr e1 :: List.map to_sexpr (apply_flatten e2))
+    Sexpr.Sexpr (Sexpr.Sident "e:apply" ::  List.map to_sexpr (apply_flatten [] e))
   | E_Match(e, cls) ->
     let f = function
       | p, None, e -> Sexpr.Sexpr [pattern_to_sexpr p; to_sexpr e]
@@ -411,12 +411,12 @@ let rec of_sexpr = function
     in
     fun_nest e vs
   | Sexpr.Sexpr (Sexpr.Sident "e:apply" :: e1 :: e2 :: es) -> 
-    let rec apply_nest = function
-      | e1 :: e2 :: []->  E_Apply(of_sexpr e1, of_sexpr e2)
-      | e :: es -> E_Apply(of_sexpr e, apply_nest es)
+    let rec apply_nest e = function
+      | e' :: []->  E_Apply(e, of_sexpr e')
+      | e' :: es' -> apply_nest (E_Apply(e, of_sexpr e')) es'
       | _ -> invalid_arg "unexpected token."
     in
-    apply_nest (e1 :: e2 :: es)
+    apply_nest (of_sexpr e1) (e2 :: es)
   | Sexpr.Sexpr (Sexpr.Sident "e:match" :: e :: cls) ->
     let f = function
       | Sexpr.Sexpr [p; e] -> pattern_of_sexpr p, None, of_sexpr e
