@@ -1,3 +1,7 @@
+(let null
+  (fun (x)
+    (= x nil)))
+
 (letrec rev_append
   (fun (xs ys)
 	(if (null xs)
@@ -23,3 +27,4 @@
 		  i
 		  (length_sub (+ i 1) (cdr xs))))
 	  (length_sub 0 xs))))
+

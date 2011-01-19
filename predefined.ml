@@ -84,6 +84,5 @@ let pervasives =
     "print_char", intop_t "print_char" tygce tyu;
     "print_string", intop_t "print_string" tygace tyu;
     ":", TE.E_Fun("x", TE.E_Fun("y", TE.E_Variable "y"));
-    "null", intop_t "%null" tyglvae tyb;
 ]
  
