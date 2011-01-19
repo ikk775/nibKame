@@ -78,6 +78,7 @@ let vt_of_sexpr = function
 
 let rec to_sexpr = function
   | Unit -> Sexpr.Sident "k:unit"
+  | Nil -> Sexpr.Sident "k:nil"
   | Int i -> Sexpr.Sint i
   | Float f -> Sexpr.Sfloat f
   | Char c -> Sexpr.Schar c
@@ -121,6 +122,7 @@ and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt_to_sexpr x.name
 
 let rec of_sexpr = function
   | Sexpr.Sident "k:unit" -> Unit
+  | Sexpr.Sident "k:nil" -> Nil
   | Sexpr.Sint i -> Int i
   | Sexpr.Sfloat f -> Float f
   | Sexpr.Schar f -> Char f
@@ -166,7 +168,7 @@ and fundef_of_sexpr = function
   | _ -> invalid_arg "unexpected token."
 
 let rec freevars_set = function
-  | Unit | Int _ | Float _ | Char _ | ExtArray _ -> Id.Set.empty
+  | Unit | Nil | Int _ | Float _ | Char _ | ExtArray _ -> Id.Set.empty
   | Neg(x) | FNeg(x) -> Id.Set.singleton x
   | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) -> Id.Set.of_list [x; y]
   | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) -> Id.Set.of_list [x; y]
@@ -193,6 +195,7 @@ let rec freevars e = Id.Set.elements (freevars_set e)
 
 let rec substitute_map sm = function
   | Unit -> Unit
+  | Nil -> Nil
   | Int i -> Int i
   | Float f -> Float f
   | Char c -> Char c
