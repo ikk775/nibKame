@@ -85,6 +85,7 @@ let rec change = function
 	 | "true" -> Syntax.Literal (Syntax.Bool true)
 	 | "false" -> Syntax.Literal (Syntax.Bool false)
 	 | "unit" -> Syntax.Literal Syntax.Unit
+	 | "nil" -> Syntax.Literal Syntax.Nil
 	 | any -> Syntax.Var any)
   | Sint i -> Syntax.Literal (Syntax.Int i)
   | Sfloat f -> Syntax.Literal (Syntax.Float f)
