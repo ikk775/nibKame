@@ -47,3 +47,6 @@ type topvar = { var_name : Id.l * Type.t; expr : t; }
 type topDecl = FunDecl of fundef | VarDecl of topvar
 val topDecls : topDecl list ref
 val from_knormal : KNormal.t -> topDecl list
+val to_sexpr : t -> Sexpr.t
+val topDecl_to_sexpr : topDecl -> Sexpr.t
+val topDecls_to_sexpr : topDecl list -> Sexpr.t

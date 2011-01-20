@@ -17,7 +17,7 @@ let read_module stm =
   let syntaxs = TranslationUnit.read stm in
   TranslationUnit.modulize (Module.ext_expr_env pervasives) syntaxs
 
-let knormalize_module m =
+let knormalize_module ch m =
   Debug.dbgprint "compose modules.";
   let m = Module.compose pervasives m in
   Debug.dbgprint "unfold pattern.";
@@ -26,19 +26,22 @@ let knormalize_module m =
   let m = Instantiate.instantiate m in
   Debug.dbgprint "coerce typevar to unit.";
   let m = Module.coerce_typevars (TypingType.O_Constant Type.Unit) m in
+  Sexpr.write (Format.formatter_of_out_channel ch) (Module.to_sexpr m);
   Debug.dbgprint "convert module to single expr.";
   let r = Module.gather_expr m in
   Debug.dbgprint "convert expr to K-normal.";
-  let k = fst (KNormal.from_typing_result r) in
+  fst (KNormal.from_typing_result r)
+(*  let k = fst (KNormal.from_typing_result r) in
   Debug.dbgprint "Alpha transform.";
-  Alpha.f k
+  Alpha.f k *)
 
 let optimize_knormal k = k
 
-let compile_knormal k =
+let compile_knormal ch k =
   let c = try
   Closure.from_knormal k
   with Not_found -> failwith "end closure" in
+  Sexpr.write (Format.formatter_of_out_channel ch) (Closure.topDecls_to_sexpr c);
   Debug.dbgprint "compile to asm.";
   let va = VirtualAsm.f c in
   va
@@ -50,10 +53,10 @@ let emit_asm ch (funcs, fp_table) =
 
 let compile ch stm =
   let m = read_module stm in
-  let k = knormalize_module m in
+  let k = knormalize_module ch m in
   let k' = optimize_knormal k in
   Sexpr.write (Format.formatter_of_out_channel ch) (KNormal.to_sexpr k');
-  let va = compile_knormal k' in
+  let va = compile_knormal ch k' in
   emit_asm ch va
 
 let string str = compile stdout (Stream.of_string str)
