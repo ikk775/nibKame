@@ -33,7 +33,7 @@
   (fun (array i xs)
     (if (null xs)
         unit
-        (seq (array-set array i (car xs))
+        (let any (array-set array i (car xs))
              (f array (+ i 1) (cdr xs))))))
 
 (let array-from-list-with-length
