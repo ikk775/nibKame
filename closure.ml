@@ -76,7 +76,7 @@ let rec fv = function
   | Ref(x) -> Id.Set.singleton x
 
 let rec g env known k =
-  Debug.dbgprintsexpr (KNormal.to_sexpr k);
+(*  Debug.dbgprintsexpr (KNormal.to_sexpr k); *)
   match k with (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
   | KNormal.Unit -> Unit
   | KNormal.Nil(tlc) -> Nil(tlc)
@@ -157,3 +157,68 @@ let f e =
   List.rev !topDecls, e'
 
 let from_knormal k = fst (f k)
+
+let l_to_string = function
+  | Id.L str ->  str
+
+let closure_to_sexpr c = Sexpr.tagged_sexpr "closure" [ Sexpr.Sident (l_to_string c.entry); Sexpr.Sexpr ( List.map Sexpr.ident c.actual_fv)]
+
+let vt_to_sexpr = function v, t -> Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t]
+let lt_to_sexpr = function Id.L v, t -> Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t]
+  
+let rec to_sexpr = function
+  | Unit -> Sexpr.Sident "c:unit"
+  | Nil tlc -> Sexpr.Sexpr [Sexpr.Sident "c:nil"; Type.listCategory_to_sexpr tlc]
+  | Int i -> Sexpr.Sint i
+  | Float f -> Sexpr.Sfloat f
+  | Char c -> Sexpr.Schar c
+  | Neg v -> Sexpr.Sexpr [Sexpr.Sident "c:neg"; Sexpr.Sident v]
+  | Add (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:add"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | Sub (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:sub"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | Mul (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:mul"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | Div (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:div"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | FNeg v -> Sexpr.Sexpr [Sexpr.Sident "c:fneg"; Sexpr.Sident v]
+  | FAdd (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:fadd"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | FSub (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:fsub"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | FMul (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:fmul"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | FDiv (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:fdiv"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | If (Eq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:if-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (NotEq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:if-not-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (Ls, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:if-ls"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (LsEq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:if-ls-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (Gt, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (GtEq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | Let (vt, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:let"; vt_to_sexpr vt; to_sexpr e1; to_sexpr e2]
+  | Var v -> Sexpr.Sexpr [Sexpr.Sident "c:var"; Sexpr.Sident v]
+  | MakeCls (vt, cl, e) -> Sexpr.Sexpr [Sexpr.Sident "c:closure"; vt_to_sexpr vt; closure_to_sexpr cl; to_sexpr e]
+  | ApplyCls ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "c:apply-closure" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
+  | ApplyDir ((Id.L v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "c:apply-direct" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
+  | Tuple vs -> Sexpr.Sexpr (Sexpr.Sident "c:tuple" :: List.map (fun x -> Sexpr.Sident x) vs)
+  | LetTuple (vts, v, e) ->
+    Sexpr.Sexpr [Sexpr.Sident "c:let-tuple"; Sexpr.Sexpr (List.map vt_to_sexpr vts); Sexpr.Sident v; to_sexpr e]
+  | Ref (v) -> Sexpr.Sexpr [Sexpr.Sident "c:ref"; Sexpr.Sident v]
+  | Set (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:set"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | ArrayAlloc (t, v) -> Sexpr.Sexpr [Sexpr.Sident "c:array-alloc"; Type.to_sexpr t; Sexpr.Sident v]
+  | ArrayRef (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:array-ref"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | ArraySet (v1, v2, v3) -> Sexpr.Sexpr [Sexpr.Sident "c:array-set"; Sexpr.Sident v1; Sexpr.Sident v2; Sexpr.Sident v3]
+  | Cons (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:cons"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | Car (v) -> Sexpr.Sexpr [Sexpr.Sident "c:car"; Sexpr.Sident v]
+  | Cdr (v) -> Sexpr.Sexpr [Sexpr.Sident "c:cdr"; Sexpr.Sident v]
+  | FCons (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "c:cons"; Sexpr.Sident v1; Sexpr.Sident v2]
+  | FCar (v) -> Sexpr.Sexpr [Sexpr.Sident "c:car"; Sexpr.Sident v]
+  | FCdr (v) -> Sexpr.Sexpr [Sexpr.Sident "c:cdr"; Sexpr.Sident v]
+  | ExtArray (Id.L v) -> Sexpr.Sexpr [Sexpr.Sident "c:ext-array"; Sexpr.Sident v]
+  | Seq (e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "c:seq"; to_sexpr e1; to_sexpr e2]
+and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "c:fundef"; lt_to_sexpr x.fun_name; Sexpr.Sexpr (List.map vt_to_sexpr x.args); Sexpr.Sexpr (List.map vt_to_sexpr x.formal_fv); to_sexpr x.body]
+
+let topvar_to_sexpr tv = Sexpr.Sexpr [lt_to_sexpr tv.var_name; to_sexpr tv.expr]
+
+let topDecl_to_sexpr = function
+  | FunDecl fundef -> Sexpr.tagged_sexpr "fun-decl" [fundef_to_sexpr fundef]
+  | VarDecl topvar -> Sexpr.tagged_sexpr "var-decl" [topvar_to_sexpr topvar]
+
+let topDecls_to_sexpr tds =
+	Sexpr.tagged_sexpr "top-decl-list" (List.map topDecl_to_sexpr tds)
+	
+let topDecls : topDecl list ref = ref []
+

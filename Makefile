@@ -31,7 +31,7 @@ SOURCES +=asmx86.ml
 SOURCES +=main.ml
 
 # the name of the resulting executable
-RESULT  = executable.exe
+RESULT  = nibkamec.exe
 
 # generate type information (.annot files)
 ANNOTATE = yes
