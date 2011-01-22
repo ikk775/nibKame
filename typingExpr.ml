@@ -314,7 +314,10 @@ let rec from_syntax = function
   | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, None, from_syntax e2])
   | Syntax.Variant v -> E_Variable v
   | Syntax.LetRec ((v, t), e1, e2) ->
-    E_Let(v, E_Fix (v, from_syntax e1), from_syntax e2)
+    let b = gen_exprvar () in
+    let bn = get_exprvar_name b in
+    let ss = [v, b] in
+    E_Let(v, E_Fix (bn, substitute_expr ss (from_syntax e1)), from_syntax e2)
   | Syntax.TopLet _ | Syntax.TopLetRec _ | Syntax.TopLetSimp _ -> invalid_arg "from_syntax"
 and pattern_from_syntax_pattern = function
   | Syntax.P_Ident v -> EP_Variable (Some v)
