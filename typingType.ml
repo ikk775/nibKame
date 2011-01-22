@@ -68,6 +68,10 @@ let typevars ot =
   in
   TypeVarSet.elements (typevars_sub ot)
 
+let rec fun_args = function
+  | O_Fun (e1, e2) -> e1 :: fun_args e2
+  | e -> []
+
 let occur tv t =
   List.mem tv (typevars t)
  
