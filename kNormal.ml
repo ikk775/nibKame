@@ -29,6 +29,8 @@ type t =
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | LetFun of fundef * t (* like let rec *)
+  | Fix of (Id.t * Type.t) * t
+  | Fun of (Id.t * Type.t) * t
   | Apply of (Id.t * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
@@ -101,6 +103,7 @@ let rec to_sexpr = function
   | Let (vt, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:let"; vt_to_sexpr vt; to_sexpr e1; to_sexpr e2]
   | Var v -> Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v]
   | LetFun (fd, e) -> Sexpr.Sexpr [Sexpr.Sident "k:letfun"; fundef_to_sexpr fd; to_sexpr e]
+  | Fix (vt, e) -> Sexpr.Sexpr [Sexpr.Sident "k:fix"; vt_to_sexpr vt; to_sexpr e]
   | Apply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
   | Tuple vs -> Sexpr.Sexpr (Sexpr.Sident "k:tuple" :: List.map (fun x -> Sexpr.Sident x) vs)
   | LetTuple (vts, v, e) ->
@@ -175,6 +178,7 @@ let rec freevars_set = function
   | IfEq(x, y, e1, e2) | IfNotEq(x, y, e1, e2) | IfLsEq(x, y, e1, e2) | IfLs(x, y, e1, e2)
   | IfGtEq(x, y, e1, e2) | IfGt(x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freevars_set e1)) (freevars_set e2)
   | Let((x, _), e1, e2) -> Id.Set.union (freevars_set e1) (Id.Set.diff (freevars_set e2) (Id.Set.singleton x))
+  | Fix((x, _), e) -> Id.Set.diff (freevars_set e) (Id.Set.singleton x)
   | Var(x) -> Id.Set.singleton x
   | LetFun({name = (x, t); args = yts; body = e1}, e2) ->
     Id.Set.diff (Id.Set.union (freevars_set e2) (Id.Set.diff (freevars_set e1) (Id.Set.of_list (List.map fst yts)))) (Id.Set.singleton x)
@@ -216,6 +220,7 @@ let rec substitute_map sm = function
   | IfGt (v1, v2, e1, e2) -> (undefined ())
   | IfGtEq (v1, v2, e1, e2) -> (undefined ())
   | Let (vt, e1, e2) -> (undefined ())
+  | Fix (vt, e) -> (undefined ())
   | Var v -> (undefined ())
   | LetFun (fd, e) -> (undefined ())
   | Apply (v, vs) -> (undefined ())
@@ -349,7 +354,7 @@ let rec from_typing_result r =
             LetFun ({name = (v, t'); args = [vf, ta]; body = e'}, Var v), t'
         | _ -> invalid_arg "from_typing_result"
       end
-    | Typing.R_Fix ((v, t), _, tw) ->
+    | Typing.R_Fix ((v, t), e, tw) ->
       invalid_arg "from_typing_result"
     | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
       Apply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type t2
