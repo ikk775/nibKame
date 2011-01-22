@@ -106,6 +106,14 @@ let rec bindedvars : result -> (Id.t * TypingType.oType) list = function
     bindedvars e @ List.concat (List.map g cls)
     
 
+let rec pattern_freevars = function
+  | RP_Variable (None, t) -> []
+  | RP_Variable (Some v, t) -> [v, t]
+  | RP_Constant _ | RP_Constructor _ -> []
+  | RP_Apply ((p1, p2), t) | RP_And ((p1, p2), t) | RP_Or ((p1, p2), t) -> List.unique (List.concat (List.map pattern_freevars [p1; p2]))
+  | RP_Not (p, t) -> pattern_freevars p
+  | RP_Tuple (ps, t) | RP_Vector (ps, t) -> List.unique (List.concat (List.map pattern_freevars ps))
+
 let rec freevars : result -> (Id.t * TypingType.oType) list = function
   | R_Constant (l, t) -> []
   | R_Variable (v, t) -> [(v, t)]
@@ -118,19 +126,11 @@ let rec freevars : result -> (Id.t * TypingType.oType) list = function
   | R_Fix ((v, t), e, t') -> List.remove_assoc v (freevars e)
   | R_External _ -> []
   | R_Match (e, cls) -> 
-    let rec g = function
-      | RP_Variable (None, t) -> []
-      | RP_Variable (Some v, t) -> [v, t]
-      | RP_Constant _ | RP_Constructor _ -> []
-      | RP_Apply _ | RP_And _ | RP_Or _
-      | RP_Not _
-      | RP_Tuple _ | RP_Vector _ -> failwith "something went wrong."
-    in
     let f = function
       | pat, None, expr -> 
-        List.setDiff (List.unique (freevars expr)) (g pat)
+        List.setDiff (List.unique (freevars expr)) (pattern_freevars pat)
       | pat, Some guard, expr -> 
-        List.setDiff (List.unique (freevars guard @ freevars expr)) (g pat)
+        List.setDiff (List.unique (freevars guard @ freevars expr)) (pattern_freevars pat)
     in
     freevars e @ List.concat (List.map f cls)
 

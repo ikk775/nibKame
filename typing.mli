@@ -25,6 +25,7 @@ and clause = pattern * result option * result
 
 val bindedvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
+val pattern_freevars : pattern -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
 val typevars : result -> Id.t list
 val gen_varname : unit -> string
