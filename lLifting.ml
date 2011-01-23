@@ -349,6 +349,22 @@ let rec to_sexpr = function
   | LetFun ((v, t), args, e1, e2) -> Sexpr.tagged_sexpr "l:letfun" [Sexpr.Sexpr (vt_to_sexpr (v, t) :: List.map vt_to_sexpr args); Sexpr.Sexpr (List.map to_sexpr [e1; e2])]
   | Match _ -> undefined ()
 
+let decl_to_sexpr = function
+  | FunDecl {fun_name = vt; args = args; body = e} ->
+      Sexpr.tagged_sexpr "fun-decl" [
+        Sexpr.tagged_sexpr "name" (vt_to_sexprs vt);
+        Sexpr.tagged_sexpr "args" (List.map vt_to_sexpr args);
+        Sexpr.tagged_sexpr "body" [to_sexpr e];
+        ]
+  | VarDecl {var_name = vt; expr = e} ->
+      Sexpr.tagged_sexpr "var-decl" [
+        Sexpr.tagged_sexpr "name" (vt_to_sexprs vt);
+        Sexpr.tagged_sexpr "expr" [to_sexpr e];
+        ]
+
+let decls_to_sexpr decls =
+  Sexpr.tagged_sexpr "l:decls" (List.map decl_to_sexpr decls)
+
 let to_decl name = function
   | LetFun ((v, t), args, e, Variable (v', t')) when v = v' -> 
     FunDecl {fun_name = (name, t); args = args; body = substitute_varname [v, name] e}
