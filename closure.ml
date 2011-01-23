@@ -101,7 +101,7 @@ let rec g env known k =
   | KNormal.IfGtEq(x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
   | KNormal.Let((x, t), e1, e2) -> Let((x, t), g env known e1, g (Id.Map.add x t env) known e2)
   | KNormal.Var(x) -> Var(x)
-  | KNormal.LetFun({ KNormal.name = (x, t); KNormal.args = yts; KNormal.body = e1 }, e2) -> (* 関数定義の場合 (caml2html: closure_letrec) *)
+(*  | KNormal.LetFun({ KNormal.name = (x, t); KNormal.args = yts; KNormal.body = e1 }, e2) -> (* 関数定義の場合 (caml2html: closure_letrec) *)
       (* 関数定義let rec x y1 ... yn = e1 in e2の場合は、
      xに自由変数がない(closureを介さずdirectに呼び出せる)
      と仮定し、knownに追加してe1をクロージャ変換してみる *)
@@ -131,6 +131,7 @@ let rec g env known k =
       else
     (Format.eprintf "eliminating closure(s) %s@." x;
      e2') (* 出現しなければMakeClsを削除 *)
+    *)
   | KNormal.Apply((x, t), ys) when Id.Set.mem x known -> (* 関数適用の場合 (caml2html: closure_app) *)
       Format.eprintf "directly applying %s@." x;
       ApplyDir((Id.L(x), t), ys)
