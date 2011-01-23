@@ -20,3 +20,5 @@ val ident: string -> t
 val string: string -> t
 val tagged_sexpr: string -> t list -> t
 val parse_tagged_sexpr: t -> string * t list
+val failwith_sexpr : string -> t -> 'a
+val failwith_sexprs : string -> t list -> 'a

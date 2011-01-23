@@ -227,4 +227,9 @@ let parse_tagged_sexpr = function
   | Sexpr (Sident tag :: contents) -> tag, contents
   | _ -> invalid_arg "parse_tagged_sexpr"
 
+let failwith_sexprs str sexprs =
+  let str = Printf.sprintf "%s%s\n" str (String.concat "\n" (List.map to_string sexprs)) in
+  failwith str
 
+let failwith_sexpr str sexpr =
+  failwith_sexprs str [sexpr]
