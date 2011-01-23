@@ -59,6 +59,14 @@ let gen_var t =
 let rec gen_varnames n =
   List.iter_list n gen_varname
 
+let varname = function
+  | Variable (v, t) -> v
+  | _ -> invalid_arg "varname"
+
+let is_variable = function
+  | Variable (v, t) -> true
+  | _ -> false
+
 let rec freevars r =
   let f = function
     | External _ -> []
