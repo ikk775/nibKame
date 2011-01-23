@@ -211,6 +211,9 @@ let rec substitute_expr ss expr =
       then E_Let(v'c, List.assoc v ss, E_Declare(v'c, t, subst e))
       else E_Declare(v, t, subst e)
 
+let rec substitute_varname ss expr =
+  substitute_expr (List.map (function v, v' -> v, E_Variable v') ss) expr
+
 let rec substitute_expr_type ss expr =
   let subst = substitute_expr_type ss in
   match expr with
