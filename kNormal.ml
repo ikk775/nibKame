@@ -422,7 +422,6 @@ let rec from_llifting r = (undefined ())
   let k, t = f Id.Map.empty r in
   Let (("%true", Type.Int), Int 1, k), List.unique ~eq:is_same_name_decl !ext_decls
 
-*)
 
 let from_ll_decl = function
   | L.FunDecl {L.fun_name = (v, t); L.args = args; L.body = r} -> 
@@ -434,3 +433,5 @@ let from_ll_decl = function
     VarDecl {var_name = (v, TT.oType_to_type t); expr = r'} :: decls
 
 let from_ll_decls decls = List.unique ~eq:is_same_name_decl (List.concat (List.map from_ll_decl decls))
+
+*)

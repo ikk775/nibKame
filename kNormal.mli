@@ -59,11 +59,11 @@ val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
 val from_typing_result : Typing.result -> (t * Type.t)
-
+(*
 val from_llifting : LLifting.t -> (t * topDecl list)
 val from_ll_decl : LLifting.topDecl -> topDecl list
 val from_ll_decls : LLifting.topDecl list -> topDecl list
-
+*)
 val internal_operator : string -> TypingType.oType -> (topDecl * Id.t)
 (** A internal symbol name must begin with the letter '%'. *)
 (** A internal symbol as a function represents a primitive function. *)
