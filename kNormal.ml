@@ -300,6 +300,23 @@ let internal_operator name t =
     | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ())
     | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ())
     | "%array-alloc", TypingType.O_Fun (tnum, ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ())
+    | "%eq", TypingType.O_Fun (TypingType.O_Tuple [t1; t2], tb)
+    | "%not-eq", TypingType.O_Fun (TypingType.O_Tuple [t1; t2], tb)
+    | "%ls", TypingType.O_Fun (TypingType.O_Tuple [t1; t2], tb)
+    | "%ls-eq", TypingType.O_Fun (TypingType.O_Tuple [t1; t2], tb)
+    | "%gt", TypingType.O_Fun (TypingType.O_Tuple [t1; t2], tb)
+    | "%gt-eq", TypingType.O_Fun (TypingType.O_Tuple [t1; t2], tb) ->
+      let t = TT.oType_to_type t1 in
+      let tn = Type.to_string t in
+      let comp = match name with
+        | "%eq" -> Eq
+        | "%not-eq" -> NotEq
+        | "%ls" -> Ls
+        | "%ls-eq" -> LsEq
+        | "%gt" -> Gt
+        | "%gt-eq" -> GtEq
+        | _ -> failwith "something went wrong." in
+      operator (name ^ "_" ^ tn) [t; t] bool (function [v1; v2] -> If (comp, v1, v2, Int 1, Int 0) | _ -> fail ())
     | _ -> Sexpr.failwith_captioned_sexprs "invalid internal operator" ["name", Sexpr.Sident name; "type", TT.oType_to_sexpr t]
 
 let rec from_typing_result r =(undefined ())
@@ -307,6 +324,7 @@ let rec from_typing_result r =(undefined ())
 let rec from_llifting r =
   let ext_decls = ref [] in
   let add_decl decl = ext_decls := decl :: !ext_decls in
+  let applied_type n t = times n TT.dest_type t in
   let rec f env r =
 (*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
     match r with
@@ -324,7 +342,7 @@ let rec from_llifting r =
     | L.External (v, t) when v.[0] = '%' ->
       let decl, name = internal_operator v t in
       add_decl decl; Var v, TypingType.oType_to_type t
-    | L.External (v, t) -> failwith "external function is not supported yet."
+    | L.External (v, t) -> Sexpr.failwith_captioned_sexprs "external function is not supported yet. but got:" ["name", Sexpr.Sident v; "type", TT.oType_to_sexpr t]
     | L.Let ((v, t), e1, e2) ->
       let e1', t1' = f env e1 in
       let e2', t2' = f (Id.Map.add v t1' env) e2 in
@@ -332,8 +350,18 @@ let rec from_llifting r =
     | L.Variable (v, t) -> Var v, TypingType.oType_to_type t
     | L.Apply (L.Variable (v, t), args) when List.for_all L.is_variable args ->
       let argns = List.map L.varname args in
-      Apply ((v, TT.oType_to_type t), argns), TT.oType_to_type (TT.dest_type t)
-    | L.Apply (L.Variable (v, t) as vf, args) ->
+      Debug.dbgprint (Printf.sprintf "var: %s" v);
+      Debug.dbgprintsexpr (TT.oType_to_sexpr t);
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map Sexpr.ident argns));
+      Apply ((v, TT.oType_to_type t), argns), TT.oType_to_type (applied_type (List.length args) t)
+    | L.Apply (L.External (v, t), args) when List.for_all L.is_variable args ->
+      let argns = List.map L.varname args in
+      Debug.dbgprint (Printf.sprintf "external: %s" v);
+      Debug.dbgprintsexpr (TT.oType_to_sexpr t);
+      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map Sexpr.ident argns));
+      ExtFunApply ((v, TT.oType_to_type t), argns), TT.oType_to_type (applied_type (List.length args) t)
+    | L.Apply (L.Variable _ as vf, args)
+    | L.Apply (L.External _ as vf, args) ->
       let vrs = List.map (function L.Variable (v, t) -> (v, t), None | r -> (L.gen_varname (), L.get_type r), Some r) args in
       let vs = List.map fst vrs in
       let vrs' = List.filter (function _, None -> false | _, _ -> true) vrs in
