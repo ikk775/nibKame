@@ -21,3 +21,8 @@ end
 
 exception Undefined
 let rec undefined () = raise Undefined
+
+let rec times n f x =
+  if n > 0
+  then times (n - 1) f (f x)
+  else x

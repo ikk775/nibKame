@@ -26,4 +26,3 @@ module String :
     val implode : char list -> string
   end
 
-val times : int -> ('a -> 'a) -> 'a -> 'a
