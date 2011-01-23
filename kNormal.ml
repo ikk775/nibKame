@@ -5,6 +5,7 @@ module TE = TypingExpr
 module TT = TypingType
 module L = LLifting
 
+type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
   | Unit
   | Nil of Type.listCategory
@@ -21,12 +22,7 @@ type t =
   | FSub of Id.t * Id.t
   | FMul of Id.t * Id.t
   | FDiv of Id.t * Id.t
-  | IfEq of Id.t * Id.t * t * t
-  | IfNotEq of Id.t * Id.t * t * t
-  | IfLs of Id.t * Id.t * t * t
-  | IfLsEq of Id.t * Id.t * t * t
-  | IfGt of Id.t * Id.t * t * t
-  | IfGtEq of Id.t * Id.t * t * t
+  | If of comp * Id.t * Id.t * t * t
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | Apply of (Id.t * Type.t) * Id.t list
@@ -106,12 +102,12 @@ let rec to_sexpr = function
   | FSub (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:fsub"; Sexpr.Sident v1; Sexpr.Sident v2]
   | FMul (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:fmul"; Sexpr.Sident v1; Sexpr.Sident v2]
   | FDiv (v1, v2) -> Sexpr.Sexpr [Sexpr.Sident "k:fdiv"; Sexpr.Sident v1; Sexpr.Sident v2]
-  | IfEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
-  | IfNotEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-not-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
-  | IfLs (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-ls"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
-  | IfLsEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-ls-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
-  | IfGt (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
-  | IfGtEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (Eq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (NotEq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-not-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (Ls, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-ls"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (LsEq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-ls-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (Gt, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
+  | If (GtEq, v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
   | Let (vt, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:let"; vt_to_sexpr vt; to_sexpr e1; to_sexpr e2]
   | Var v -> Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v]
   | Apply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
@@ -149,12 +145,12 @@ let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:fsub"; Sexpr.Sident v1; Sexpr.Sident v2] -> FSub (v1, v2)
   | Sexpr.Sexpr [Sexpr.Sident "k:fmul"; Sexpr.Sident v1; Sexpr.Sident v2] -> FMul (v1, v2)
   | Sexpr.Sexpr [Sexpr.Sident "k:fdiv"; Sexpr.Sident v1; Sexpr.Sident v2] -> FDiv (v1, v2)
-  | Sexpr.Sexpr [Sexpr.Sident "k:if-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfEq (v1, v2, of_sexpr e1, of_sexpr e2)
-  | Sexpr.Sexpr [Sexpr.Sident "k:if-not-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfNotEq (v1, v2, of_sexpr e1, of_sexpr e2)
-  | Sexpr.Sexpr [Sexpr.Sident "k:if-ls-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfLsEq (v1, v2, of_sexpr e1, of_sexpr e2)
-  | Sexpr.Sexpr [Sexpr.Sident "k:if-ls"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfLs (v1, v2, of_sexpr e1, of_sexpr e2)
-  | Sexpr.Sexpr [Sexpr.Sident "k:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfGtEq (v1, v2, of_sexpr e1, of_sexpr e2)
-  | Sexpr.Sexpr [Sexpr.Sident "k:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfGt (v1, v2, of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:if-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> If (Eq, v1, v2, of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:if-not-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> If (NotEq, v1, v2, of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:if-ls-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> If (LsEq, v1, v2, of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:if-ls"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> If (Ls, v1, v2, of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> If (GtEq, v1, v2, of_sexpr e1, of_sexpr e2)
+  | Sexpr.Sexpr [Sexpr.Sident "k:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> If (Gt, v1, v2, of_sexpr e1, of_sexpr e2)
   | Sexpr.Sexpr [Sexpr.Sident "k:let"; vt; e1; e2] -> Let (vt_of_sexpr vt, of_sexpr e1, of_sexpr e2)
   | Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v] -> Var (v)
   | Sexpr.Sexpr [Sexpr.Sident "k:apply"; Sexpr.Sexpr [Sexpr.Sident v; t]; Sexpr.Sexpr vs] -> Apply ((v, Type.of_sexpr t), List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
@@ -184,8 +180,7 @@ let rec freevars_set = function
   | Neg(x) | FNeg(x) -> Id.Set.singleton x
   | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) -> Id.Set.of_list [x; y]
   | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) -> Id.Set.of_list [x; y]
-  | IfEq(x, y, e1, e2) | IfNotEq(x, y, e1, e2) | IfLsEq(x, y, e1, e2) | IfLs(x, y, e1, e2)
-  | IfGtEq(x, y, e1, e2) | IfGt(x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freevars_set e1)) (freevars_set e2)
+  | If (comp, x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freevars_set e1)) (freevars_set e2)
   | Let((x, _), e1, e2) -> Id.Set.union (freevars_set e1) (Id.Set.diff (freevars_set e2) (Id.Set.singleton x))
   | Var(x) -> Id.Set.singleton x
   | Apply((x, t), ys) -> Id.Set.of_list (x :: ys)
@@ -219,12 +214,7 @@ let rec substitute_map sm = function
   | FSub (v1, v2) -> (undefined ())
   | FMul (v1, v2) -> (undefined ())
   | FDiv (v1, v2) -> (undefined ())
-  | IfEq (v1, v2, e1, e2) -> (undefined ())
-  | IfNotEq (v1, v2, e1, e2) -> (undefined ())
-  | IfLs (v1, v2, e1, e2) -> (undefined ())
-  | IfLsEq (v1, v2, e1, e2) -> (undefined ())
-  | IfGt (v1, v2, e1, e2) -> (undefined ())
-  | IfGtEq (v1, v2, e1, e2) -> (undefined ())
+  | If (comp, v1, v2, e1, e2) -> (undefined ())
   | Let (vt, e1, e2) -> (undefined ())
   | Var v -> (undefined ())
   | Apply (v, vs) -> (undefined ())
@@ -377,7 +367,7 @@ let rec from_llifting r =
     | L.If (L.Variable (v, t), e2, e3) ->
       let e2', t2' = f env e2 in
       let e3', t3' = f env e3 in
-      IfEq (v, "%true", e2', e3'), t2'
+      If (Eq, v, "%true", e2', e3'), t2'
     | L.If (e1, e2, e3) ->
       let bn = L.gen_varname () in
       let t1 = L.get_type e1 in

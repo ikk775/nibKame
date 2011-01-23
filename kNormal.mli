@@ -1,3 +1,4 @@
+type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
     Unit
   | Nil of Type.listCategory
@@ -14,12 +15,7 @@ type t =
   | FSub of Id.t * Id.t
   | FMul of Id.t * Id.t
   | FDiv of Id.t * Id.t
-  | IfEq of Id.t * Id.t * t * t
-  | IfNotEq of Id.t * Id.t * t * t
-  | IfLs of Id.t * Id.t * t * t
-  | IfLsEq of Id.t * Id.t * t * t
-  | IfGt of Id.t * Id.t * t * t
-  | IfGtEq of Id.t * Id.t * t * t
+  | If of comp * Id.t * Id.t * t * t
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | Apply of (Id.t * Type.t) * Id.t list
