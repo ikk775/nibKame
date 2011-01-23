@@ -25,3 +25,5 @@ module String :
     val explode : string -> char list
     val implode : char list -> string
   end
+
+val times : int -> ('a -> 'a) -> 'a -> 'a

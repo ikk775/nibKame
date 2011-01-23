@@ -75,3 +75,8 @@ module String = struct
     Format.call_with_output_string (fun fmtr -> 
       List.iter (Format.fprintf fmtr "%c") cs)
 end
+
+let rec times n f x =
+  if n > 0
+  then times (n - 1) f (f x)
+  else x
