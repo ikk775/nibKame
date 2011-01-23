@@ -321,7 +321,8 @@ let internal_operator name t =
 
 let rec from_typing_result r =(undefined ())
 
-let rec from_llifting r =
+let rec from_llifting r = (undefined ())
+(*
   let ext_decls = ref [] in
   let add_decl decl = ext_decls := decl :: !ext_decls in
   let applied_type n t = times n TT.dest_type t in
@@ -420,6 +421,8 @@ let rec from_llifting r =
   in
   let k, t = f Id.Map.empty r in
   Let (("%true", Type.Int), Int 1, k), List.unique ~eq:is_same_name_decl !ext_decls
+
+*)
 
 let from_ll_decl = function
   | L.FunDecl {L.fun_name = (v, t); L.args = args; L.body = r} -> 
