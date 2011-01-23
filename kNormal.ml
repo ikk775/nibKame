@@ -29,9 +29,6 @@ type t =
   | IfGtEq of Id.t * Id.t * t * t
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
-  | LetFun of fundef * t (* like let rec *)
-  | Fix of (Id.t * Type.t) * t
-  | Fun of (Id.t * Type.t) * t
   | Apply of (Id.t * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
@@ -81,6 +78,11 @@ let rec gen_vars n =
   then gen_var () :: gen_vars (n - 1)
   else []
 
+let is_same_name_decl x y = match x, y with
+  | VarDecl {var_name = n1}, VarDecl {var_name = n2} -> n1 = n2
+  | FunDecl {name = n1}, FunDecl {name = n2} -> n1 = n2
+  | _, _ -> false
+
 let vt_to_sexpr = function
   | v, t -> Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t]
 
@@ -112,8 +114,6 @@ let rec to_sexpr = function
   | IfGtEq (v1, v2, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:if-gt-eq"; Sexpr.Sident v1; Sexpr.Sident v2; to_sexpr e1; to_sexpr e2]
   | Let (vt, e1, e2) -> Sexpr.Sexpr [Sexpr.Sident "k:let"; vt_to_sexpr vt; to_sexpr e1; to_sexpr e2]
   | Var v -> Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v]
-  | LetFun (fd, e) -> Sexpr.Sexpr [Sexpr.Sident "k:letfun"; fundef_to_sexpr fd; to_sexpr e]
-  | Fix (vt, e) -> Sexpr.Sexpr [Sexpr.Sident "k:fix"; vt_to_sexpr vt; to_sexpr e]
   | Apply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
   | Tuple vs -> Sexpr.Sexpr (Sexpr.Sident "k:tuple" :: List.map (fun x -> Sexpr.Sident x) vs)
   | LetTuple (vts, v, e) ->
@@ -157,7 +157,6 @@ let rec of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "k:if-gt"; Sexpr.Sident v1; Sexpr.Sident v2; e1; e2] -> IfGt (v1, v2, of_sexpr e1, of_sexpr e2)
   | Sexpr.Sexpr [Sexpr.Sident "k:let"; vt; e1; e2] -> Let (vt_of_sexpr vt, of_sexpr e1, of_sexpr e2)
   | Sexpr.Sexpr [Sexpr.Sident "k:var"; Sexpr.Sident v] -> Var (v)
-  | Sexpr.Sexpr [Sexpr.Sident "k:letfun"; fd; e] -> LetFun (fundef_of_sexpr fd, of_sexpr e)
   | Sexpr.Sexpr [Sexpr.Sident "k:apply"; Sexpr.Sexpr [Sexpr.Sident v; t]; Sexpr.Sexpr vs] -> Apply ((v, Type.of_sexpr t), List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
   | Sexpr.Sexpr [Sexpr.Sident "k:tuple"; Sexpr.Sexpr vs] -> Tuple (List.map (function Sexpr.Sident x -> x | _ -> invalid_arg "unexpected token.") vs)
   | Sexpr.Sexpr [Sexpr.Sident "k:let-tuple"; Sexpr.Sexpr vts; Sexpr.Sident v; e] -> LetTuple (List.map vt_of_sexpr vts, v, of_sexpr e)
@@ -188,10 +187,7 @@ let rec freevars_set = function
   | IfEq(x, y, e1, e2) | IfNotEq(x, y, e1, e2) | IfLsEq(x, y, e1, e2) | IfLs(x, y, e1, e2)
   | IfGtEq(x, y, e1, e2) | IfGt(x, y, e1, e2) -> Id.Set.union (Id.Set.union (Id.Set.of_list [x; y]) (freevars_set e1)) (freevars_set e2)
   | Let((x, _), e1, e2) -> Id.Set.union (freevars_set e1) (Id.Set.diff (freevars_set e2) (Id.Set.singleton x))
-  | Fix((x, _), e) -> Id.Set.diff (freevars_set e) (Id.Set.singleton x)
   | Var(x) -> Id.Set.singleton x
-  | LetFun({name = (x, t); args = yts; body = e1}, e2) ->
-    Id.Set.diff (Id.Set.union (freevars_set e2) (Id.Set.diff (freevars_set e1) (Id.Set.of_list (List.map fst yts)))) (Id.Set.singleton x)
   | Apply((x, t), ys) -> Id.Set.of_list (x :: ys)
   | Tuple(xs) -> Id.Set.of_list xs
   | LetTuple(xts, y, e) -> 
@@ -230,9 +226,7 @@ let rec substitute_map sm = function
   | IfGt (v1, v2, e1, e2) -> (undefined ())
   | IfGtEq (v1, v2, e1, e2) -> (undefined ())
   | Let (vt, e1, e2) -> (undefined ())
-  | Fix (vt, e) -> (undefined ())
   | Var v -> (undefined ())
-  | LetFun (fd, e) -> (undefined ())
   | Apply (v, vs) -> (undefined ())
   | Tuple vs -> (undefined ())
   | LetTuple (vts, v, e) -> (undefined ())
@@ -254,14 +248,14 @@ and fundef_to_sexpr x = (undefined ())
 let internal_operator name t =
   let operator name ts t f = match ts with
     | [] -> 
-      f []
+      VarDecl { var_name = name, t; expr =  f [] }, name
     | [tf] -> 
       let v = gen_varname () in
-      LetFun ({ name = name, Type.Fun ([tf], t); args = [v, tf]; body =  f [v] }, Var name)
+      FunDecl { name = name, Type.Fun ([tf], t); args = [v, tf]; body =  f [v] }, name
     | _ -> 
       let vs = gen_varnames (List.length ts) in
       let v = gen_varname () in
-      LetFun ({ name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, Var name)
+      FunDecl { name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, name
   in
   let ext_func ts' t' qualifiers prefix name tg =
     let mname = Syntax.mangle qualifiers prefix name tg in
@@ -275,18 +269,15 @@ let internal_operator name t =
         operator mname ts t (fun vs -> ExtFunApply ((mname, Type.Fun ([Type.Tuple ts], t)), vs))
   in
   let int = Type.Int in
-  let float = Type.Int in
+  let float = Type.Float in
   let bool = Type.Bool in
   let li = [int] in
   let lf = [float] in
-  let lb = [bool] in
   let lii = [int; int] in
   let lff = [float; float] in
-  let lb = [bool] in
   let ob = TypingType.O_Constant bool in
   let ol = TypingType.O_Constant (Type.Variant "list") in
   let olf = TypingType.O_Variant(TypingType.O_Constant Type.Float, ol) in
-  let ovf = TypingType.O_Vector (TypingType.O_Constant Type.Float) in
   let omii = TypingType.O_Fun (TypingType.O_Constant int, TypingType.O_Constant int) in
   let omtiii = TypingType.O_Fun (TypingType.O_Tuple [TypingType.O_Constant int; TypingType.O_Constant int], TypingType.O_Constant int) in
   let omff = TypingType.O_Fun (TypingType.O_Constant float, TypingType.O_Constant float) in
@@ -296,138 +287,36 @@ let internal_operator name t =
   let omtflflf = TypingType.O_Fun (TypingType.O_Tuple [TypingType.O_Constant float; olf], olf) in
   let fail () = failwith "BUG: numbers of types and variables are mismatched." in
   match name, t with
-    | "%neg", t when t = omii -> operator "%neg" li int (function [v] -> Neg (v) | _ -> fail ()), int
-    | "%add", t when t = omtiii -> operator "%add" lii int (function [v1; v2] -> Add (v1, v2) | _ -> fail ()), int
-    | "%sub", t when t = omtiii -> operator "%sub" lii int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ()), int
-    | "%mul", t when t = omtiii -> operator "%mul" lii int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ()), int
-    | "%div", t when t = omtiii -> operator "%div" lii int (function [v1; v2] -> Div (v1, v2) | _ -> fail ()), int
-    | "%fneg", t when t = omff -> operator "%fneg" lf float (function [v] -> Neg (v) | _ -> fail ()), float
-    | "%fadd", t when t = omtfff -> operator "%fadd" lff float (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ()), float
-    | "%fsub", t when t = omtfff -> operator "%fsub" lff float (function [v1; v2] -> FSub (v1, v2) | _ -> fail ()), float
-    | "%fmul", t when t = omtfff -> operator "%fmul" lff float (function [v1; v2] -> FMul (v1, v2) | _ -> fail ()), float
-    | "%fdiv", t when t = omtfff -> operator "%fdiv" lff float (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ()), float
-    | "%true", t when t = ob -> Int 1, int
-    | "%false", t when t = ob -> Int 0, int
-    | "%cons", t when t = omtflflf -> operator "%fcons" [float; Type.List float] (Type.List float) (function [v1; v2] -> FCons (v1, v2) | _ -> fail ()), Type.List float
-    | "%car", t when t = omlff -> operator "%fcar" [Type.List float] float (function [v] -> FCar (v) | _ -> fail ()), float
-    | "%cdr", t when t = omlflf -> operator "%fcdr" [Type.List float] (Type.List float) (function [v] -> FCdr (v) | _ -> fail ()), Type.List float
-    | "%cons", TypingType.O_Fun (TypingType.O_Tuple [te; tl], tl') -> operator "%cons" (List.map TypingType.oType_to_type [te; tl]) (TypingType.oType_to_type tl') (function [v1; v2] -> Cons (v1, v2) | _ -> fail ()), TypingType.oType_to_type tl'
-    | "%car", TypingType.O_Fun (tl, te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ()), TypingType.oType_to_type te
-    | "%cdr", TypingType.O_Fun (tl, tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ()), TypingType.oType_to_type tl'
-    | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ()),  TypingType.oType_to_type tt
-    | "%set", TypingType.O_Fun (TypingType.O_Tuple [tr; te], tt) -> operator "%set" (List.map TypingType.oType_to_type [tr; te]) (TypingType.oType_to_type tt) (function [v1; v2] -> Set (v1, v2) | _ -> fail ()), TypingType.oType_to_type tt
-    | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ()), TypingType.oType_to_type te
-    | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ()), TypingType.oType_to_type tt
-    | "%array-alloc", TypingType.O_Fun (tnum, ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ()), TypingType.oType_to_type ta
-    | _ -> invalid_arg "internal_operator"
-let is_valid_internal_operator name t =
-  try
-    ignore (internal_operator name t); true
-  with
-    | Invalid_argument "internal_operator"-> false
+    | "%neg", t when t = omii -> operator "%neg" li int (function [v] -> Neg (v) | _ -> fail ())
+    | "%add", t when t = omtiii -> operator "%add" lii int (function [v1; v2] -> Add (v1, v2) | _ -> fail ())
+    | "%sub", t when t = omtiii -> operator "%sub" lii int (function [v1; v2] -> Sub (v1, v2) | _ -> fail ())
+    | "%mul", t when t = omtiii -> operator "%mul" lii int (function [v1; v2] -> Mul (v1, v2) | _ -> fail ())
+    | "%div", t when t = omtiii -> operator "%div" lii int (function [v1; v2] -> Div (v1, v2) | _ -> fail ())
+    | "%fneg", t when t = omff -> operator "%fneg" lf float (function [v] -> FNeg (v) | _ -> fail ())
+    | "%fadd", t when t = omtfff -> operator "%fadd" lff float (function [v1; v2] -> FAdd (v1, v2) | _ -> fail ())
+    | "%fsub", t when t = omtfff -> operator "%fsub" lff float (function [v1; v2] -> FSub (v1, v2) | _ -> fail ())
+    | "%fmul", t when t = omtfff -> operator "%fmul" lff float (function [v1; v2] -> FMul (v1, v2) | _ -> fail ())
+    | "%fdiv", t when t = omtfff -> operator "%fdiv" lff float (function [v1; v2] -> FDiv (v1, v2) | _ -> fail ())
+    | "%true", t when t = ob -> operator "%true" [] int (function [] -> Int 1 | _ -> fail ())
+    | "%false", t when t = ob -> operator "%false" [] int (function [] -> Int 0 | _ -> fail ())
+    | "%cons", t when t = omtflflf -> operator "%fcons" [float; Type.List float] (Type.List float) (function [v1; v2] -> FCons (v1, v2) | _ -> fail ())
+    | "%car", t when t = omlff -> operator "%fcar" [Type.List float] float (function [v] -> FCar (v) | _ -> fail ())
+    | "%cdr", t when t = omlflf -> operator "%fcdr" [Type.List float] (Type.List float) (function [v] -> FCdr (v) | _ -> fail ())
+    | "%cons", TypingType.O_Fun (TypingType.O_Tuple [te; tl], tl') -> operator "%cons" (List.map TypingType.oType_to_type [te; tl]) (TypingType.oType_to_type tl') (function [v1; v2] -> Cons (v1, v2) | _ -> fail ())
+    | "%car", TypingType.O_Fun (tl, te) -> operator "%car" [TypingType.oType_to_type tl] (TypingType.oType_to_type te) (function [v] -> Car (v) | _ -> fail ())
+    | "%cdr", TypingType.O_Fun (tl, tl') -> operator "%cdr" [TypingType.oType_to_type tl] (TypingType.oType_to_type tl') (function [v] -> Cdr (v) | _ -> fail ())
+    | "%ref", TypingType.O_Fun (ft, tt) -> operator "%ref" [TypingType.oType_to_type ft] (TypingType.oType_to_type tt) (function [v] -> Ref (v) | _ -> fail ())
+    | "%set", TypingType.O_Fun (TypingType.O_Tuple [tr; te], tt) -> operator "%set" (List.map TypingType.oType_to_type [tr; te]) (TypingType.oType_to_type tt) (function [v1; v2] -> Set (v1, v2) | _ -> fail ())
+    | "%array-ref", TypingType.O_Fun (TypingType.O_Tuple [ta; tind], te) -> operator "%array-ref" (List.map TypingType.oType_to_type [ta; tind]) (TypingType.oType_to_type te) (function [v1; v2] -> ArrayRef (v1, v2) | _ -> fail ())
+    | "%array-set", TypingType.O_Fun (TypingType.O_Tuple [ta; tind; te], tt) -> operator "%array-set" (List.map TypingType.oType_to_type [ta; tind; te]) (TypingType.oType_to_type tt) (function [v1; v2; v3] -> ArraySet (v1, v2, v3) | _ -> fail ())
+    | "%array-alloc", TypingType.O_Fun (tnum, ((TypingType.O_Variant (te, TypingType.O_Constant (Type.Variant "array"))) as ta)) -> operator "%array-alloc" (List.map TypingType.oType_to_type [tnum]) (TypingType.oType_to_type ta) (function [v] -> ArrayAlloc (TypingType.oType_to_type te, v) | _ -> fail ())
+    | _ -> Sexpr.failwith_captioned_sexprs "invalid internal operator" ["name", Sexpr.Sident name; "type", TT.oType_to_sexpr t]
 
-let rec from_typing_result r =
-  let rec f env r =
-(*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
-    match r with
-    | Typing.R_Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
-    | Typing.R_Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
-      Nil Type.List_Float, TypingType.oType_to_type t
-    | Typing.R_Constant (Syntax.Nil, t) ->
-      Nil Type.List_Other, TypingType.oType_to_type t
-    | Typing.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
-    | Typing.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
-    | Typing.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
-    | Typing.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
-    | Typing.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
-    | Typing.R_Constant (_, _) -> failwith "invalid constant type."
-    | Typing.R_External (v, t) when v.[0] = '%' -> internal_operator v t
-    | Typing.R_External (v, t) -> failwith "external function is not supported yet."
-    | Typing.R_Let ((v, t), e1, e2) ->
-      let e1', t1' = f env e1 in
-      let e2', t2' = f (Id.Map.add v t1' env) e2 in
-      Let ((v, TT.oType_to_type t), e1', e2'), t2'
-    | Typing.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
-    | Typing.R_Fun((v, t), e) ->
-      let bn = gen_varname () in
-      let ta = TT.oType_to_type t in
-      let e', t' = f (Id.Map.add v ta env) e in
-      let tra = TT.oType_to_type (T.result_type r) in
-      LetFun ({name = (bn, TT.oType_to_type t); args = [v, ta]; body = e'}, Var bn), tra
-    | Typing.R_Fix ((v, t), (T.R_Fun((vf, tf), ef) as ew), tw) ->
-      let bn = gen_varname () in
-      let t' = TT.oType_to_type t in
-      let ew', tw' = f (Id.Map.add v t' env) ew in
-      assert (t' = TT.oType_to_type t);
-      begin match ew' with
-        | LetFun ({args = [vf, ta]; body = e'}, Var _) -> 
-            LetFun ({name = (v, t'); args = [vf, ta]; body = e'}, Var v), t'
-        | _ -> invalid_arg "from_typing_result"
-      end
-    | Typing.R_Fix ((v, t), e, tw) ->
-      invalid_arg "from_typing_result"
-    | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
-      Apply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
-    | Typing.R_Apply(Typing.R_External (v1, t1), Typing.R_Variable (v2, t2)) ->
-      ExtFunApply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
-    | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e)
-    | Typing.R_Apply(Typing.R_External (v, t) as rv, e) ->
-      let bn = Typing.gen_varname () in
-      let t = Typing.result_type e in
-      let e' = Typing.R_Let((bn, t), e, Typing.R_Apply (rv, Typing.R_Variable (bn, t))) in
-      f env e'
-    | Typing.R_Apply(e1, e2) ->
-      let bn = Typing.gen_varname () in
-      let t1 = Typing.result_type e1 in
-      let e' = Typing.R_Let((bn, t1), e1, Typing.R_Apply (Typing.R_Variable (bn, t1), e2)) in
-      f env e'
-    | Typing.R_Tuple (es, t) when List.for_all (function Typing.R_Variable _ -> true | _ -> false) es ->
-      Tuple (List.map Typing.varname es), TT.oType_to_type t
-    | Typing.R_Tuple (es, t) ->
-      let bns = Typing.gen_varnames (List.length es) in
-      let bs = List.map2 (fun x e -> Typing.R_Variable (x, Typing.result_type e)) bns es in
-      let e' = List.fold_left2 (fun e' e b ->
-        Typing.R_Let ((b, Typing.result_type e), e, e'))
-        (Typing.R_Tuple (bs, t)) es bns
-      in
-      f env e'
-    | Typing.R_Vector (es, t) when List.for_all (function Typing.R_Variable _ -> true | _ -> false) es ->
-      undefined ()
-    | Typing.R_Vector (es, t) ->
-      let bns = Typing.gen_varnames (List.length es) in
-      let bs = List.map2 (fun x e -> Typing.R_Variable (x, Typing.result_type e)) bns es in
-      let e' = List.fold_left2 (fun e' e b ->
-        Typing.R_Let ((b, Typing.result_type e), e, e'))
-        (Typing.R_Vector (bs, t)) es bns
-      in
-      f env e'
-    | Typing.R_If (Typing.R_Variable (v, t), e2, e3) ->
-      let e2', t2' = f env e2 in
-      let e3', t3' = f env e3 in
-      IfEq (v, "%true", e2', e3'), t2'
-    | Typing.R_If (e1, e2, e3) ->
-      let bn = Typing.gen_varname () in
-      let t1 = Typing.result_type e1 in
-      let e' = Typing.R_Let((bn, t1), e1, Typing.R_If (Typing.R_Variable (bn, t1), e2, e3)) in
-      f env e'
-    | Typing.R_Match (Typing.R_Variable (v, _), [Typing.RP_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
-      let g = function
-        | Some v, t -> v, TT.oType_to_type t
-        | None, t -> Typing.gen_varname (), TT.oType_to_type t in
-      let h = function
-        | Typing.RP_Variable (ov, t) -> g (ov, t)
-        | _ -> failwith "something went wrong." in
-      LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (Typing.result_type expr)
-    | Typing.R_Match (e, cls) when (match e with T.R_Variable _ -> false | _ -> true) ->
-      let te = Typing.result_type e in
-      let b = Typing.gen_var te in
-      let bn = Typing.varname b in
-      f env (Typing.R_Let ((bn, te), e, Typing.R_Match (b, cls)))
-  in
-  let k, t = f Id.Map.empty r in
-  Let (("%true", Type.Int), Int 1, k), t
-  
+let rec from_typing_result r =(undefined ())
+
 let rec from_llifting r =
+  let ext_decls = ref [] in
+  let add_decl decl = ext_decls := decl :: !ext_decls in
   let rec f env r =
 (*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
     match r with
@@ -442,7 +331,9 @@ let rec from_llifting r =
     | L.Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
     | L.Constant (Syntax.ExtFun f, _) -> (undefined ())
     | L.Constant (_, _) -> failwith "invalid constant type."
-    | L.External (v, t) when v.[0] = '%' -> internal_operator v t
+    | L.External (v, t) when v.[0] = '%' ->
+      let decl, name = internal_operator v t in
+      add_decl decl; Var v, TypingType.oType_to_type t
     | L.External (v, t) -> failwith "external function is not supported yet."
     | L.Let ((v, t), e1, e2) ->
       let e1', t1' = f env e1 in
@@ -510,13 +401,15 @@ let rec from_llifting r =
       *)
   in
   let k, t = f Id.Map.empty r in
-  Let (("%true", Type.Int), Int 1, k), t
+  Let (("%true", Type.Int), Int 1, k), List.unique ~eq:is_same_name_decl !ext_decls
 
 let from_ll_decl = function
   | L.FunDecl {L.fun_name = (v, t); L.args = args; L.body = r} -> 
     let args' = List.map (function v, t -> v, TT.oType_to_type t) args in
-    FunDecl {name = (v, TT.oType_to_type t); args = args'; body = fst (from_llifting r)}
+    let r', decls = from_llifting r in
+    FunDecl {name = (v, TT.oType_to_type t); args = args'; body = r'} :: decls
   | L.VarDecl {L.var_name = (v, t); L.expr = r} -> 
-    VarDecl {var_name = (v, TT.oType_to_type t); expr = fst (from_llifting r)}
+    let r', decls = from_llifting r in
+    VarDecl {var_name = (v, TT.oType_to_type t); expr = r'} :: decls
 
-let from_ll_decls decls = List.map from_ll_decl decls
+let from_ll_decls decls = List.unique ~eq:is_same_name_decl (List.concat (List.map from_ll_decl decls))

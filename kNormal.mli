@@ -22,9 +22,6 @@ type t =
   | IfGtEq of Id.t * Id.t * t * t
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
-  | LetFun of fundef * t
-  | Fix of (Id.t * Type.t) * t
-  | Fun of (Id.t * Type.t) * t
   | Apply of (Id.t * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
@@ -67,11 +64,11 @@ val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
 val from_typing_result : Typing.result -> (t * Type.t)
 
-val from_llifting : LLifting.t -> (t * Type.t)
-val from_ll_decl : LLifting.topDecl -> topDecl
+val from_llifting : LLifting.t -> (t * topDecl list)
+val from_ll_decl : LLifting.topDecl -> topDecl list
 val from_ll_decls : LLifting.topDecl list -> topDecl list
 
-val internal_operator : string -> TypingType.oType -> (t * Type.t)
+val internal_operator : string -> TypingType.oType -> (topDecl * Id.t)
 (** A internal symbol name must begin with the letter '%'. *)
 (** A internal symbol as a function represents a primitive function. *)
 (** A primitive function takes one argument and should not return a function to represent a multi-argument function.
