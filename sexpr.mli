@@ -21,4 +21,6 @@ val string: string -> t
 val tagged_sexpr: string -> t list -> t
 val parse_tagged_sexpr: t -> string * t list
 val failwith_sexpr : string -> t -> 'a
-val failwith_sexprs : string -> t list -> 'a
+val failwith_captioned_sexpr : string -> (string * t) -> 'a
+val failwith_sexprs : string ->  t list -> 'a
+val failwith_captioned_sexprs : string -> (string * t) list -> 'a
