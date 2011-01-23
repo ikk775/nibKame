@@ -42,6 +42,14 @@ type t =
   | ExtArray of Id.t
   | ExtFunApply of (Id.t * Type.t) * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t; }
+type topvar = {
+  var_name : Id.t * Type.t;
+  expr : t
+}
+type topDecl =
+  | FunDecl of fundef
+  | VarDecl of topvar
+
 type substitution = Substitution of Id.t * Id.t
 
 val gen_varname : unit -> string
@@ -58,6 +66,10 @@ val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
 val from_typing_result : Typing.result -> (t * Type.t)
+
+val from_llifting : LLifting.t -> (t * Type.t)
+val from_ll_decl : LLifting.topDecl -> topDecl
+val from_ll_decls : LLifting.topDecl list -> topDecl list
 
 val internal_operator : string -> TypingType.oType -> (t * Type.t)
 (** A internal symbol name must begin with the letter '%'. *)

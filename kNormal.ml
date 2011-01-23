@@ -3,6 +3,7 @@ open MyUtil
 module T = Typing
 module TE = TypingExpr
 module TT = TypingType
+module L = LLifting
 
 type t =
   | Unit
@@ -48,6 +49,15 @@ type t =
   | ExtArray of Id.t
   | ExtFunApply of (Id.t * Type.t) * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
+
+type topvar = {
+  var_name : Id.t * Type.t;
+  expr : t
+}
+
+type topDecl =
+  | FunDecl of fundef
+  | VarDecl of topvar
 
 type substitution =
   | Substitution of Id.t * Id.t
@@ -357,7 +367,7 @@ let rec from_typing_result r =
     | Typing.R_Fix ((v, t), e, tw) ->
       invalid_arg "from_typing_result"
     | Typing.R_Apply(Typing.R_Variable (v1, t1), Typing.R_Variable (v2, t2)) ->
-      Apply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type t2
+      Apply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
     | Typing.R_Apply(Typing.R_External (v1, t1), Typing.R_Variable (v2, t2)) ->
       ExtFunApply ((v1, TT.oType_to_type t1), [v2]), TT.oType_to_type (TT.dest_type t1)
     | Typing.R_Apply(Typing.R_Variable (v, t) as rv, e)
@@ -417,4 +427,96 @@ let rec from_typing_result r =
   let k, t = f Id.Map.empty r in
   Let (("%true", Type.Int), Int 1, k), t
   
+let rec from_llifting r =
+  let rec f env r =
+(*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
+    match r with
+    | L.Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
+    | L.Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
+      Nil Type.List_Float, TypingType.oType_to_type t
+    | L.Constant (Syntax.Nil, t) ->
+      Nil Type.List_Other, TypingType.oType_to_type t
+    | L.Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
+    | L.Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
+    | L.Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
+    | L.Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
+    | L.Constant (Syntax.ExtFun f, _) -> (undefined ())
+    | L.Constant (_, _) -> failwith "invalid constant type."
+    | L.External (v, t) when v.[0] = '%' -> internal_operator v t
+    | L.External (v, t) -> failwith "external function is not supported yet."
+    | L.Let ((v, t), e1, e2) ->
+      let e1', t1' = f env e1 in
+      let e2', t2' = f (Id.Map.add v t1' env) e2 in
+      Let ((v, TT.oType_to_type t), e1', e2'), t2'
+    | L.Variable (v, t) -> Var v, TypingType.oType_to_type t
+    | L.Apply (L.Variable (v, t), args) when List.for_all L.is_variable args ->
+      let argns = List.map L.varname args in
+      Apply ((v, TT.oType_to_type t), argns), TT.oType_to_type (TT.dest_type t)
+    | L.Apply (L.Variable (v, t) as vf, args) ->
+      let vrs = List.map (function L.Variable (v, t) -> (v, t), None | r -> (L.gen_varname (), L.get_type r), Some r) args in
+      let vs = List.map fst vrs in
+      let vrs' = List.filter (function _, None -> false | _, _ -> true) vrs in
+      let defs = List.map (function v, Some r -> v, r | _, _ -> failwith "something went wrong.") vrs' in
+      let g r = function v', r' -> L.Let (v', r', r) in
+      f env (List.fold_left g (L.Apply (vf, List.map (function v, t -> L.Variable (v, t)) vs)) defs)
+    | L.Apply (lf, args) ->
+      let bn = L.gen_varname () in
+      let t = L.get_type lf in
+      f env (L.Let ((bn, t), lf, L.Apply (L.Variable (bn, t), args)))
+    | L.Tuple (es, t) when List.for_all (function L.Variable _ -> true | _ -> false) es ->
+      Tuple (List.map L.varname es), TT.oType_to_type t
+    | L.Tuple (es, t) ->
+      let bns = L.gen_varnames (List.length es) in
+      let bs = List.map2 (fun x e -> L.Variable (x, L.get_type e)) bns es in
+      let e' = List.fold_left2 (fun e' e b ->
+        L.Let ((b, L.get_type e), e, e'))
+        (L.Tuple (bs, t)) es bns
+      in
+      f env e'
+    | L.Vector (es, t) when List.for_all (function L.Variable _ -> true | _ -> false) es ->
+      undefined ()
+    | L.Vector (es, t) ->
+      let bns = L.gen_varnames (List.length es) in
+      let bs = List.map2 (fun x e -> L.Variable (x, L.get_type e)) bns es in
+      let e' = List.fold_left2 (fun e' e b ->
+        L.Let ((b, L.get_type e), e, e'))
+        (L.Vector (bs, t)) es bns
+      in
+      f env e'
+    | L.If (L.Variable (v, t), e2, e3) ->
+      let e2', t2' = f env e2 in
+      let e3', t3' = f env e3 in
+      IfEq (v, "%true", e2', e3'), t2'
+    | L.If (e1, e2, e3) ->
+      let bn = L.gen_varname () in
+      let t1 = L.get_type e1 in
+      let e' = L.Let((bn, t1), e1, L.If (L.Variable (bn, t1), e2, e3)) in
+      f env e'
+    | L.LetFun _ -> Sexpr.failwith_sexpr "LetFun must be eliminated in the lamda lifting phase. but got:" (L.to_sexpr r)
+    | L.Match _ -> Sexpr.failwith_sexpr "Match is not supported yet. but got:" (L.to_sexpr r)
+(*    | L.Match (L.Variable (v, _), [L.P_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
+      let g = function
+        | Some v, t -> v, TT.oType_to_type t
+        | None, t -> L.gen_varname (), TT.oType_to_type t in
+      let h = function
+        | L.RP_Variable (ov, t) -> g (ov, t)
+        | _ -> failwith "something went wrong." in
+      LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (L.get_type expr)
+    | L.Match (e, cls) when (match e with L.Variable _ -> false | _ -> true) ->
+      let te = L.get_type e in
+      let b = L.gen_var te in
+      let bn = L.varname b in
+      f env (L.Let ((bn, te), e, L.Match (b, cls)))
+      *)
+  in
+  let k, t = f Id.Map.empty r in
+  Let (("%true", Type.Int), Int 1, k), t
 
+let from_ll_decl = function
+  | L.FunDecl {L.fun_name = (v, t); L.args = args; L.body = r} -> 
+    let args' = List.map (function v, t -> v, TT.oType_to_type t) args in
+    FunDecl {name = (v, TT.oType_to_type t); args = args'; body = fst (from_llifting r)}
+  | L.VarDecl {L.var_name = (v, t); L.expr = r} -> 
+    VarDecl {var_name = (v, TT.oType_to_type t); expr = fst (from_llifting r)}
+
+let from_ll_decls decls = List.map from_ll_decl decls
