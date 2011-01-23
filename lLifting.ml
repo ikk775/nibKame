@@ -204,15 +204,16 @@ let rec of_typint_result r =
           LetFun ((bn, t'), vts', f e', Variable (bn, t'))
       end
     | R.R_Fix ((v, t), e, t') -> 
-      let bn = gen_varname () in
+(*      let bn = gen_varname () in
       let e' = R.substitute_varname [v, bn] e in
       let vts, e' = unfold_fun [] e' in
       begin match (v, t) :: vts with
         | [] -> failwith ""
         | vts' -> 
           let t' = add_type_args (R.result_type e) (List.map snd vts') in
-          LetFun ((bn, t'), vts', f e', Variable (bn, t'))
-      end
+          *)
+      let vts, e' = unfold_fun [] e in
+      LetFun ((v, t), vts, f e', Variable (v, t))
     | R.R_Apply (e1, e2) -> 
       let vts, e1' = unfold_apply [] e1 in
       begin match e2 :: vts with
@@ -237,11 +238,12 @@ let rec uncover ss known r =
       let vs = v :: List.map fst args in
       let fvts' = List.filter (function v', t' -> not (List.mem v' vs)) fvts in
       let fts = List.map snd fvts' in
-      let ss = compose_subst ss [v, Apply (Variable (v, t), vts_to_vars fvts')] in
+      let t' = add_type_args t fts in
+      let ss = compose_subst ss [v, Apply (Variable (v, t'), vts_to_vars fvts')] in
       let known' = List.setDiff known vs in
       let e1' = uncover ss known' e1 in
       let e2' = uncover ss known' e2 in
-      LetFun ((v, add_type_args t fts), fvts' @ args, e1', e2')
+      LetFun ((v, t'), fvts' @ args, e1', e2')
     | Apply (e, es) -> Apply (f e, List.map f es)
     | Tuple (es, t) -> Tuple (List.map f es, t)
     | Vector (es, t) -> Vector (List.map f es, t)
