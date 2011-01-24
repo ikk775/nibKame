@@ -489,6 +489,11 @@ and w_pattern env = function
     let ss, t, p' = w_pattern env p in
     ss, t, RP_Not (p', t)
 
+let typing_without_value_restriction env expr =
+  let ss, t, expr' = w env expr in
+  let expr'' = substitute_result_type ss expr' in
+  t, expr'', ss
+
 let typing_with_subst env expr =
   let ss, t, expr' = w env expr in
   let expr'' = substitute_result_type ss expr' in
