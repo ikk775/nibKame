@@ -159,6 +159,27 @@ let add_type = fun m ->
       let substtoname tvn = TypingType.get_oType_variable_name (TypingType.substitute eim''.eim_Type (TypingType.O_Variable tvn)) in
       {m with eim = eim'; iem = iem'; defs = (Type (bn, (List.map substtoname tvs , t')) :: es)}
 
+let rec backpatch m = function
+  | [] -> m
+  | (fv, ot) :: fvs when exists_expr_def m fv -> 
+    Debug.dbgprint (Format.sprintf "backpatching %s" fv);
+    let _, (qtvs', t', r') = def_expr m fv in
+    let ot' = TypingType.remove_quantifier t' in
+    Debug.dbgprintsexpr (TypingType.oType_to_sexpr ot');
+    let ss = TypingType.renew ot' ot in
+    Debug.dbgprint "subst:";
+    Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
+    let ss' = TypingType.domain_diff ss qtvs' in
+    Debug.dbgprint "free variables:";
+    Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'));
+    Debug.dbgprint "free-variable-removed subst:";
+    Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
+    let m' = subst {emptysubst with s_Type = ss'} m in
+    backpatch m' fvs
+  | (fv, ot) :: fvs -> 
+    Debug.dbgprint (Format.sprintf "%s is in external module." fv);
+    backpatch m fvs
+
 (* top-level let 相当 *)
 let add_expr_with_env = fun env m -> 
   function
@@ -177,28 +198,7 @@ let add_expr_with_env = fun env m ->
       let fvs = Typing.freevars r in
       Debug.dbgprint "free variables:";
       Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (function x, t -> Sexpr.Sexpr[Sexpr.Sident x; TypingType.oType_to_sexpr t]) fvs));
-      let rec f m = function
-        | [] -> m
-        | (fv, ot) :: fvs when exists_expr_def m fv -> 
-          Debug.dbgprint (Format.sprintf "backpatching %s" fv);
-          let _, (qtvs', t', r') = def_expr m fv in
-          let ot' = TypingType.remove_quantifier t' in
-          Debug.dbgprintsexpr (TypingType.oType_to_sexpr ot');
-          let ss = TypingType.renew ot' ot in
-          Debug.dbgprint "subst:";
-          Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss);
-          let ss' = TypingType.domain_diff ss qtvs' in
-          Debug.dbgprint "free variables:";
-          Debug.dbgprintsexpr (Sexpr.Sexpr (List.map (fun x -> Sexpr.Sident x) qtvs'));
-          Debug.dbgprint "free-variable-removed subst:";
-          Debug.dbgprintsexpr (TypingType.substitutions_to_sexpr ss');
-          let m' = subst {emptysubst with s_Type = ss'} m in
-          f m' fvs
-        | (fv, ot) :: fvs -> 
-          Debug.dbgprint (Format.sprintf "%s is in external module." fv);
-          f m fvs
-      in
-      let m' = f m fvs in
+      let m' = backpatch m fvs in
       let b = TypingExpr.gen_exprvar () in
       let bn = TypingExpr.get_exprvar_name b in
       let eim' = {eim with eim_Expr = (ename, b) :: List.remove_assoc ename eim.eim_Expr} in
@@ -207,7 +207,6 @@ let add_expr_with_env = fun env m ->
 
 let add_expr m e = add_expr_with_env TypingExpr.empty_exprEnv m e
   
-
 let add_expr_instance = fun m ->  function
   | ename, t, r -> 
       Debug.dbgprint "called add_expr_instance";
