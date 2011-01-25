@@ -269,23 +269,6 @@ type pat =
 
 let rec from_syntax = function
   | Syntax.Literal l -> E_Constant l
-  | Syntax.Add (e1, e2) -> E_Apply(E_Apply(E_Variable "+", from_syntax e1), from_syntax e2)
-  | Syntax.Sub (e1, e2) -> E_Apply(E_Apply(E_Variable "-", from_syntax e1), from_syntax e2)
-  | Syntax.Mul (e1, e2) -> E_Apply(E_Apply(E_Variable "*", from_syntax e1), from_syntax e2)
-  | Syntax.Div (e1, e2) -> E_Apply(E_Apply(E_Variable "/", from_syntax e1), from_syntax e2)
-  | Syntax.Fadd (e1, e2) -> E_Apply(E_Apply(E_Variable "+.", from_syntax e1), from_syntax e2)
-  | Syntax.Fsub (e1, e2) -> E_Apply(E_Apply(E_Variable "-.", from_syntax e1), from_syntax e2)
-  | Syntax.Fmul (e1, e2) -> E_Apply(E_Apply(E_Variable "*.", from_syntax e1), from_syntax e2)
-  | Syntax.Fdiv (e1, e2) -> E_Apply(E_Apply(E_Variable "/.", from_syntax e1), from_syntax e2)
-  | Syntax.Seq (e1, e2) -> E_Apply(E_Apply(E_Variable ";", from_syntax e1), from_syntax e2)
-  | Syntax.And (e1, e2) -> E_If(from_syntax e1, from_syntax e2, E_Constant (Syntax.Bool false))
-  | Syntax.Or (e1, e2) -> E_If(from_syntax e1, E_Constant (Syntax.Bool true), from_syntax e2)
-  | Syntax.Eq (e1, e2) -> E_Apply(E_Apply(E_Variable "=", from_syntax e1), from_syntax e2)
-  | Syntax.NotEq (e1, e2) -> E_Apply(E_Apply(E_Variable "<>", from_syntax e1), from_syntax e2)
-  | Syntax.LsEq (e1, e2) -> E_Apply(E_Apply(E_Variable "<=", from_syntax e1), from_syntax e2)
-  | Syntax.Ls (e1, e2) -> E_Apply(E_Apply(E_Variable "<", from_syntax e1), from_syntax e2)
-  | Syntax.Gt (e1, e2) -> E_Apply(E_Apply(E_Variable ">", from_syntax e1), from_syntax e2)
-  | Syntax.GtEq (e1, e2) -> E_Apply(E_Apply(E_Variable ">=", from_syntax e1), from_syntax e2)
   | Syntax.LetSimp ((v, t), e1, e2) -> E_Let(v, from_syntax e1, from_syntax e2)
   | Syntax.If (e1, e2, e3) -> E_If(from_syntax e1, from_syntax e2, from_syntax e3)
   | Syntax.Fun (vts, e) -> 
@@ -298,7 +281,6 @@ let rec from_syntax = function
     List.fold_left g (from_syntax f) es
   | Syntax.Tuple es -> 
     E_Tuple(List.map from_syntax es)
-  | Syntax.Cons (e1, e2) -> E_Apply(E_Apply(E_Variable "::", from_syntax e1), from_syntax e2)
   | Syntax.List es -> 
     let f e acc= E_Apply(E_Apply(E_Variable "cons", from_syntax e), acc) in
     List.fold_right f es (E_Constant Syntax.Nil)

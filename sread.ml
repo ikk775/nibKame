@@ -108,27 +108,19 @@ let rec change = function
 	| Sident "tuple" :: tail -> Syntax.Tuple (List.map change tail)
 	| Sident "array" :: tail -> Syntax.Array (List.map change tail)
       
-	| Sident "+" :: a :: b :: [] -> Syntax.Add (change a, change b)
-	| Sident "-" :: a :: b :: [] -> Syntax.Sub (change a, change b)
-	| Sident "*" :: a :: b :: [] -> Syntax.Mul (change a, change b)
-	| Sident "/" :: a :: b :: [] -> Syntax.Div (change a, change b)
-	| Sident "+." :: a :: b :: [] -> Syntax.Fadd (change a, change b)
-	| Sident "-." :: a :: b :: [] -> Syntax.Fsub (change a, change b)
-	| Sident "*." :: a :: b :: [] -> Syntax.Fmul (change a, change b)
-	| Sident "/." :: a :: b :: [] -> Syntax.Fdiv (change a, change b)
-	    
-	| Sident "=" :: a :: b :: [] -> Syntax.Eq (change a, change b)
-	| Sident "<>" :: a :: b :: [] -> Syntax.NotEq (change a, change b)
-	| Sident "<=" :: a :: b :: [] -> Syntax.LsEq (change a, change b)
-	| Sident "<" :: a :: b :: [] -> Syntax.Ls (change a, change b)
-	| Sident ">" :: a :: b :: [] -> Syntax.Gt (change a, change b)
-	| Sident ">=" :: a :: b :: [] -> Syntax.GtEq (change a, change b)
+        | Sident "and" :: [] ->
+	    Syntax.Literal (Syntax.Bool true)
+        | Sident "and" :: e :: [] ->
+	    change e
+	| Sident "and" :: e :: es ->
+	    Syntax.If (change e, change (Sexpr (Sident "and" :: es)), Syntax.Literal (Syntax.Bool false))
 
-	| Sident "cons" :: a :: b :: [] -> Syntax.Cons (change a, change b)
-	| Sident "seq" :: a :: b :: [] -> Syntax.Seq (change a, change b)
-	    
-	| Sident "&&" :: a :: b :: [] -> Syntax.And (change a, change b)
-	| Sident "||" :: a :: b :: [] -> Syntax.Or (change a, change b)
+        | Sident "or" :: [] ->
+	    Syntax.Literal (Syntax.Bool true)
+        | Sident "or" :: e :: [] ->
+	    change e
+	| Sident "or" :: e :: es ->
+	    Syntax.If (change e, Syntax.Literal (Syntax.Bool true), change (Sexpr (Sident "and" :: es)))
 
 	| Sident "if" :: a :: b :: c :: [] ->
 	    Syntax.If (change a, change b, change c)
