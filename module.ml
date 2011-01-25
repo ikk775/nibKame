@@ -256,7 +256,7 @@ let add_mutual_recursive_expr_with_env m env ves =
       let ss = TypingType.compose ss' ss in
       let env' = TypingExpr.add_env env v (TypingType.OType t) in
       let env'' = TypingExpr.substitute_env ss env' in
-      f ((v, TypingType.clos_ot t, r) :: rs) ss env'' es in
+      f ((v, Typing.value_restrict r t, r) :: rs) ss env'' es in
   List.fold_left add_typed_expr m (f [] [] env' ves)
 
 let freeexprvars = function
