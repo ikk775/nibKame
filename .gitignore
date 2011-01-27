@@ -14,3 +14,14 @@ _build/
 .settings
 .project
 quickCheck.ml
+*.pdf
+*.ps
+*.xbb
+*.lof
+*.lol
+*.lot
+*.toc
+*.eps
+*.bbl
+*.bblannot
+*.blg
