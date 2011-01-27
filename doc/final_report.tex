@@ -125,11 +125,20 @@ Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
 \mainmatter
 %\chapter{原理}\label{ch:原理}
 
-\section{型システム}\label{sec:型システム}
 
-\subsection{Hindley-Milner型システム}\label{ssec:Hindley-Milner型システム}
-HaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムである．
-Hindley-Milner型システムでは，「すべての式に一意な最汎(most general)型，即ち主型(principal type)を付けることができる」という重要な性質を持つ．
+
+\chapter{対象言語の設計}\label{ch:lang_design}
+
+\begin{abstract}
+この章では，言語の仕様とその背景，設計思想について述べる．
+そして，最終的に実装された言語機能と構文を示す．
+\end{abstract}
+
+\section{型システム}\label{sec:型システム}
+nibkameでは型システムとして，Hindley-Milner型システムを採用した．
+
+Hindley-Milner型システムとはHaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムであり，
+「すべての式に一意な最汎(most general)型，即ち主型(principal type)を付けることができる」という重要な性質を持つ．
 
 代表的なアルゴリズムは「\algorithmW」\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}として知られているものである．
 このアルゴリズムはHindley-MilnerアルゴリズムともDamas-Milnerアルゴリズムとも呼ばれる．
@@ -153,9 +162,6 @@ Hindley-Milner型システムを採用したnibkameでは型は以下の様に�
             &\mid&  \forall \alpha. \sigma          & \text{全称量化}
 \end{array}
 \end{equation}
-
-
-\section{対象言語の設計}\label{sc:lang_design}
 
 \section{内部の設計と実装}\label{sc:impl}
 
