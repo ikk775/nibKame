@@ -1,12 +1,35 @@
-\documentclass[a4paper,titlepage]{jsarticle}
+\documentclass[a4paper,titlepage,report]{jsbook}
 
 \usepackage[dvipdfmx]{graphicx}
+\usepackage{emp} % 図の描画用
 \usepackage[sc]{mathpazo}
 \usepackage{listings}
 \usepackage{jlisting}
+\usepackage{mathtools} % Ams-TeXの使用
+\usepackage{mathrsfs} % 数式フォント
+\usepackage{amssymb,amsthm} % 記号と定理環境
+\usepackage{proof} % 証明図
 
+% 定理類似環境:
+\newtheorem{theo}{定理}
+\newtheorem{defi}[theo]{定義}
+\newtheorem{lemm}[theo]{補題}
+\newtheorem{prop}[theo]{命題}
+\renewcommand{\proofname}{\bf 証明}
 \pagestyle{myheadings}
 
+% 見出し:
+\renewcommand{\lstlistlistingname}{プログラム一覧}
+
+% 略語:
+\newcommand{\algorithmW}{algorithm $\mathscr{W}$}
+
+% 記号:
+\DeclareSymbolFont{symbolsC}{U}{txsyc}{m}{n}
+\DeclareMathSymbol{\strictif}{\mathrel}{symbolsC}{74}
+\DeclareMathSymbol{\boxright}{\mathrel}{symbolsC}{128}
+
+\newcommand{\dash}{\hspace{0.1em}--\hspace{0.1em}}
 \begin{document}
 \title{電子情報工学科実験報告書 \\ 関数型言語の設計と実装}
 \author{
@@ -16,10 +39,16 @@
 \end{tabular}
 }
 \date{平成23年2月3日}
+
+\frontmatter
+
 \maketitle
 \tableofcontents
+\listoffigures
+\listoftables
+\lstlistoflistings
 
-\section{序論}
+\chapter{序論}
 かくこと
 \begin{itemize}
  \item なぜ関数型
@@ -27,19 +56,52 @@
 \end{itemize}
 MinCaml\cite{住井英二郎:2008-04-24}とかを使う．
 
-\section{対象言語の設計}
+\mainmatter
+\chapter{原理}\label{ch:原理}
 
+\section{型システム}\label{sec:型システム}
+
+\subsection{Hindley-Milner型システム}\label{ssec:Hindley-Milner型システム}
+HaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムである．
+Hindley-Milner型システムでは，「すべての式に一意な最汎(most general)型，即ち主型(principal type)を付けることができる」という重要な性質を持つ．
+
+代表的なアルゴリズムは「\algorithmW」\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}として知られているものである。
+このアルゴリズムはHindley-MilnerアルゴリズムともDamas-Milnerアルゴリズムとも呼ばれる。
+型変数への代入による型の同一化(unification)を基本操作としている。
+
+このアルゴリズムの起源は、Haskell CurryとRobert Feysが1958年に単純型付ラムダ計算の型推論のために考案したものであり、
+1969年にJ. Roger Hindleyがそれを拡張し、また、それが常に最汎な型に推論することを証明した。
+1978年にRobin MilnerはHindleyとは独立に\algorithmW\cite{Milner1978348}を導き出し、
+1982年、Luis Damasが最終的にMilnerのアルゴリズムの完全性を証明した\cite{Damas:1982:PTF:582153.582176}。
+
+Hindley-Milner型システムを採用したnibkameでは型は以下の様に定義される。
+\begin{equation}\label{eq:type} 
+\begin{array}{rcll}
+    \tau    &\Coloneqq& \iota                       & \text{型定数} \\
+            &\mid&  \alpha                          & \text{型変数} \\
+            &\mid&  \tau \rightarrow \tau           & \text{関数型} \\
+            &\mid&  \tau \times \cdots \times \tau  & \text{直積型} \\
+            &\mid&  \tau + \cdots + \tau            & \text{直和型} \\
+            &\mid&  \tau \tau                       & \text{多相のヴァリアント} \\
+    \sigma  &\Coloneqq & \tau                       & \text{量化なし} \\
+            &\mid&  \forall \alpha. \sigma          & \text{全称量化}
+\end{array}
+\end{equation}
+
+\section{対象言語の設計}
+pp. 126--127またはpp. 126\dash 127と
 \section{内部の設計と実装}
 
 \section{サンプルプログラムと実行結果}
 
-\section{結論}
+\section{結論}\label{ch:結論}
 
-\section*{謝辞}
+\section*{謝辞}\label{sec:謝辞}
 
 \bibliographystyle{jplain}
 \bibliography{reference}
 
+\backmatter
 \appendix
 
 \end{document}
