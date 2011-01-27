@@ -17,25 +17,94 @@
 }
 \date{平成23年2月3日}
 \maketitle
+
 \tableofcontents
+\newpage
 
-\section{序論}
-かくこと
+\section{序論}\label{sc:intro}
+関数型言語と呼ばれるプログラム言語に由来する機能が，C++やJava, C\# など
+の言語に取り込まれている．またScala\footnote{http://www.scala-lang.org/}
+やF\#{}\footnote{http://msdn.microsoft.com/ja-jp/fsharp}
+など既存の手続き型言語との連携を強く意識した言語も登場している．
+
+関数型言語に特徴的な機能として第一級の関数やクロージャなどがある．これら
+は計算機の命令セットの持つ機能からかけ離れている．こういった機能を持った
+言語を設計し，実装することで機能に対する理解を深めることを目標とする．
+
+そのために，我々は静的に強く型付けされる関数型言語nibkameを設計しコンパ
+イラを実装した．これは学生実験における参照実装として開発された
+MinCaml\cite{住井英二郎:2008-04-24}を基にして開発を行なった．
+
+MinCamlおよびMinCamlコンパイラは簡潔な実装(約2000行ほど)で性能の良いコー
+ドを生成することに特徴のある関数型言語である．構文はObjective
+Caml\footnote{http://caml.inria.fr/ocaml/}のサブセットであり,算術演算や
+タプル構造，破壊的代入の可能な配列，高階関数，再帰と末尾呼び出し，型推論
+などの機能が実現されており，レイトレーシングなどの複雑なプログラムを記述
+することができる．MinCamlはプログラム言語処理系の教材として用いられるこ
+とを主眼としており，その機能選定は実装を簡潔に保つことを重視して行われた．
+
+簡潔さを保つために，多くのアプリケーションプログラムを記述するときに必須
+でない機能は省略された．その中にはMinCamlコンパイラの記述に多く用いられ
+ている代数的データ型やパターンマッチングなどが存在する．
+nibkameではそういった機能と，その他にも生産性に高い影響を与える機能を追
+加することでより実用的な言語を開発することを目指した．
+MinCamlコンパイラはターゲットとする計算機としてSPARCとPowerPCをサポート
+している．しかし実行する計算機の確保の容易さから，nibkameコンパイラはター
+ゲットをx86プロセッサとした．
+
+\subsection{実装規模}
+コンパイラの主要部分はObjective
+Camlを用いて実装した．構文解析部分はScheme
+(処理系としては
+Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
+を用いた．実行時ランタイムはC言語にて実装した．
+% ここに行数などを含むといいみたい
+
+2011年1月12日時点でのソースコードの全行数は7001行であり，
+ソースソードの目的別言語別行数内訳は以下のようになっている．
 \begin{itemize}
- \item なぜ関数型
- \item 既存のものとの比較 (機能なりターゲットコードなり対象なり)
+ \item 本体
+       \begin{description}
+	\item[O'Caml 実装] 4820行
+	\item[O'Caml インターフェース] 781行
+	\item[Scheme] 337行
+	\item[C言語] 0行
+       \end{description}
+ \item 単体テスト
+       \begin{description}
+	\item[O'Caml 実装部分] 1063行
+       \end{description}
 \end{itemize}
-MinCaml\cite{住井英二郎:2008-04-24}とかを使う．
 
-\section{対象言語の設計}
+\subsection{報告書の構成} % ここは内容にあわせて書き換えてください．あと
+			  % subsectionはオーバースペックな気が．
+\ref{sc:lang_design}節では，まずnibkame言語に搭載された機能のうち関数型
+言語に特有なものについて説明し，次に最終的に実装された言語機能と構文を示
+す．
+\ref{sc:impl}節ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
+コンパイラの実装について説明する．
+\ref{sc:sample}節では実際のnibkameプログラムの例を示し，コンパイラの動作
+と得られる目的プログラムについて説明する．
+\ref{sc:conclu}節では実装した機能についてまとめ，これからの課題を議論する．
 
-\section{内部の設計と実装}
+%かくこと
+%\begin{itemize}
+% \item なぜ関数型 (MinCamlをなぜ参考したか)
+% \item 既存のものとの比較 (機能なりターゲットコードなり対象なり)
+%\end{itemize}
 
-\section{サンプルプログラムと実行結果}
+\section{対象言語の設計}\label{sc:lang_design}
 
-\section{結論}
+\section{内部の設計と実装}\label{sc:impl}
+
+\section{サンプルプログラムと実行結果}\label{sc:sample}
+
+\section{結論}\label{sc:conclu}
 
 \section*{謝辞}
+樋口先生にはプロジェクト計画についてご意見をいただきました．大墳先生には発表
+資料の作成や発表についてご指導いただきました．牛田先生には予稿などの書法につ
+いて助言をいただきました．深謝の意を表します．
 
 \bibliographystyle{jplain}
 \bibliography{reference}
