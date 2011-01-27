@@ -123,7 +123,7 @@ Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
 % \item 既存のものとの比較 (機能なりターゲットコードなり対象なり)
 %\end{itemize}
 \mainmatter
-\chapter{原理}\label{ch:原理}
+%\chapter{原理}\label{ch:原理}
 
 \section{型システム}\label{sec:型システム}
 
@@ -131,16 +131,16 @@ Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
 HaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムである．
 Hindley-Milner型システムでは，「すべての式に一意な最汎(most general)型，即ち主型(principal type)を付けることができる」という重要な性質を持つ．
 
-代表的なアルゴリズムは「\algorithmW」\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}として知られているものである。
-このアルゴリズムはHindley-MilnerアルゴリズムともDamas-Milnerアルゴリズムとも呼ばれる。
-型変数への代入による型の同一化(unification)を基本操作としている。
+代表的なアルゴリズムは「\algorithmW」\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}として知られているものである．
+このアルゴリズムはHindley-MilnerアルゴリズムともDamas-Milnerアルゴリズムとも呼ばれる．
+型変数への代入による型の同一化(unification)を基本操作としている．
 
-このアルゴリズムの起源は、Haskell CurryとRobert Feysが1958年に単純型付ラムダ計算の型推論のために考案したものであり、
-1969年にJ. Roger Hindleyがそれを拡張し、また、それが常に最汎な型に推論することを証明した。
-1978年にRobin MilnerはHindleyとは独立に\algorithmW\cite{Milner1978348}を導き出し、
-1982年、Luis Damasが最終的にMilnerのアルゴリズムの完全性を証明した\cite{Damas:1982:PTF:582153.582176}。
+このアルゴリズムの起源は，Haskell CurryとRobert Feysが1958年に単純型付ラムダ計算の型推論のために考案したものであり，
+1969年にJ. Roger Hindleyがそれを拡張し，また，それが常に最汎な型に推論することを証明した．
+1978年にRobin MilnerはHindleyとは独立に\algorithmW\cite{Milner1978348}を導き出し，
+1982年，Luis Damasが最終的にMilnerのアルゴリズムの完全性を証明した\cite{Damas:1982:PTF:582153.582176}．
 
-Hindley-Milner型システムを採用したnibkameでは型は以下の様に定義される。
+Hindley-Milner型システムを採用したnibkameでは型は以下の様に定義される．
 \begin{equation}\label{eq:type} 
 \begin{array}{rcll}
     \tau    &\Coloneqq& \iota                       & \text{型定数} \\
