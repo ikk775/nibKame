@@ -112,11 +112,11 @@ Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
 \chapter{準備}\label{ch:notation}
 \begin{abstract}
 本報告書で用いる理論・記法について概説する． 
-本章は解りやすさを最優先したため，
-論理的に不正確な箇所があるがお赦し願いたい．
+本章は直感的な解りやすさを最優先したため，
+論理的に不正確な箇所が多々あるがお赦し願いたい．
 \end{abstract}
 
-\section{記法について}\label{sec:about-notation}
+\section{全体的な記法について}\label{sec:about-notation}
 以下，演算子の結合力を表す際に，
 \begin{equation}\label{eq:bonding-strength}
 \times \gtrdotrel +
@@ -158,47 +158,99 @@ $\limpl$は右結合性，即ち$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$�
 $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
 主に，$\Gamma_1, \Gamma_2, \cdots$から$A_1, A_2, \cdots$が推論できることを表す記法として用いる.
 
-\section{ラムダ計算について}\label{sec:about-lambda-calculi}
-ラムダ計算(lambda calculus) とは，一言で言ってしまうと関数の計算を抽象化したものである．
+\section{ラムダ記法について}\label{sec:about-lambda-notation}
+ラムダ記法(lambda notation) とは，一言で言ってしまうと関数を抽象化したものである．
 
 例えば以下の式を考えよう．
 \begin{align}
-(x + 1)^2 &= x^2 + 2x + 1\\
+f(x) &= (x + 1)^2\\
+f(x + 1) &= x^2 + 4x + 4\\
 (x + 1) &= x + 1
 \end{align}
-これは$(x + 1)$に対して二乗するという演算を施すと$x^2 + 2x + 1$となるが,
-施さないとそれは$x + 1$そのものであることを表している．
+これは$(x + 1)$に対して関数$f$を適用すると$x^2 + 2x + 1$となるが，
+関数を適用しないとそれは$x + 1$そのものであることを表している．
 
-では次の場合はどうなるだろうか．
+では逆に，$f$に引数を適用しないとどうなるのであろうか．
 \begin{align}
-f(2) &= 2^2 + 2\cdot 2 + 1 = 9\\
 f(x) &= x^2 + 2x + 1\\
-f    &= ?
+f    &= \;?
 \end{align}
 この場合の$f$そのものを表すのにラムダ記法を用いることが出来，そうすると
 \begin{align}
-f &= \lambdadot{x}{x^2 + 2x + 1} \\
-f(2) &= (\lambdadot{x}{x^2 + 2x + 1})(2) = 2^2 + 2\cdot 2 + 1 = 9
+f &= \lambdadot{x}{(x^2 + 2x + 1)} \\
 \end{align}
 となって関数そのものを陽に扱うことが出来る．
+以下，必要の無い限り括弧は省略し，$\lambdadot{x}{(x^2 + 2x + 1)}$は$\lambdadot{x}{x^2 + 2x + 1}$と書く．
+
+ラムダ記法を用いて記述した関数に引数を適用させると，
+\begin{align}
+f(y) &= (\lambdadot{x}{x^2 + 2x + 1})(y) = y^2 + 2y + 2 \\
+f(2) &= (\lambdadot{x}{x^2 + 2x + 1})(2) = 2^2 + 2\cdot 2 + 1 = 9
+\end{align}
+となる．
 
 次に複数引数の関数を考えよう．
 \begin{align}
 g(x, y) &= x + y
 \end{align}
-この関数を表すために，$\lambdadot{x,y}{}$という記法を導入すると，
+この関数を表すためには，
+$\lambdadot{x,y}{}$という記法を導入するのが良いと思われる．
+従って，
 \begin{align}
+\label{eq:lambda-multiple}
 g &= \lambdadot{x,y}{x + y}\\
+\label{eq:lambda-multiple-inst}
 g(a, b) &= a + b\\
 g(1, 2) &= (\lambdadot{x,y}{x + y})(1, 2) = 1 + 2 = 3
 \end{align}
 と表せる．
 
 ここで，天下り的ではあるが，$\lambdadot{x}{\lambdadot{y}{x+y}}$を考える．
-\begin{align}
-h &= \lambdadot{x}{\lambdadot{y}{x+y}}
-\end{align}
+すると，
+\begin{gather}
+\begin{aligned}
+\label{eq:lambda-curried}
+h &= \lambdadot{x}{\lambdadot{y}{x+y}} \\
+\end{aligned}\\
+\begin{aligned}
+h(a) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(a) \nonumber \\
+     &= {\lambdadot{y}{a+y}}
+\end{aligned}\\
+\begin{aligned}
+\label{eq:lambda-curried-inst}
+h(a)(b) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(a)(b) \nonumber\\
+        &= {\lambdadot{y}{a+y}}(b) \nonumber\\
+        &= a + b
+\end{aligned}\\
+\begin{aligned}
+h(1)(2) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(1)(2) \nonumber \\
+        &= {\lambdadot{y}{1+y}}(2) \nonumber \\
+        &= 1 + 2 = 3
+\end{aligned}
+\end{gather}
+このようになる．
 
+ここで，
+\refEq{eq:lambda-multiple-inst}と\refEq{eq:lambda-curried-inst}
+を見比べると$g(a, b) = h(a)(b)$であることがわかる．
+つまり，
+\begin{equation}
+(\lambdadot{x,y}{\cdots})(a,b) \equiv (\lambdadot{x}{\lambdadot{y}{\cdots}})(a)(b)
+\end{equation}
+といえる．
+
+これは簡単に拡張が出来て，任意の多変数関数$g$に対してある関数$h$があって
+\begin{equation}
+g(a_1, a_2, \cdots, a_n)= h(a_1)(a_2)\cdots(a_n)
+\end{equation}
+となる．
+この操作$\mathrm{curry}: g\mapsto h$をカリー化(currying)と呼ぶ．
+
+従って，カリー化を行うことにより全ての多変数関数は一変数関数で書くことが出来る．
+
+\section{ラムダ計算}\label{sc:about-lambda-calculus}
+\section{型付ラムダ計算}\label{sc:about-typed-lambda-calculus}
+\section{型理論}\label{sc:about-type-theory}
 
 \chapter{対象言語の設計}\label{ch:lang_design}
 
