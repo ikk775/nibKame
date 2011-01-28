@@ -36,7 +36,14 @@
 
 \newpage
 
-\section{序論}\label{sc:intro}
+\mainmatter % 序論も本文の内
+
+\chapter{序論}\label{ch:intro}
+\begin{abstract}
+ 本実験課題選定の理由と目的について論じる．また，実装の概要と報告書の構成を述べる．
+\end{abstract}
+
+\section{目的}
 関数型言語と呼ばれるプログラム言語に由来する機能が，C++やJava, C\# など
 の言語に取り込まれている．またScala\footnote{\url{http://www.scala-lang.org/}}
 やF\#{}\footnote{\url{http://msdn.microsoft.com/ja-jp/fsharp}}
@@ -67,7 +74,7 @@ MinCamlコンパイラはターゲットとする計算機としてSPARCとPower
 している．しかし実行する計算機の確保の容易さから，nibkameコンパイラはター
 ゲットをx86プロセッサとした．
 
-\subsection{実装規模}
+\section{実装概要}
 コンパイラの主要部分はObjective
 Camlを用いて実装した．構文解析部分はScheme
 (処理系としては
@@ -95,23 +102,19 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
     \end{center}
 \end{table}
 
-\subsection{報告書の構成} % ここは内容にあわせて書き換えてください．あと
+\section{報告書の構成} % ここは内容にあわせて書き換えてください．あと
 			  % subsectionはオーバースペックな気が．
-\refCh{ch:lang_design}では，まずnibkame言語に搭載された機能のうち関数型
-言語に特有なものについて説明し，次に最終的に実装された言語機能と構文を示
-す．
-\refSc{sc:impl}ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
+\refCh{ch:preparation}では本報告書で用いる論理学や集合の記法について説明す
+る．コンパイラの動作を理解するために必要となる理論についても概説する．
+\refCh{ch:lang_design}では，nibkame言語に搭載された機能のうち関数型言語
+に特有なものについて説明し，最終的に実装された言語機能と構文を示す．
+\refCh{ch:impl}ではコンパイラのモジュール構造と各フェーズの対応を示し，
 コンパイラの実装について説明する．
-\refSc{sc:sample}では実際のnibkameプログラムの例を示し，コンパイラの動作
+\refCh{ch:sample-program}では実際のnibkameプログラムの例を示し，コンパイラの動作
 と得られる目的プログラムについて説明する．
-\refSc{sc:conclu}では実装した機能についてまとめ，これからの課題を議論する．
+\refCh{ch:conclude}では実装した機能についてまとめ，これからの課題を議論する．
 
-%かくこと
-%\begin{itemize}
-% \item なぜ関数型 (MinCamlをなぜ参考したか)
-% \item 既存のものとの比較 (機能なりターゲットコードなり対象なり)
-%\end{itemize}
-\mainmatter
+%\mainmatter
 %\chapter{原理}\label{ch:原理}
 
 \chapter{準備}\label{ch:preparation}
@@ -390,12 +393,18 @@ Hindley-Milner型システムを採用したnibkameでは型は以下の様に�
 
 \subsection{型定数}\label{ssc:type-constant}
 
-\section{内部の設計と実装}\label{sc:impl}
+%\section{内部の設計と実装}\label{sc:impl}
+%\section{サンプルプログラムと実行結果}\label{sc:sample}
+%\section{結論}\label{sc:conclu}
 
-\section{サンプルプログラムと実行結果}\label{sc:sample}
+\chapter{コンパイラの設計と実装}\label{ch:impl}
 
-\section{結論}\label{sc:conclu}
+\chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 
+\chapter{結論}\label{ch:conclude}
+
+%\chapter*{謝辞}
+\addcontentsline{toc}{chapter}{謝辞}
 \section*{謝辞}
 樋口先生にはプロジェクト計画についてご意見をいただきました．大墳先生には発表
 資料の作成や発表についてご指導いただきました．牛田先生には予稿などの書法につ
