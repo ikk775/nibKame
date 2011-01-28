@@ -37,8 +37,8 @@
 
 \section{序論}\label{sc:intro}
 関数型言語と呼ばれるプログラム言語に由来する機能が，C++やJava, C\# など
-の言語に取り込まれている．またScala\footnote{http://www.scala-lang.org/}
-やF\#{}\footnote{http://msdn.microsoft.com/ja-jp/fsharp}
+の言語に取り込まれている．またScala\footnote{\url{http://www.scala-lang.org/}}
+やF\#{}\footnote{\url{http://msdn.microsoft.com/ja-jp/fsharp}}
 など既存の手続き型言語との連携を強く意識した言語も登場している．
 
 関数型言語に特徴的な機能として第一級の関数やクロージャなどがある．これら
@@ -51,7 +51,7 @@ MinCaml\cite{住井英二郎:2008-04-24}を基にして開発を行なった．
 
 MinCamlおよびMinCamlコンパイラは簡潔な実装(約2000行ほど)で性能の良いコー
 ドを生成することに特徴のある関数型言語である．構文はObjective
-Caml\footnote{http://caml.inria.fr/ocaml/}のサブセットであり,算術演算や
+Caml\footnote{\url{http://caml.inria.fr/ocaml/}}のサブセットであり,算術演算や
 タプル構造，破壊的代入の可能な配列，高階関数，再帰と末尾呼び出し，型推論
 などの機能が実現されており，レイトレーシングなどの複雑なプログラムを記述
 することができる．MinCamlはプログラム言語処理系の教材として用いられるこ
@@ -70,7 +70,7 @@ MinCamlコンパイラはターゲットとする計算機としてSPARCとPower
 コンパイラの主要部分はObjective
 Camlを用いて実装した．構文解析部分はScheme
 (処理系としては
-Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
+Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 を用いた．実行時ランタイムはC言語にて実装した．
 % ここに行数などを含むといいみたい
 
@@ -92,14 +92,14 @@ Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
 
 \subsection{報告書の構成} % ここは内容にあわせて書き換えてください．あと
 			  % subsectionはオーバースペックな気が．
-\ref{sc:lang_design}節では，まずnibkame言語に搭載された機能のうち関数型
+\refCh{ch:lang_design}では，まずnibkame言語に搭載された機能のうち関数型
 言語に特有なものについて説明し，次に最終的に実装された言語機能と構文を示
 す．
-\ref{sc:impl}節ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
+\refSc{sc:impl}ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
 コンパイラの実装について説明する．
-\ref{sc:sample}節では実際のnibkameプログラムの例を示し，コンパイラの動作
+\refSc{sc:sample}では実際のnibkameプログラムの例を示し，コンパイラの動作
 と得られる目的プログラムについて説明する．
-\ref{sc:conclu}節では実装した機能についてまとめ，これからの課題を議論する．
+\refSc{sc:conclu}では実装した機能についてまとめ，これからの課題を議論する．
 
 %かくこと
 %\begin{itemize}
