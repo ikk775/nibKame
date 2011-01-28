@@ -149,6 +149,96 @@ Gauche\footnote{http://practical-scheme.net/gauche/index-j.html})
 \mainmatter
 %\chapter{原理}\label{ch:原理}
 
+\chapter{準備}\label{ch:notation}
+\begin{abstract}
+本報告書で用いる理論・記法について概説する． 
+本章は命題論理を理解する人に対し，
+この報告書を読んで理解できる程度の知識を付けてもらうことを目的としているため，
+論理的に不正確な箇所があるがお赦し願いたい．
+\end{abstract}
+
+\section{記法について}\label{sec:about-notation}
+以下，演算子の結合力を表す際に，
+\begin{equation}\label{eq:bonding-strength}
+\times \gtrdotrel +
+\end{equation}
+と表すこととする．
+これは，$A\times B + C$という式があったときに$(A\times B)+ C$と解釈することを意味する．
+
+等号の使い分けは以下のようにする．
+
+\section{集合について}\label{sec:about-set}
+元として含むことを表す記号として$\in$，$\ni$を用いる.
+
+部分集合を表す記号として$\msubset$，$\msupset$を，
+真部分集合を表す記号として$\mpsubset$，$\mpsupset$を用いる． 
+
+空集合の記号としては$\emptyset$を用いる.
+
+\section{論理について}\label{sec:about-logic}
+真・偽を表すの記号として夫々，$\ltrue$，$\lfalse$を用いる.
+論理和・論理積・否定・含意の記号として夫々，$\lor$，$\land$，$\lnot$，$\limpl$を用いる.
+$\limpl$は右結合性，即ち$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$とする．
+夫々の演算子の優先順位は$\lnot\gtrdotrel\land,\lor\gtrdotrel\limpl$とする．
+
+\begin{equation}\label{eq:def-mp}
+\infer[\text{M.P.}]{Q}{P & P \limpl Q}
+\end{equation}
+は，$P$と$P \limpl Q$という仮定から，M.P.という推論規則によって$Q$が導き出されることを表す記法である.
+\ref{eq:def-mp}によって定義される推論規則は，推論規則内の$P$，$Q$に式を代入することによって
+\begin{equation}\label{eq:def-mp-instance-1}
+\infer[\text{M.P.}]{A\land B}{A & A \limpl A\land B}
+\end{equation}
+や，
+\begin{equation}\label{eq:def-mp-instance-2}
+\infer[\text{M.P.}]{\foralldot{x}{P_2(a, x) \limpl P_1(x)}}{\existsdot{x}{P_1(x)} & \existsdot{x}{P_1(x)} \limpl \foralldot{x}{P_2(a, x) \limpl P_1(x)}}
+\end{equation}
+も表す．このように，文脈上の
+
+
+$\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
+主に，$\Gamma_1, \Gamma_2, \cdots$から$A_1, A_2, \cdots$が推論できることを表す記法として用いる.
+
+\section{ラムダ計算について}\label{sec:about-lambda-calculi}
+ラムダ計算(lambda calculus) とは，一言で言ってしまうと関数の計算を抽象化したものである．
+
+例えば以下の式を考えよう．
+\begin{align}
+(x + 1)^2 &= x^2 + 2x + 1\\
+(x + 1) &= x + 1
+\end{align}
+これは$(x + 1)$に対して二乗するという演算を施すと$x^2 + 2x + 1$となるが,
+施さないとそれは$x + 1$そのものであることを表している．
+
+では次の場合はどうなるだろうか．
+\begin{align}
+f(2) &= 2^2 + 2\cdot 2 + 1 = 9\\
+f(x) &= x^2 + 2x + 1\\
+f    &= ?
+\end{align}
+この場合の$f$そのものを表すのにラムダ記法を用いることが出来，そうすると
+\begin{align}
+f &= \lambdadot{x}{x^2 + 2x + 1} \\
+f(2) &= (\lambdadot{x}{x^2 + 2x + 1})(2) = 2^2 + 2\cdot 2 + 1 = 9
+\end{align}
+となって関数そのものを陽に扱うことが出来る．
+
+次に複数引数の関数を考えよう．
+\begin{align}
+g(x, y) &= x + y
+\end{align}
+この関数を表すために，$\lambdadot{x,y}{}$という記法を導入すると，
+\begin{align}
+g &= \lambdadot{x,y}{x + y}\\
+g(a, b) &= a + b\\
+g(1, 2) &= (\lambdadot{x,y}{x + y})(1, 2) = 1 + 2 = 3
+\end{align}
+と表せる．
+
+ここで，天下り的ではあるが，$\lambdadot{x}{\lambdadot{y}{x+y}}$を考える．
+\begin{align}
+h &= \lambdadot{x}{\lambdadot{y}{x+y}}
+\end{align}
 
 
 \chapter{対象言語の設計}\label{ch:lang_design}
@@ -180,12 +270,16 @@ Hindley-Milner型システムを採用したnibkameでは型は以下の様に�
             &\mid&  \alpha                          & \text{型変数} \\
             &\mid&  \tau \rightarrow \tau           & \text{関数型} \\
             &\mid&  \tau \times \cdots \times \tau  & \text{直積型} \\
-            &\mid&  \tau + \cdots + \tau            & \text{直和型} \\
             &\mid&  \tau \tau                       & \text{多相のヴァリアント} \\
     \sigma  &\Coloneqq & \tau                       & \text{量化なし} \\
-            &\mid&  \forall \alpha. \sigma          & \text{全称量化}
+            &\mid&  \foralldot{\alpha}{\sigma}      & \text{全称量化}
 \end{array}
 \end{equation}
+直和形については型推論部では扱わない．
+
+\subsection{実例}\label{ssc:example}
+
+\subsection{型定数}\label{ssc:type-constant}
 
 \section{内部の設計と実装}\label{sc:impl}
 
