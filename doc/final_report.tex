@@ -2,13 +2,14 @@
 
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{emp} % 図の描画用
-\usepackage[sc]{mathpazo}
+\usepackage[sc,slantedGreek]{mathpazo}
 \usepackage{listings}
 \usepackage{jlisting}
 \usepackage{mathtools} % Ams-TeXの使用
 \usepackage{mathrsfs} % 数式フォント
 \usepackage{amssymb,amsthm} % 記号と定理環境
 \usepackage{proof} % 証明図
+\usepackage{url} % URL
 
 % 定理類似環境:
 \newtheorem{theo}{定理}
@@ -28,6 +29,29 @@
 \DeclareSymbolFont{symbolsC}{U}{txsyc}{m}{n}
 \DeclareMathSymbol{\strictif}{\mathrel}{symbolsC}{74}
 \DeclareMathSymbol{\boxright}{\mathrel}{symbolsC}{128}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\msubset}{\subseteq}
+\newcommand{\mnsubset}{\nsubseteq}
+\newcommand{\mpsubset}{\subset}
+\newcommand{\mnpsubset}{\nsubset}
+\newcommand{\msupset}{\supseteq}
+\newcommand{\mnsupset}{\nsupseteq}
+\newcommand{\mpsupset}{\supset}
+\newcommand{\mnpsupset}{\nsupset}
+\newcommand{\limpl}{\supset}
+\newcommand{\gtrdotrel}{\mathrel{\gtrdot}}
+\newcommand{\Rrel}{\mathrel{R}}
+\newcommand{\curlyveeord}{\mathord{\curlyvee}}
+\newcommand{\curlywedgeord}{\mathord{\curlywedge}}
+\newcommand{\powerset}{\mathfrak{P}}
+\newcommand{\monadicopdot}[3]{#1#2.\,#3}
+\newcommand{\newmonadicopdot}[2]{\newcommand{#1}[2]{#2##1.\,##2}}
+\newmonadicopdot{\foralldot}{\forall}
+\newmonadicopdot{\existsdot}{\exists}
+\newmonadicopdot{\lambdadot}{\lambda}
+\newcommand{\ltrue}{\top}
+\newcommand{\lfalse}{\bot}
 
 \newcommand{\dash}{\hspace{0.1em}--\hspace{0.1em}}
 \begin{document}
