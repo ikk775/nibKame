@@ -76,20 +76,24 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 % ここに行数などを含むといいみたい
 
 2011年1月12日時点でのソースコードの全行数は7001行であり，
-ソースソードの目的別言語別行数内訳は以下のようになっている．
-\begin{itemize}
- \item 本体
-       \begin{description}
-	\item[O'Caml 実装] 4820行
-	\item[O'Caml インターフェース] 781行
-	\item[Scheme] 337行
-	\item[C言語] 0行
-       \end{description}
- \item 単体テスト
-       \begin{description}
-	\item[O'Caml 実装部分] 1063行
-       \end{description}
-\end{itemize}
+ソースソードの目的別言語別行数内訳は\refTbl{tbl:sourcecode-lines}のようになっている．
+
+\begin{table}[hbt]
+    \caption{ソースコードの行数}\label{tbl:sourcecode-lines}
+    \begin{center}
+    \begin{tabular}{cllr@{行}}
+        \Hline
+        \multicolumn{1}{c}{目的} & \multicolumn{2}{c}{言語} & \multicolumn{1}{c}{行数} \\
+        \hline
+        本体        & O'Caml & 実装             & 4820 \\
+	                & O'Caml & インターフェース & 781 \\
+	                & Scheme &                  & 337 \\
+	                & C言語  &                  & 0 \\
+        単体テスト  & O'Caml & 実装             & 1063 \\
+        \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
 
 \subsection{報告書の構成} % ここは内容にあわせて書き換えてください．あと
 			  % subsectionはオーバースペックな気が．
