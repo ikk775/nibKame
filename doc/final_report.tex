@@ -121,7 +121,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 論理的に不正確な箇所が多々あるがお赦し願いたい．
 \end{abstract}
 
-\section{全体的な記法について}\label{sec:about-notation}
+\section{全体的な記法について}\label{sc:about-notation}
 以下，演算子の結合力を表す際に，
 \begin{equation}\label{eq:bonding-strength}
 \times \gtrdotrel +
@@ -129,9 +129,25 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 と表すこととする．
 これは，$A\times B + C$という式があったときに$(A\times B)+ C$と解釈することを意味する．
 
-等号の使い分けは以下のようにする．
+等号系の記号の使い分けは\refTbl{tbl:equal-usage}のようにする．
 
-\section{集合について}\label{sec:about-set}
+\begin{table}[hbt]
+    \caption{等号系記号の使い分け}\label{tbl:equal-usage}
+    \begin{center}
+    \begin{tabular}{cp{40zw}}
+        \Hline
+        \multicolumn{1}{c}{記号} & \multicolumn{1}{c}{目的} \\
+        \hline
+        $=$ & 通常の等値，即ち数値・真偽値・集合などの等しさを真偽値で表す，または，等しいことを言明する． \\
+        $\equiv$ & $=$よりも広い意味で同じであることを表す． \\
+        $\defeq$ & 通常の式において左辺の記号が右辺で定義されることを示す．\\
+        $\Coloneqq$ & BNFにおいて，左辺の記号が右辺で定義されることを示す．\refSc{sc:about-BNF-form} \\
+        \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
+
+\section{集合について}\label{sc:about-set}
 元として含むことを表す記号として$\in$，$\ni$を用いる.
 
 部分集合を表す記号として$\msubset$，$\msupset$を，
@@ -139,7 +155,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 
 空集合の記号としては$\emptyset$を用いる.
 
-\section{論理について}\label{sec:about-logic}
+\section{論理について}\label{sc:about-logic}
 真・偽を表すの記号として夫々，$\ltrue$，$\lfalse$を用いる.
 論理和・論理積・否定・含意の記号として夫々，$\lor$，$\land$，$\lnot$，$\limpl$を用いる.
 $\limpl$は右結合性，即ち$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$とする．
@@ -163,7 +179,7 @@ $\limpl$は右結合性，即ち$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$�
 $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
 主に，$\Gamma_1, \Gamma_2, \cdots$から$A_1, A_2, \cdots$が推論できることを表す記法として用いる.
 
-\section{バッカス・ナウア記法について}\label{sec:about-BNF-form}
+\section{バッカス・ナウア記法について}\label{sc:about-BNF-form}
 バッカス・ナウア記法（Backus-Naur Form, BNF）
 BNFは文脈自由文法を定義するのに用いられるメタ言語であって，
 プログラミング言語の構文記述やデータ構造の記述など，広汎に利用される．
@@ -173,7 +189,7 @@ BNFは文脈自由文法を定義するのに用いられるメタ言語であ�
 
 $\Coloneqq$の左辺にある名前は右辺にある式で定義される．
 例えば，
-\begin{equation}\label{eq:bnf-example-2} 
+\begin{equation}\label{eq:bnf-example-1} 
 e\Coloneqq \mathsf{abc}
 \end{equation}
 というBNFに対しては
@@ -211,7 +227,7 @@ e\Coloneqq \mathsf{a} \mid \mathsf{b} \mid \mathsf{c}
 \end{equation}
 となる．
 
-\section{ラムダ式について}\label{sec:about-lambda-expression}
+\section{ラムダ式について}\label{sc:about-lambda-expression}
 ラムダ式(lambda expression，$\lambda$-expression) とは，一言で言ってしまうと関数そのものを抽象化したものである．
 
 例えば以下の式を考えよう．
@@ -341,7 +357,7 @@ f(3)            &= (\lambdadot{x}{\lambdadot{y}{x+y}})(3) \\
 そして，最終的に実装された言語機能と構文を示す．
 \end{abstract}
 
-\section{型システム}\label{sec:型システム}
+\section{型システム}\label{sc:型システム}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
 
 Hindley-Milner型システムとはHaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムであり，
