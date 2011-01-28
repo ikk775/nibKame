@@ -163,8 +163,56 @@ $\limpl$は右結合性，即ち$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$�
 $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
 主に，$\Gamma_1, \Gamma_2, \cdots$から$A_1, A_2, \cdots$が推論できることを表す記法として用いる.
 
-\section{ラムダ記法について}\label{sec:about-lambda-notation}
-ラムダ記法(lambda notation) とは，一言で言ってしまうと関数を抽象化したものである．
+\section{バッカス・ナウア記法について}\label{sec:about-BNF-form}
+バッカス・ナウア記法（Backus-Naur Form, BNF）
+BNFは文脈自由文法を定義するのに用いられるメタ言語であって，
+プログラミング言語の構文記述やデータ構造の記述など，広汎に利用される．
+計算機科学でも式として頻繁に用いられるので解説する．
+
+以下，変数$e$の動く領域を$\varrange{e}$と表すこととする\footnote{一般的な方法ではない}．
+
+$\Coloneqq$の左辺にある名前は右辺にある式で定義される．
+例えば，
+\begin{equation}\label{eq:bnf-example-2} 
+e\Coloneqq \mathsf{abc}
+\end{equation}
+というBNFに対しては
+\begin{equation}
+\varrange{e} = \{\mathsf{abc}\}
+\end{equation}
+となる．
+
+右辺において$\mid$は「または」の意味を表し，$\mid$で区切られたいずれかの式に当てはまる．例えば，
+\begin{equation}\label{eq:bnf-example-2} 
+e\Coloneqq \mathsf{a} \mid \mathsf{b} \mid \mathsf{c}
+\quad\text{または}\quad
+\begin{array}{rcl}
+    e    &\Coloneqq& \mathsf{a} \\
+            &\mid&   \mathsf{b} \\
+            &\mid&   \mathsf{c} \\
+\end{array}
+\end{equation}
+というBNFに対しては
+\begin{equation}
+\varrange{e} = \{\mathrm{a}, \mathrm{b}, \mathrm{c}\}
+\end{equation}
+となる．
+
+右辺において左辺の記号が使われた場合は再帰となる
+\begin{equation}\label{eq:bnf-example-3} 
+\begin{array}{rcl}
+    e    &\Coloneqq& \mathsf{a} \\
+            &\mid&   e\mathsf{'} \\
+\end{array}
+\end{equation}
+というBNFに対しては
+\begin{equation}
+\varrange{e} = \{\mathrm{a}, \mathrm{a'}, \mathrm{a''}, \mathrm{a'''}, \cdots \}
+\end{equation}
+となる．
+
+\section{ラムダ式について}\label{sec:about-lambda-expression}
+ラムダ式(lambda expression，$\lambda$-expression) とは，一言で言ってしまうと関数そのものを抽象化したものである．
 
 例えば以下の式を考えよう．
 \begin{align}
@@ -180,14 +228,14 @@ f(x + 1) &= {\left((x + 1) + 1\right)}^2 = x^2 + 4x + 4\\
 f(x) &= x^2 + 2x + 1\\
 f    &= \;?
 \end{align}
-この場合の$f$そのものを表すのにラムダ記法を用いることが出来，そうすると
+この場合の$f$そのものを表すのにラムダ式を用いることが出来，そうすると
 \begin{align}
 f &= \lambdadot{x}{(x^2 + 2x + 1)}
 \end{align}
 となって関数そのものを陽に扱うことが出来る．
 以下，必要の無い限り括弧は省略し，$\lambdadot{x}{(x^2 + 2x + 1)}$は$\lambdadot{x}{x^2 + 2x + 1}$と書く．
 
-ラムダ記法を用いて記述した関数に引数を適用させると，
+ラムダ式を用いて記述した関数に引数を適用させると，
 \begin{align}
 f(y) &= (\lambdadot{x}{x^2 + 2x + 1})(y) = y^2 + 2y + 2 \\
 f(2) &= (\lambdadot{x}{x^2 + 2x + 1})(2) = 2^2 + 2\cdot 2 + 1 = 9
@@ -264,11 +312,13 @@ $\lambdadot{xyz\cdots}{}$と書き，
 $f(a)(b)(c)\cdots$を
 $f(a,b,c\cdots)$と書くことがある．
 
-ここで，\refEq{eq:lambda-curried-partial}に注目する．これの意味するところは，
+ここで，二変数の関数に一つだけ引数を与えた\refEq{eq:lambda-curried-partial}のような場合を考える．
 \begin{align}
 f (x)(y) &= x + y \quad \left(f = \lambdadot{xy}{x + y}\right) \\
 \mathit{add3}(x)   &= 3 + x \quad \left(\mathit{add3} = \lambdadot{x}{3 + x}\right) \\
-\intertext{なる$f$，$\mathit{add3}$を考えたときに}
+\end{align}
+なる$f$，$\mathit{add3}$を考えたときに
+\begin{align}
 \begin{aligned}
 f(3)            &= (\lambdadot{x}{\lambdadot{y}{x+y}})(3) \\
                 &= \lambdadot{y}{3 + y} \\
