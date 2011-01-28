@@ -165,7 +165,7 @@ $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
 例えば以下の式を考えよう．
 \begin{align}
 f(x) &= (x + 1)^2\\
-f(x + 1) &= x^2 + 4x + 4\\
+f(x + 1) &= {\left((x + 1) + 1\right)}^2 = x^2 + 4x + 4\\
 (x + 1) &= x + 1
 \end{align}
 これは$(x + 1)$に対して関数$f$を適用すると$x^2 + 2x + 1$となるが，
@@ -178,7 +178,7 @@ f    &= \;?
 \end{align}
 この場合の$f$そのものを表すのにラムダ記法を用いることが出来，そうすると
 \begin{align}
-f &= \lambdadot{x}{(x^2 + 2x + 1)} \\
+f &= \lambdadot{x}{(x^2 + 2x + 1)}
 \end{align}
 となって関数そのものを陽に扱うことが出来る．
 以下，必要の無い限り括弧は省略し，$\lambdadot{x}{(x^2 + 2x + 1)}$は$\lambdadot{x}{x^2 + 2x + 1}$と書く．
@@ -212,24 +212,29 @@ g(1, 2) &= (\lambdadot{x,y}{x + y})(1, 2) = 1 + 2 = 3
 \begin{aligned}
 \label{eq:lambda-curried}
 h &= \lambdadot{x}{\lambdadot{y}{x+y}} \\
-\end{aligned}\\
+\end{aligned} \\
 \begin{aligned}
-h(a) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(a) \nonumber \\
+\label{eq:lambda-curried-partial}
+h(a) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(a)\\
      &= {\lambdadot{y}{a+y}}
-\end{aligned}\\
+\end{aligned} \\
 \begin{aligned}
 \label{eq:lambda-curried-inst}
-h(a)(b) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(a)(b) \nonumber\\
-        &= {\lambdadot{y}{a+y}}(b) \nonumber\\
+\left(h(a)\right)(b) &= \left((\lambdadot{x}{\lambdadot{y}{x+y}})(a)\right)(b) \\
+        &= (\lambdadot{y}{a+y})(b)\\
         &= a + b
-\end{aligned}\\
+\end{aligned} \\
 \begin{aligned}
-h(1)(2) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(1)(2) \nonumber \\
-        &= {\lambdadot{y}{1+y}}(2) \nonumber \\
+\left(h(1)\right)(2) &= \left((\lambdadot{x}{\lambdadot{y}{x+y}})(1)\right)(2) \\
+        &= (\lambdadot{y}{1+y})(2) \\
         &= 1 + 2 = 3
 \end{aligned}
 \end{gather}
 このようになる．
+以下，$f(a)(b)(c)\cdots$は
+$\left({\cdots\left({\left({\left({f(a)}\right)(b)}\right)(c)}\right)\cdots}\right)$
+を表すものとし，
+必要の無い限り括弧を省略する．
 
 ここで，
 \refEq{eq:lambda-multiple-inst}と\refEq{eq:lambda-curried-inst}
@@ -246,10 +251,32 @@ g(a_1, a_2, \cdots, a_n)= h(a_1)(a_2)\cdots(a_n)
 \end{equation}
 となる．
 この操作$\mathrm{curry}: g\mapsto h$をカリー化(currying)と呼ぶ．
+纏めると，カリー化を行うことにより全ての多変数関数は一変数関数で書くことが出来ることとなる．
 
-従って，カリー化を行うことにより全ての多変数関数は一変数関数で書くことが出来る．
+このことより，
+$\lambdadot{x}{\lambdadot{y}{\lambdadot{z}{\cdots}}}$の略記として
+$\lambdadot{x,y,z,\cdots}{}$または
+$\lambdadot{xyz\cdots}{}$と書き，
+$f(a)(b)(c)\cdots$を
+$f(a,b,c\cdots)$と書くことがある．
 
-\section{ラムダ計算}\label{sc:about-lambda-calculus}
+ここで，\refEq{eq:lambda-curried-partial}に注目する．これの意味するところは，
+\begin{align}
+f (x)(y) &= x + y \quad \left(f = \lambdadot{xy}{x + y}\right) \\
+\mathit{add3}(x)   &= 3 + x \quad \left(\mathit{add3} = \lambdadot{x}{3 + x}\right) \\
+\intertext{なる$f$，$\mathit{add3}$を考えたときに}
+\begin{aligned}
+f(3)            &= (\lambdadot{x}{\lambdadot{y}{x+y}})(3) \\
+                &= \lambdadot{y}{3 + y} \\
+                &= \lambdadot{x}{3 + x} \\
+                &= \mathit{add3}
+\end{aligned}
+\end{align}
+となって，二つの引数を持つ関数$f$に引数を一つ適用した関数$f(3)$と
+常識的な方法で定義した引数に3を加える関数$\mathit{add3}$が等しくなる．
+このように$n$の引数を取る関数に対して$m$ ($<n$)の引数を適用することを部分適用(partial application)と呼ぶ．
+
+% \section{ラムダ計算}\label{sc:about-lambda-calculus}
 \section{型付ラムダ計算}\label{sc:about-typed-lambda-calculus}
 \section{型理論}\label{sc:about-type-theory}
 
