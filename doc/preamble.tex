@@ -32,14 +32,16 @@
 \newcommand{\curlyveeord}{\mathord{\curlyvee}}
 \newcommand{\curlywedgeord}{\mathord{\curlywedge}}
 \newcommand{\powerset}{\mathfrak{P}}
-\newcommand{\monadicopdot}[3]{#1#2.\,#3}
 \newcommand{\newmonadicopdot}[2]{\newcommand{#1}[2]{#2##1.\,##2}}
 \newmonadicopdot{\foralldot}{\forall}
 \newmonadicopdot{\existsdot}{\exists}
 \newmonadicopdot{\lambdadot}{\lambda}
 \newcommand{\ltrue}{\top}
 \newcommand{\lfalse}{\bot}
+\newcommand{\defeq}{\triangleq} % 定義時に使う等号
 
+\newcommand{\rulename}[1]{\text{\scshape\bfseries #1}}
+\newcommand{\varrange}[1]{\widetilde{#1}} %\widetriangle \widering \wideparen \widetilde \widehat のいづれかが良いと思う
 \newcommand{\refEq}[1]{式\ref{#1}}
 \newcommand{\refTbl}[1]{表\ref{#1}}
 \newcommand{\refFig}[1]{図\ref{#1}}
