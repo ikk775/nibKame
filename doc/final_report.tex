@@ -11,49 +11,8 @@
 \usepackage{proof} % 証明図
 \usepackage{url} % URL
 
-% 定理類似環境:
-\newtheorem{theo}{定理}
-\newtheorem{defi}[theo]{定義}
-\newtheorem{lemm}[theo]{補題}
-\newtheorem{prop}[theo]{命題}
-\renewcommand{\proofname}{\bf 証明}
-\pagestyle{myheadings}
+\input{preamble}
 
-% 見出し:
-\renewcommand{\lstlistlistingname}{プログラム一覧}
-
-% 略語:
-\newcommand{\algorithmW}{algorithm $\mathscr{W}$}
-
-% 記号:
-\DeclareSymbolFont{symbolsC}{U}{txsyc}{m}{n}
-\DeclareMathSymbol{\strictif}{\mathrel}{symbolsC}{74}
-\DeclareMathSymbol{\boxright}{\mathrel}{symbolsC}{128}
-\newcommand{\Z}{\mathbb{Z}}
-\newcommand{\N}{\mathbb{N}}
-\newcommand{\msubset}{\subseteq}
-\newcommand{\mnsubset}{\nsubseteq}
-\newcommand{\mpsubset}{\subset}
-\newcommand{\mnpsubset}{\nsubset}
-\newcommand{\msupset}{\supseteq}
-\newcommand{\mnsupset}{\nsupseteq}
-\newcommand{\mpsupset}{\supset}
-\newcommand{\mnpsupset}{\nsupset}
-\newcommand{\limpl}{\supset}
-\newcommand{\gtrdotrel}{\mathrel{\gtrdot}}
-\newcommand{\Rrel}{\mathrel{R}}
-\newcommand{\curlyveeord}{\mathord{\curlyvee}}
-\newcommand{\curlywedgeord}{\mathord{\curlywedge}}
-\newcommand{\powerset}{\mathfrak{P}}
-\newcommand{\monadicopdot}[3]{#1#2.\,#3}
-\newcommand{\newmonadicopdot}[2]{\newcommand{#1}[2]{#2##1.\,##2}}
-\newmonadicopdot{\foralldot}{\forall}
-\newmonadicopdot{\existsdot}{\exists}
-\newmonadicopdot{\lambdadot}{\lambda}
-\newcommand{\ltrue}{\top}
-\newcommand{\lfalse}{\bot}
-
-\newcommand{\dash}{\hspace{0.1em}--\hspace{0.1em}}
 \begin{document}
 \title{電子情報工学科実験報告書 \\ 関数型言語の設計と実装}
 \author{
