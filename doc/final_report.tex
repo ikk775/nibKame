@@ -146,16 +146,16 @@ $\limpl$は右結合性，即ち$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$�
 夫々の演算子の優先順位は$\lnot\gtrdotrel\land,\lor\gtrdotrel\limpl$とする．
 
 \begin{equation}\label{eq:def-mp}
-\infer[\text{M.P.}]{Q}{P & P \limpl Q}
+\infer[\rulename{M.P.}]{Q}{P & P \limpl Q}
 \end{equation}
-は，$P$と$P \limpl Q$という仮定から，M.P.という推論規則によって$Q$が導き出されることを表す記法である.
+は，$P$と$P \limpl Q$という仮定から，\rulename{M.P.}という推論規則によって$Q$が導き出されることを表す記法である.
 \ref{eq:def-mp}によって定義される推論規則は，推論規則内の$P$，$Q$に式を代入することによって
 \begin{equation}\label{eq:def-mp-instance-1}
-\infer[\text{M.P.}]{A\land B}{A & A \limpl A\land B}
+\infer[\rulename{M.P.}]{A\land B}{A & A \limpl A\land B}
 \end{equation}
 や，
 \begin{equation}\label{eq:def-mp-instance-2}
-\infer[\text{M.P.}]{\foralldot{x}{P_2(a, x) \limpl P_1(x)}}{\existsdot{x}{P_1(x)} & \existsdot{x}{P_1(x)} \limpl \foralldot{x}{P_2(a, x) \limpl P_1(x)}}
+\infer[\rulename{M.P.}]{\foralldot{x}{P_2(a, x) \limpl P_1(x)}}{\existsdot{x}{P_1(x)} & \existsdot{x}{P_1(x)} \limpl \foralldot{x}{P_2(a, x) \limpl P_1(x)}}
 \end{equation}
 も表す．このように，文脈上の
 
