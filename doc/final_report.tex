@@ -44,7 +44,8 @@
 \end{abstract}
 
 \section{目的}
-関数型言語と呼ばれるプログラム言語に由来する機能が，C++やJava, C\# など
+関数型言語の有用性はHughes\cite{hughes1989functional}などにより主張され
+ていた．現在では，関数型言語に由来する機能が，C++やJava, C\# など
 の言語に取り込まれている．またScala\footnote{\url{http://www.scala-lang.org/}}
 やF\#{}\footnote{\url{http://msdn.microsoft.com/ja-jp/fsharp}}
 など既存の手続き型言語との連携を強く意識した言語も登場している．
@@ -360,7 +361,10 @@ nibkameコンパイラはターゲットとしてx86機械語を生成する．�
 
 いわゆるx86は，1978年に発表されたIntel 8086とそれを元に開発された互換性
 のあるマイクロプロセッサの総称である．以下では特にIntel Pentium 4プロセッ
-サ以降のSSE2命令に対応したものについて扱う．
+サ以降のSSE2命令に対応したものについて扱う．\footnote{詳細について
+は，「IA-32 インテル アーキテクチャー・ソフトウェア・デベロッパーズ・マ
+ニュアル」を参照のこと(\url{http://www.intel.com/jp/download/index.htm}
+から入手できる)．}
 
 \subsection{命令セットの概要}\label{ssc:instruction_set}
 
