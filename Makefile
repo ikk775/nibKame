@@ -21,6 +21,7 @@ SOURCES +=pattern.ml
 SOURCES +=kNormal.ml
 SOURCES +=closure.ml
 SOURCES +=virtualAsm.ml
+SOURCES +=escapeAnalysis.ml
 SOURCES +=basicblock.ml
 SOURCES +=asmx86.ml
 SOURCES +=instantiate.ml
