@@ -100,7 +100,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 \refCh{ch:lang_design}では，まずnibkame言語に搭載された機能のうち関数型
 言語に特有なものについて説明し，次に最終的に実装された言語機能と構文を示
 す．
-\refSc{sc:impl}ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
+\refCh{sc:impl}ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
 コンパイラの実装について説明する．
 \refSc{sc:sample}では実際のnibkameプログラムの例を示し，コンパイラの動作
 と得られる目的プログラムについて説明する．
@@ -388,6 +388,35 @@ $f$の型は$t\rightarrow s$であるとする．
 そして，最終的に実装された言語機能と構文を示す．
 \end{abstract}
 
+\section{主要な構文要素}\label{sc:syntax-element}
+\subsection{数}\label{sc:syntax-number}
+数は整数と実数の二種類があり，この二つは明確に区別される．
+いくつか例を挙げると\refTbl{tbl:int-float}のようになる．
+
+\begin{table}[h]
+    \caption{整数と実数}\label{tbl:int-float}
+    \begin{center}
+    \begin{tabular}{crl}
+    \Hline
+    整数の例&\lstinline|0|& \\
+            &\lstinline|1|& \\
+            &\lstinline|100|& \\
+            &\lstinline|-1|& 負号がついても整数 \\
+            &\lstinline|+20|& 正号がついても整数 \\
+    \hline
+    実数の例 &\lstinline|0.0|& \\
+             &\lstinline|1.0|& \\
+             &\lstinline|-1.0|& 負号がついても整数 \\
+             &\lstinline|+3.14|& 正号がついても整数 \\
+             &\lstinline|1.0e10|& 指数表記も可能 \\
+             &\lstinline|1.0e+10|& 指数にも正負号を付けられる \\
+    \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
+
+\subsection{char}\label{ssc:syntax-char}
+
 \section{型システム}\label{sc:型システム}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
 
@@ -447,10 +476,12 @@ nibkameにおいて型定数は次の様に定義される．
 $\typename{list}$と$\typename{array}$，ヴァリアント型が型定数となっているのに違和感を覚える向きもあるだろうが理由は
 \refSsc{ssc:type-apply}で詳説する．
 
-\subsection{関数型}\label{ssc:type-function}
-
 \subsection{型変数}\label{ssc:type-variable}
 型変数とは型を動く変数である．
+
+\subsection{関数型}\label{ssc:type-function}
+関数型とはその名の通り関数が持つ型であり，
+$s$型をとって$t$型を返す関数の型は$s\rightarrow t$となる．
 
 \subsection{直積型}\label{ssc:type-tuple}
 \subsection{参照型}\label{ssc:type-reference}
@@ -475,7 +506,33 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 
 \subsection{ヴァリアント型}\label{ssc:type-variant}
 
-\chapter{内部の設計と実装}\label{sc:impl}
+\chapter{内部の設計と実装}\label{ch:impl}
+
+\begin{abstract}
+\end{abstract}
+
+\section{構文解析部}\label{sc:impl-parsing}
+現在のところ，構文解析部は
+解析表現文法(Parsing Expression Grammar, PEG)\cite{Ford:2004:PEG:982962.964011}の
+実装であるParsec\cite{Hutton96monadicparser}を
+Schemeへ移植したライブラリ\footnote{Gaucheに付属}
+を用いて書かれている．
+
+\section{型推論部}\label{sc:impl-type-inference}
+現在のところ，型推論部は
+\algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
+CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつつ
+それを拡張して利用した．
+型の合一化のアルゴリズムは
+\algorithmU\cite{DBLP:books/el/RV01/BaaderS01}
+を使用している．
+
+そのため，非常に計算量が大きくなっており，
+\cite{DBLP:journals/jfp/HengleinM94}の
+第3節にあるような型をもつ関数に対する型推論を
+現実的な時間・メモリ使用量で終わらせることが出来ない．
+
+ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
 
 \section{サンプルプログラムと実行結果}\label{sc:sample}
 
