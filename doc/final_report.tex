@@ -403,15 +403,19 @@ Hindley-Milner型システムとはHaskellやMLのような静的型付け関数
 1978年にRobin MilnerはHindleyとは独立に\algorithmW\cite{Milner1978348}を導き出し，
 1982年，Luis Damasが最終的にMilnerのアルゴリズムの完全性を証明した\cite{Damas:1982:PTF:582153.582176}．
 
-Hindley-Milner型システムを採用したnibkameでは型は以下の様に定義される．
+今現在，
+Hindley-Milner型システムを採用しているnibkameでは型は以下の様に定義される．
 \begin{equation}\label{eq:type} 
 \begin{array}{rcll}
-    \tau    &\Coloneqq& \iota                       & \text{型定数} \\
-            &\mid&  \alpha                          & \text{型変数} \\
-            &\mid&  \tau \rightarrow \tau           & \text{関数型} \\
-            &\mid&  \tau \times \cdots \times \tau  & \text{直積型} \\
-            &\mid&  \tau \tau                       & \text{多相のヴァリアント} \\
-    \sigma  &\Coloneqq & \tau                       & \text{量化なし} \\
+    \tau    &\Coloneqq&                             & \text{型:} \\
+            &\mid&  \iota                           & \text{型定数 (\refSsc{ssc:type-constant})} \\
+            &\mid&  \alpha                          & \text{型変数 (\refSsc{ssc:type-variable})} \\
+            &\mid&  \tau \rightarrow \tau           & \text{関数型 (\refSsc{ssc:type-function})} \\
+            &\mid&  \tau \times \cdots \times \tau  & \text{直積型 (\refSsc{ssc:type-tuple})} \\
+            &\mid&  \tau\ \textsf{ref}              & \text{参照型 (\refSsc{ssc:type-reference})} \\
+            &\mid&  \tau\ \tau                      & \text{型適用 (\refSsc{ssc:type-apply})} \\
+    \sigma  &\Coloneqq &                            & \text{型スキーム:} \\
+            &\mid & \tau                            & \text{型} \\
             &\mid&  \foralldot{\alpha}{\sigma}      & \text{全称量化}
 \end{array}
 \end{equation}
@@ -420,8 +424,58 @@ Hindley-Milner型システムを採用したnibkameでは型は以下の様に�
 \subsection{実例}\label{ssc:example}
 
 \subsection{型定数}\label{ssc:type-constant}
+nibkameにおいて型定数は次の様に定義される．
+\begin{equation}\label{eq:type-constant} 
+\begin{array}{rcll}
+    \iota   &\Coloneqq&                             & \text{型定数:} \\
+            &\mid&  \typename{int}                  & \text{整数型} \\
+            &\mid&  \typename{float}                & \text{実数型} \\
+            &\mid&  \typename{char}                 & \text{char型} \\
+            &\mid&  \typename{list}                 & \text{リスト型} \\
+            &\mid&  \typename{array}                & \text{配列型} \\
+            &\mid&  \mathit{variant}                & \text{ヴァリアント型} \\
+\end{array}
+\end{equation}
 
-\section{内部の設計と実装}\label{sc:impl}
+以上のうち，\typename{int}と\typename{float}は数値を表す型であり，
+内部的には夫々マシンにおけるもっとも自然な整数を表す表現\jpdash 例えばレジスタによる整数表現\jpdash と，
+もっとも自然な浮動小数点数を表す表現\jpdash 例えばIEEEの浮動小数点数\jpdash が用いられる．
+\typename{char}は1バイトによって表現できる符号なし数
+\jpdash 典型的には$0$から$2^8-1$\jpdash 
+を表す型である．
+
+$\typename{list}$と$\typename{array}$，ヴァリアント型が型定数となっているのに違和感を覚える向きもあるだろうが理由は
+\refSsc{ssc:type-apply}で詳説する．
+
+\subsection{関数型}\label{ssc:type-function}
+
+\subsection{型変数}\label{ssc:type-variable}
+型変数とは型を動く変数である．
+
+\subsection{直積型}\label{ssc:type-tuple}
+\subsection{参照型}\label{ssc:type-reference}
+
+\subsection{型適用}\label{ssc:type-apply}
+ML系言語の型には，
+$\typename{int}\ \typename{list}$や，
+$(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
+等の型が存在する
+\footnote{
+    Haskell，Mirandaではそれぞれ
+    $[\typename{Int}]$，
+    $[(\typename{Int}, \typename{Array}\ \typename{Char})]$
+    となる．
+    }
+．
+これは夫々整数型のリスト，整数と(char型の配列)の組のリストという意味である．
+
+上記の例よりわかるとおり，\typename{list}や\typename{array}などは型を引数として取る型である．
+それを実現するために，それらを型を取って型を返す関数の様に扱う．
+但し，ML系関数の記法と合わせるために，関数と引数の並びが通常と逆になる．
+
+\subsection{ヴァリアント型}\label{ssc:type-variant}
+
+\chapter{内部の設計と実装}\label{sc:impl}
 
 \section{サンプルプログラムと実行結果}\label{sc:sample}
 
