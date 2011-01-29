@@ -319,8 +319,8 @@ let get_type = function
   | BB.ApplyCls ((_, VA.Fun (arg, ret)), _) | BB.ApplyDir ((_, VA.Fun (arg, ret)), _) -> Some ret
   | BB.Cons _ | BB.Car _ | BB.Cdr _ -> Some (VA.Pointer (VA.List VA.Int))
   | BB.FCons _ | BB.FCar _ | BB.FCdr _ -> Some (VA.Pointer (VA.List VA.Float))
-  | BB.TupleAlloc l -> Some (VA.Pointer (VA.Tuple (List.map snd l)))
-  | BB.ArrayAlloc (t, _) -> Some (VA.Pointer (VA.Array t))
+  | BB.TupleAlloc (_, l) -> Some (VA.Pointer (VA.Tuple (List.map snd l)))
+  | BB.ArrayAlloc (_, t, _) -> Some (VA.Pointer (VA.Array t))
 
 let is_power2 n =
   let n = abs n in
@@ -414,7 +414,7 @@ let rec asmgen = function
 	| BB.FCons (h, t) -> Push (R (TempR t)) :: FPush (TempF h) :: Call (Id.L "_nibkame_fcons_") :: Add (RI (ESP, VA.Int_l 12)) :: FMov (TempF dst, XMM0) :: asmgen tail
 	| BB.FCar l -> FLd (TempF dst, Base (TempR l)) :: asmgen tail
 	| BB.FCdr l -> Ld (TempR dst, Offset (TempR l, 8)) :: asmgen tail
-	| BB.TupleAlloc l ->
+	| BB.TupleAlloc (escaped, l) ->
 	    let stores, _ =
 	      List.fold_left (fun a b -> 
 				let src = fst b in
@@ -424,7 +424,7 @@ let rec asmgen = function
 		([], 0) l in
 	      [Push (I (VA.Int_l (VA.tuple_size (List.map snd l)))); Call (Id.L "_nibkame_tuple_alloc_"); Add (RI (ESP, VA.Int_l 4))]
 	      @ (List.rev stores) @ Mov (TempR dst, EAX) :: asmgen tail
-	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l (VA.sizeof t))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
+	| BB.ArrayAlloc (escaped, t, n) -> Push (I (VA.Int_l (VA.sizeof t))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
       end
 	
   | BB.If (ins, b_label) :: tail ->

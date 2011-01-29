@@ -1,4 +1,5 @@
 module VA = VirtualAsm
+module EA = EscapeAnalysis
 
 module M = 
   Map.Make
@@ -51,8 +52,8 @@ type ins =
   | FCar of Id.t
   | FCdr of Id.t
 
-  | TupleAlloc of (Id.t * VA.ty) list
-  | ArrayAlloc of VA.ty * Id.t
+  | TupleAlloc of bool * (Id.t * VA.ty) list
+  | ArrayAlloc of bool * VA.ty * Id.t
 
 
 type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty; block_labels : Id.l list }
@@ -64,48 +65,48 @@ let mkblockname () =
     Id.L (Format.sprintf "block%d" i)
 
 let to_ins = function
-  | VA.Nop -> Nop
-  | VA.Set (lit) -> Set lit
-  | VA.Mov (v) -> Mov v
-  | VA.Neg (id) -> Neg id
-  | VA.Add (s1, s2) -> Add (s1, s2)
-  | VA.Sub (s1, s2) -> Sub (s1, s2)
-  | VA.Mul (s1, s2) -> Mul (s1, s2)
-  | VA.Div (s1, s2) -> Div (s1, s2)
-  | VA.SLL (s1, s2) -> SLL (s1, s2)
-  | VA.SLR (s1, s2) -> SLR (s1, s2)
-  | VA.Ld (m) -> Ld m
-  | VA.St (data, mem) -> St (data, mem)
-  | VA.FMov (id) -> FMov id
-  | VA.FNeg (id) -> FNeg id
-  | VA.FAdd (s1, s2) -> FAdd (s1, s2)
-  | VA.FSub (s1, s2) -> FSub (s1, s2)
-  | VA.FMul (s1, s2) -> FMul (s1, s2)
-  | VA.FDiv (s1, s2) -> FDiv (s1, s2)
-  | VA.FLd (m) -> FLd m
-  | VA.FSt (data, mem) -> FSt (data, mem)
+  | EA.Nop -> Nop
+  | EA.Set (lit) -> Set lit
+  | EA.Mov (v) -> Mov v
+  | EA.Neg (id) -> Neg id
+  | EA.Add (s1, s2) -> Add (s1, s2)
+  | EA.Sub (s1, s2) -> Sub (s1, s2)
+  | EA.Mul (s1, s2) -> Mul (s1, s2)
+  | EA.Div (s1, s2) -> Div (s1, s2)
+  | EA.SLL (s1, s2) -> SLL (s1, s2)
+  | EA.SLR (s1, s2) -> SLR (s1, s2)
+  | EA.Ld (m) -> Ld m
+  | EA.St (data, mem) -> St (data, mem)
+  | EA.FMov (id) -> FMov id
+  | EA.FNeg (id) -> FNeg id
+  | EA.FAdd (s1, s2) -> FAdd (s1, s2)
+  | EA.FSub (s1, s2) -> FSub (s1, s2)
+  | EA.FMul (s1, s2) -> FMul (s1, s2)
+  | EA.FDiv (s1, s2) -> FDiv (s1, s2)
+  | EA.FLd (m) -> FLd m
+  | EA.FSt (data, mem) -> FSt (data, mem)
 
-  | VA.BLd (m) -> BLd m
-  | VA.BSt (data, mem) -> BSt (data, mem)
+  | EA.BLd (m) -> BLd m
+  | EA.BSt (data, mem) -> BSt (data, mem)
 
-  | VA.Comp (op, ty, s1, s2) -> Comp (op, ty, s1, s2)
+  | EA.Comp (op, ty, s1, s2) -> Comp (op, ty, s1, s2)
 
-  | VA.ApplyCls (cls, args) -> ApplyCls (cls, args)
-  | VA.ApplyDir (func, args) -> ApplyDir (func, args)
+  | EA.ApplyCls (cls, args) -> ApplyCls (cls, args)
+  | EA.ApplyDir (func, args) -> ApplyDir (func, args)
 
-  | VA.Cons (h, t) -> Cons (h, t)
-  | VA.Car (l) -> Car l
-  | VA.Cdr (l) -> Cdr l
-  | VA.FCons (h, t) -> FCons (h, t)
-  | VA.FCar (l) -> FCar l
-  | VA.FCdr (l) -> FCdr l
+  | EA.Cons (h, t) -> Cons (h, t)
+  | EA.Car (l) -> Car l
+  | EA.Cdr (l) -> Cdr l
+  | EA.FCons (h, t) -> FCons (h, t)
+  | EA.FCar (l) -> FCar l
+  | EA.FCdr (l) -> FCdr l
 
-  | VA.TupleAlloc (data) -> TupleAlloc data
-  | VA.ArrayAlloc (ty, num) -> ArrayAlloc (ty, num)
+  | EA.TupleAlloc (escaped, data) -> TupleAlloc (escaped, data)
+  | EA.ArrayAlloc (escaped, ty, num) -> ArrayAlloc (escaped, ty, num)
 
 
 let rec linerize blocks stack = function
-  | VA.Ans (VA.If (cond, tr, fal)) ->
+  | EA.Ans (EA.If (cond, tr, fal)) ->
       let block_tr = mkblockname () in
 	begin match stack with
 	  | [] ->
@@ -115,11 +116,11 @@ let rec linerize blocks stack = function
 	      blocks := M.add block_tr (Label block_tr :: (List.rev (Jump continue  :: (List.rev (linerize blocks next tr))))) !blocks;
 	      If (to_ins cond, block_tr) :: linerize blocks next fal
 	end
-  | VA.Ans (t) -> [to_ins t]
-  | VA.Seq (t1, t2) -> 
+  | EA.Ans (t) -> [to_ins t]
+  | EA.Seq (t1, t2) -> 
       let continue = mkblockname () in
 	linerize blocks (continue :: stack) t1 @ (Label (continue) :: linerize blocks stack t2)
-  | VA.Let (id, exp, next) ->
+  | EA.Let (id, exp, next) ->
       Let (id, to_ins exp) :: linerize blocks stack next
 
 let rec add_ret = function
@@ -128,7 +129,7 @@ let rec add_ret = function
   | ins :: tail -> ins :: add_ret tail
 
 
-let linerize_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
+let linerize_func {EA.name = func_label; EA.args = args; EA.body = body; EA.ret = ret } =
   let blocks = ref M.empty in
   let insts = linerize blocks [] body in
   let insts' = add_ret insts in

@@ -47,7 +47,7 @@ let compile_knormal ch k =
   va
 
 let emit_asm ch (funcs, fp_table) =
-  let f = List.map Asmx86.generate_function (Basicblock.f funcs) in
+  let f = List.map Asmx86.generate_function (Basicblock.f (EscapeAnalysis.f funcs)) in
     List.iter (Asmx86.output_function ch) f
   
 

@@ -36,9 +36,9 @@ type ins =
   | FCons of Id.t * Id.t
   | FCar of Id.t
   | FCdr of Id.t
-  | TupleAlloc of (Id.t * VirtualAsm.ty) list
-  | ArrayAlloc of VirtualAsm.ty * Id.t
+  | TupleAlloc of bool * (Id.t * VirtualAsm.ty) list
+  | ArrayAlloc of bool * VirtualAsm.ty * Id.t
 
 type fundef = { name : Id.l; args : (Id.t * VirtualAsm.ty) list; body : ins list; ret : VirtualAsm.ty; block_labels : Id.l list }
 
-val f: VirtualAsm.fundef list -> fundef list
+val f: EscapeAnalysis.fundef list -> fundef list
