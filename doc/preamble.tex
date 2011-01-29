@@ -40,8 +40,12 @@
 \newcommand{\lfalse}{\bot}
 \newcommand{\defeq}{\triangleq} % 定義時に使う等号
 
+% 日本語特有の記号
+\newcommand{\jpdash}{―\nobreak\hspace{-0.5zw}\nobreak―\nobreak\hspace{-0.5zw}\nobreak―}
+
 \newcommand{\rulename}[1]{\text{\scshape\bfseries #1}}
-\newcommand{\varrange}[1]{\widetilde{#1}} %\widetriangle \widering \wideparen \widetilde \widehat のいづれかが良いと思う
+\newcommand{\typename}[1]{\text{\sffamily\bfseries #1}}
+\newcommand{\varrange}[1]{\boldsymbol{\widetilde{#1}}} %\widetriangle \widering \wideparen \widetilde \widehat のいづれかが良いと思う
 \newcommand{\refEq}[1]{式\ref{#1}}
 \newcommand{\refTbl}[1]{表\ref{#1}}
 \newcommand{\refFig}[1]{図\ref{#1}}
