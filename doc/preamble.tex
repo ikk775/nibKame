@@ -11,6 +11,7 @@
 
 % 略語:
 \newcommand{\algorithmW}{algorithm $\mathscr{W}$}
+\newcommand{\algorithmU}{algorithm $\mathscr{U}$}
 
 % 記号:
 \DeclareSymbolFont{symbolsC}{U}{txsyc}{m}{n}
@@ -54,6 +55,7 @@
 \newcommand{\refSsc}[1]{\ref{#1}項}
 \newcommand{\refSssc}[1]{\ref{#1}目}
 
+% 罫線に太線を追加
 \makeatletter
 \def\@arrayrule{\@addtopreamble{%
 \vrule \@width \arrayrulewidth}}
@@ -153,3 +155,50 @@
   \LT@bchunk}
 
 \makeatother
+
+% listings用設定
+\lstdefinelanguage{nibkame}{%
+   morekeywords={%
+        let,letrec,if,match,type,fun,+,-,*,/,+.,-.,*.,\.,
+        and,or,not,unit%
+   }%
+   sensitive,% ???
+   alsodigit=-+e.,%
+   morecomment=[l];,%
+   morecomment=[s]{\#|}{|\#},%
+   morestring=[b]"%"
+}[keywords,comments,strings]
+
+\lstdefinelanguage[Objective display]{Caml}[Objective]{Caml}{%
+    morestring=[d]',%'
+%    classoffset=2,
+%    morekeywords={int,float,char,string},keywordstyle=\color{red},
+%    classoffset=3,
+%    morekeywords={list,array},keywordstyle=\color{blue},
+%    classoffset=0,
+    literate=%
+        {[|}{[\hskip -1pt$|$}2%
+        {|]}{$|$\hskip -1pt]}2%
+%       {[]}{\ensuremath{[\hskip -0.1em]}}2%
+        {->}{\ensuremath{\rightarrow}~}2%
+        {::}{\ensuremath{:\hskip -0.1em:}~}2%
+}
+\lstset{language=[Objective display]Caml,%
+  basicstyle={\normalfont\normalsize\sffamily},%
+  commentstyle={\small\ttfamily\itshape\bfseries\upshape},%
+  classoffset=1,%
+  keywordstyle={\bfseries},%
+  %frame=,%
+  %framesep=0pt,%
+  showstringspaces=false,%
+  %numbers=left,%
+  %numberstyle={\scriptsize},%
+  %stepnumber=1,%
+  tabsize=8,%
+  lineskip=-0.5ex,%
+%
+  breaklines=true,%
+  linewidth=\the\textwidth,
+%  columns=[l]flexible%
+  columns=flexible%
+}
