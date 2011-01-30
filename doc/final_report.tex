@@ -36,8 +36,16 @@
 
 \newpage
 
-\section{序論}\label{sc:intro}
-関数型言語と呼ばれるプログラム言語に由来する機能が，C++やJava, C\# など
+\mainmatter % 序論も本文の内
+
+\chapter{序論}\label{ch:intro}
+\begin{abstract}
+ 本実験課題選定の理由と目的について論じる．また，実装の概要と報告書の構成を述べる．
+\end{abstract}
+
+\section{目的}
+関数型言語の有用性はHughes\cite{hughes1989functional}などにより主張され
+ていた．現在では，関数型言語に由来する機能が，C++やJava, C\# など
 の言語に取り込まれている．またScala\footnote{\url{http://www.scala-lang.org/}}
 やF\#{}\footnote{\url{http://msdn.microsoft.com/ja-jp/fsharp}}
 など既存の手続き型言語との連携を強く意識した言語も登場している．
@@ -67,7 +75,7 @@ MinCamlコンパイラはターゲットとする計算機としてSPARCとPower
 している．しかし実行する計算機の確保の容易さから，nibkameコンパイラはター
 ゲットをx86プロセッサとした．
 
-\subsection{実装規模}
+\section{実装概要}
 コンパイラの主要部分はObjective
 Camlを用いて実装した．構文解析部分はScheme
 (処理系としては
@@ -95,23 +103,20 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
     \end{center}
 \end{table}
 
-\subsection{報告書の構成} % ここは内容にあわせて書き換えてください．あと
+\section{報告書の構成} % ここは内容にあわせて書き換えてください．あと
 			  % subsectionはオーバースペックな気が．
-\refCh{ch:lang_design}では，まずnibkame言語に搭載された機能のうち関数型
-言語に特有なものについて説明し，次に最終的に実装された言語機能と構文を示
-す．
-\refCh{sc:impl}ではコンパイラの持つ中間言語と実行する翻訳に主眼を置いて
+\refCh{ch:preparation}ではコンパイラの動作を理解するために必要となる理論
+や規則について概説する．本報告書で用いる論理学や集合の記法についても説明
+する．
+\refCh{ch:lang_design}では，nibkame言語に搭載された機能のうち関数型言語
+に特有なものについて説明し，最終的に実装された言語機能と構文を示す．
+\refCh{ch:impl}ではコンパイラのモジュール構造と各フェーズの対応を示し，
 コンパイラの実装について説明する．
-\refSc{sc:sample}では実際のnibkameプログラムの例を示し，コンパイラの動作
+\refCh{ch:sample-program}では実際のnibkameプログラムの例を示し，コンパイラの動作
 と得られる目的プログラムについて説明する．
-\refSc{sc:conclu}では実装した機能についてまとめ，これからの課題を議論する．
+\refCh{ch:conclude}では実装した機能についてまとめ，これからの課題を議論する．
 
-%かくこと
-%\begin{itemize}
-% \item なぜ関数型 (MinCamlをなぜ参考したか)
-% \item 既存のものとの比較 (機能なりターゲットコードなり対象なり)
-%\end{itemize}
-\mainmatter
+%\mainmatter
 %\chapter{原理}\label{ch:原理}
 
 \chapter{準備}\label{ch:preparation}
@@ -381,6 +386,21 @@ e: t
 関数$f$と型$t$の式$e:t$があって，$e$に$f$を適用した$f\ e$の型が$s$であるとき，
 $f$の型は$t\rightarrow s$であるとする．
 
+\section{目的とする計算機}\label{sc:target-machine}
+nibkameコンパイラはターゲットとしてx86機械語を生成する．それの理解のため
+に必要となるx86アーキテクチャの機能について説明する．
+
+いわゆるx86は，1978年に発表されたIntel 8086とそれを元に開発された互換性
+のあるマイクロプロセッサの総称である．以下では特にIntel Pentium 4プロセッ
+サ以降のSSE2命令に対応したものについて扱う．\footnote{詳細について
+は，「IA-32 インテル アーキテクチャー・ソフトウェア・デベロッパーズ・マ
+ニュアル」を参照のこと(\url{http://www.intel.com/jp/download/index.htm}
+から入手できる)．}
+
+\subsection{命令セットの概要}\label{ssc:instruction_set}
+
+\subsection{呼び出し規約}\label{ssc:calling-convention}
+
 \chapter{対象言語の設計}\label{ch:lang_design}
 
 \begin{abstract}
@@ -506,7 +526,11 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 
 \subsection{ヴァリアント型}\label{ssc:type-variant}
 
-\chapter{内部の設計と実装}\label{ch:impl}
+%\section{内部の設計と実装}\label{sc:impl}
+%\section{サンプルプログラムと実行結果}\label{sc:sample}
+%\section{結論}\label{sc:conclu}
+
+\chapter{コンパイラの設計と実装}\label{ch:impl}
 
 \begin{abstract}
 \end{abstract}
@@ -534,10 +558,12 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
 
-\section{サンプルプログラムと実行結果}\label{sc:sample}
+\chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 
-\section{結論}\label{sc:conclu}
+\chapter{結論}\label{ch:conclude}
 
+%\chapter*{謝辞}
+\addcontentsline{toc}{chapter}{謝辞}
 \section*{謝辞}
 樋口先生にはプロジェクト計画についてご意見をいただきました．大墳先生には発表
 資料の作成や発表についてご指導いただきました．牛田先生には予稿などの書法につ
