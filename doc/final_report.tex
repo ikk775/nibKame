@@ -187,7 +187,8 @@ $\forall$，$\exists$，$\lnot$，$\limpl$は右結合性，
 \begin{equation}\label{eq:def-mp-instance-2}
 \infer[\rulename{M.P.}]{\foralldot{x}{Q(a, x) \limpl P(x)}}{\existsdot{x}{P(x)} & \existsdot{x}{P(x)} \limpl \foralldot{x}{Q(a, x) \limpl P(x)}}
 \end{equation}
-も表す．このように，文脈上の
+も表す．
+この例における$\alpha$，$\beta$のように，超文脈的に扱われる変数のことをメタ変数(meta-variable)と呼ぶ．
 
 
 $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
@@ -195,7 +196,7 @@ $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
 
 \section{バッカス・ナウア記法について}\label{sc:about-BNF-form}
 バッカス・ナウア記法（Backus-Naur Form, BNF）
-BNFは文脈自由文法を定義するのに用いられるメタ言語であって，
+は文脈自由文法を定義するのに用いられるメタ言語であって，
 プログラミング言語の構文記述やデータ構造の記述など，広汎に利用される．
 計算機科学でも式として頻繁に用いられるので解説する．
 
@@ -436,6 +437,44 @@ nibkameコンパイラはターゲットとしてx86機械語を生成する．�
 \end{table}
 
 \subsection{char}\label{ssc:syntax-char}
+nibkameにおいて用意されている組み込みの文字型は
+char型であるが，この型はC言語と同様に
+
+\section{式}\label{sc:expr}
+nibkameにおける式の定義は以下の様になる．
+\begin{equation}\label{eq:expr} 
+\begin{array}{rcll}
+e&\Coloneqq&                             & \text{式:} \\
+ &\mid&  c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
+ &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
+ &\mid&  x                          & \text{変数 (\refSsc{ssc:expr-variable})} \\
+ &\mid&  \lambdadot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
+ &\mid&  e, \cdots, e               & \text{組 (\refSsc{ssc:expr-tuple})} \\
+ &\mid&  e!                         & \text{参照 (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\ e                       & \text{適用 (\refSsc{ssc:expr-apply})} \\
+ &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
+ &\mid&  \fixdot{f}{\lambdadot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
+ &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
+ &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{条件 (\refSsc{ssc:expr-if})} \\
+\mathit{cls} &\Coloneqq& &\text{節:} \\
+             &\mid& p\rightarrow e & \\
+             &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
+\mathit{clss} &\Coloneqq& &\text{複数の節:} \\
+              &\mid& \mathit{cls} &\text{} \\
+              &\mid& \mathit{clss}|\mathit{cls} &\text{} \\
+
+p&\Coloneqq&                             & \text{パターン:} \\
+ &\mid&  \_                         & \text{全て} \\
+ &\mid&  c                          & \text{定数} \\
+ &\mid&  x                          & \text{変数} \\
+ &\mid&  g                          & \text{型構築子} \\
+ &\mid&  g\ p                       & \text{型構築子適用} \\
+ &\mid&  p,\cdots,p                 & \text{組} \\
+ &\mid&  p @ p                      & \text{連言} \\
+ &\mid&  p | p                      & \text{選言} \\
+ &\mid&  \lnot p                    & \text{否定} \\
+\end{array}
+\end{equation}
 
 \section{型システム}\label{sc:型システム}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
@@ -557,6 +596,7 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 現実的な時間・メモリ使用量で終わらせることが出来ない．
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
+
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 
