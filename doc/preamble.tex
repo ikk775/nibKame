@@ -33,10 +33,12 @@
 \newcommand{\curlyveeord}{\mathord{\curlyvee}}
 \newcommand{\curlywedgeord}{\mathord{\curlywedge}}
 \newcommand{\powerset}{\mathfrak{P}}
+\newcommand{\mathnkop}[1]{\mathop{\mathsf{#1}}}
 \newcommand{\newmonadicopdot}[2]{\newcommand{#1}[2]{#2##1.\,##2}}
 \newmonadicopdot{\foralldot}{\forall}
 \newmonadicopdot{\existsdot}{\exists}
 \newmonadicopdot{\lambdadot}{\lambda}
+\newmonadicopdot{\fixdot}{\mathnkop{fix}}
 \newcommand{\ltrue}{\top}
 \newcommand{\lfalse}{\bot}
 \newcommand{\defeq}{\triangleq} % 定義時に使う等号
