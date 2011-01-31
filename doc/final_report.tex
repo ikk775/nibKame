@@ -44,7 +44,7 @@
  本実験課題選定の理由と目的について論じる．また，実装の概要と報告書の構成を述べる．
 \end{abstract}
 
-\section{目的}
+\begin{resbonsiblesection}{目的}{\kobori}
 関数型言語の有用性はHughes\cite{hughes1989functional}などにより主張され
 ていた．現在では，関数型言語に由来する機能が，C++やJava, C\# など
 の言語に取り込まれている．またScala\footnote{\url{http://www.scala-lang.org/}}
@@ -75,6 +75,7 @@ nibkameではそういった機能と，その他にも生産性に高い影響�
 MinCamlコンパイラはターゲットとする計算機としてSPARCとPowerPCをサポート
 している．しかし実行する計算機の確保の容易さから，nibkameコンパイラはター
 ゲットをx86プロセッサとした．
+\end{resbonsiblesection}
 
 \section{実装概要}
 コンパイラの主要部分はObjective
@@ -127,7 +128,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 論理的に不正確な箇所が多々あるがお赦し願いたい．
 \end{abstract}
 
-\section{全体的な記法について}\label{sc:about-notation}
+\begin{resbonsiblesection}{全体的な記法について}{\sakamoto}\label{sc:about-notation}
 以下，演算子の結合力を表す際に，
 \begin{equation}\label{eq:bonding-strength}
 \times \gtrdotrel +
@@ -154,6 +155,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 \end{table}
 
 変数$e$の動く領域を$\varrange{e}$と表すこととする\footnote{一般的な方法ではない}．
+\end{resbonsiblesection}
 
 \begin{resbonsiblesection}{集合について}{\sakamoto}\label{sc:about-set}
 元として含むことを表す記号として$\in$，$\ni$を用いる.
@@ -184,7 +186,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 順序対の集合\jpdash 例えば，$\{(x,y)|x\in\R,y\in\Z\}$などにおいて，
 \end{resbonsiblesection}
 
-\section{論理について}\label{sc:about-logic}
+\begin{resbonsiblesection}{論理について}{\sakamoto}\label{sc:about-logic}
 真・偽を表すの記号として夫々，$\ltrue$，$\lfalse$を用いる.
 論理和・論理積・否定・含意の記号として夫々，$\lor$，$\land$，$\lnot$，$\limpl$を用いる.
 変数$x$がその領域$\varrange{x}$を動くとき，
@@ -215,8 +217,9 @@ $\forall$，$\exists$，$\lnot$，$\limpl$は右結合性，
 
 $\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
 主に，$\Gamma_1, \Gamma_2, \cdots$から$A_1, A_2, \cdots$が推論できることを表す記法として用いる.
+\end{resbonsiblesection}
 
-\section{バッカス・ナウア記法について}\label{sc:about-BNF-form}
+\begin{resbonsiblesection}{バッカス・ナウア記法について}{\sakamoto}\label{sc:about-BNF-form}
 バッカス・ナウア記法（Backus-Naur Form, BNF）
 は文脈自由文法を定義するのに用いられるメタ言語であって，
 プログラミング言語の構文記述やデータ構造の記述など，広汎に利用される．
@@ -267,8 +270,9 @@ e\Coloneqq \mathsf{a} \mid \mathsf{b} \mid \mathsf{c}
 \varrange{e} = \{\mathrm{a}, \mathrm{a'}, \mathrm{a''}, \mathrm{a'''}, \cdots \}
 \end{equation}
 となる．
+\end{resbonsiblesection}
 
-\section{ラムダ式について}\label{sc:about-lambda-expression}
+\begin{resbonsiblesection}{ラムダ式について}{\sakamoto}\label{sc:about-lambda-expression}
 ラムダ式(lambda expression，$\lambda$-expression) とは，一言で言ってしまうと関数そのものを抽象化したものである．
 
 例えば以下の式を考えよう．
@@ -389,12 +393,13 @@ f(3)            &= (\lambdadot{x}{\lambdadot{y}{x+y}})(3) \\
 
 以下，関数の引数を表す括弧は省略し，
 $f(x)(y)(z)\cdots$は$f\ x\ y\ z\ \cdots$または$f x y z \cdots$と書く．
+\end{resbonsiblesection}
 
 % \section{ラムダ計算}\label{sc:about-lambda-calculus}
 
 % \section{型付ラムダ計算}\label{sc:about-typed-lambda-calculus}
 
-\section{型について}\label{sc:about-type}
+\begin{resbonsiblesection}{型について}{\sakamoto}\label{sc:about-type}
 
 ある式$e$が型$t$を持つことを
 \begin{equation}
@@ -407,8 +412,9 @@ e: t
 
 関数$f$と型$t$の式$e:t$があって，$e$に$f$を適用した$f\ e$の型が$s$であるとき，
 $f$の型は$t\rightarrow s$であるとする．
+\end{resbonsiblesection}
 
-\section{目的とする計算機}\label{sc:target-machine}
+\begin{resbonsiblesection}{目的とする計算機}{\kobori}\label{sc:target-machine}
 nibkameコンパイラはターゲットとしてx86機械語を生成する．それの理解のため
 に必要となるx86アーキテクチャの機能について説明する．
 
@@ -475,6 +481,7 @@ x86アーキテクチャにおいては汎用レジスタの本数が少ない�
 浮動小数点数を返すときは，使用する命令の種類によって2種類にわかれ
 る．\textbf{FPU命令を用いるとき} FPUスタックのトップへ積む．
 \textbf{SSE2命令を用いるとき} XMM0レジスタの下位ビット側に格納する．
+\end{resbonsiblesection}
 
 
 \chapter{対象言語の設計}\label{ch:lang_design}
@@ -484,7 +491,7 @@ x86アーキテクチャにおいては汎用レジスタの本数が少ない�
 そして，最終的に実装された言語機能と構文を示す．
 \end{abstract}
 
-\section{主要な構文要素}\label{sc:syntax-element}
+\begin{resbonsiblesection}{主要な構文要素}{\sakamoto}\label{sc:syntax-element}
 \subsection{数}\label{sc:syntax-number}
 数は整数と実数の二種類があり，この二つは明確に区別される．
 いくつか例を挙げると\refTbl{tbl:int-float}のようになる．
@@ -516,8 +523,9 @@ nibkameにおいて用意されている組み込みの文字型は
 char型であるが，この型は%C言語と同様に
 8ビットの符号付き整数である．
 %char型であり，計算機上での表現は処理系に依存する．
+\end{resbonsiblesection}
 
-\section{式}\label{sc:expr}
+\begin{resbonsiblesection}{式}{\sakamoto}\label{sc:expr}
 nibkameにおける式の定義は以下の様になる．
 \begin{equation}\label{eq:expr} 
 \begin{array}{rcll}
@@ -564,7 +572,8 @@ p&\Coloneqq&\_                         & \text{全て} \\
 \subsection{適用}\label{ssc:expr-apply}
 \subsection{組}\label{ssc:expr-tuple}
 \subsection{参照}\label{ssc:expr-reference}
-\section{型システム}\label{sc:型システム}
+\end{resbonsiblesection}
+\begin{resbonsiblesection}{型システム}{\sakamoto}\label{sc:型システム}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
 
 Hindley-Milner型システムとはHaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムであり，
@@ -687,9 +696,10 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 \end{subequations}
 $\sigma\succ\tau$のとき，$\sigma$に含まれるいくつかの型変数に対して置換$\Sigma$を適用することで，
 $\Sigma\sigma=\tau$となる．
+\end{resbonsiblesection}
 
 
-\section{式の持つ型}\label{sc:type-inf}
+\begin{resbonsiblesection}{式の持つ型}{\sakamoto}\label{sc:type-inf}
 まず，変数や型変数，型構築子の型の環境は次の様に定義される．
 \begin{equation}\label{eq:type-env} 
 \begin{array}{rcll}
@@ -728,6 +738,9 @@ $e\in\mathset{Expr}$
         {\tau=\mathfunc{ConstType}(c)}
 \end{gather}
 \end{subequations}
+
+\end{resbonsiblesection}
+
 %\section{内部の設計と実装}\label{sc:impl}
 %\section{サンプルプログラムと実行結果}\label{sc:sample}
 %\section{結論}\label{sc:conclu}
@@ -737,14 +750,15 @@ $e\in\mathset{Expr}$
 \begin{abstract}
 \end{abstract}
 
-\section{構文解析部}\label{sc:impl-parsing}
+\begin{resbonsiblesection}{構文解析部}{\sakamoto}\label{sc:impl-parsing}
 現在のところ，構文解析部は
 解析表現文法(Parsing Expression Grammar, PEG)\cite{Ford:2004:PEG:982962.964011}の
 実装であるParsec\cite{Hutton96monadicparser}を
 Schemeへ移植したライブラリ\footnote{Gaucheのソースコードに付属}
 を用いて書かれている．
+\end{resbonsiblesection}
 
-\section{型推論部}\label{sc:impl-type-inference}
+\begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
 現在のところ，型推論部は
 \algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
 CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつつ
@@ -759,6 +773,7 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 現実的な時間・メモリ使用量で終わらせることが出来ない．
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
+\end{resbonsiblesection}
 
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
