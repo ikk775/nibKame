@@ -155,13 +155,34 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 
 変数$e$の動く領域を$\varrange{e}$と表すこととする\footnote{一般的な方法ではない}．
 
-\section{集合について}\label{sc:about-set}
+\begin{resbonsiblesection}{集合について}{\sakamoto}\label{sc:about-set}
 元として含むことを表す記号として$\in$，$\ni$を用いる.
 
 部分集合を表す記号として$\msubset$，$\msupset$を，
 真部分集合を表す記号として$\mpsubset$，$\mpsupset$を用いる． 
 
 空集合の記号としては$\emptyset$を用いる.
+
+集合$x$の羃集合は$\powerset x$若しくは$\powerset(x)$と書く
+\footnote{$2^x$や$\boldsymbol{2}^x$という表記も一般的．}．
+
+順序対若しくは単純に対は，$(x,y)$と表すことにする\footnote{標準的には$\left<x,y\right>$である．}．
+順序対は
+\begin{equation}
+(x_0,x_1) = (y_0,y_1) \iff x_0 = y_0 \land x_1 = y_1
+\end{equation}
+という式によって特徴付けられる．
+
+組は$(x_0,x_1,\cdots,x_n)$と表すことにする\footnote{これも標準的には$\left<x_0,x_1,\cdots,x_n\right>$である．}．
+順序対と同様に
+\begin{equation}
+(x_0,x_1,\cdots,x_n) = (y_0,y_1,\cdots,x_n) \iff \foralldot{i\in\{0,1,\cdots,n\}}{x_i = y_i}
+\end{equation}
+となる．
+
+標準射影とは，組または対からその構成要素を取り出す演算であり，
+順序対の集合\jpdash 例えば，$\{(x,y)|x\in\R,y\in\Z\}$などにおいて，
+\end{resbonsiblesection}
 
 \section{論理について}\label{sc:about-logic}
 真・偽を表すの記号として夫々，$\ltrue$，$\lfalse$を用いる.
@@ -624,36 +645,32 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 \subsection{型変数への代入}\label{ssc:type-order}
 型についての半順序関係$\succ$を以下の様に定義する．
 但し，$i,n\in\N$，$\rho,\sigma,\tau,\upsilon,\sigma_n,\tau_n\in\mathset{Type}$とする．
-\begin{equation}\label{eq:type-order}
-\begin{gathered}
-\begin{aligned}
+\begin{subequations}\label{eq:type-order}
+\begin{gather}
     \infer[\rulename{SO-Id}]
         {\tau\succ\tau}
-        {} &&
+        {} \\
     \infer[\rulename{SO-Var}]
         {\alpha\succ\tau}
-        {\alpha\in\mathset{TypeVar}}  &&
+        {\alpha\in\mathset{TypeVar}} \\
     \infer[\rulename{SO-Fun}]
         {(\rho\rightarrow\sigma)\succ(\tau\rightarrow\upsilon)}
-        {\rho\succ\tau & \sigma\succ\upsilon}
-\end{aligned} \\
-\begin{aligned}
+        {\rho\succ\tau & \sigma\succ\upsilon} \\
     \infer[\rulename{SO-Tuple}]
         {
             (\sigma_0\times\sigma_1\times\cdots\times\sigma_n)
             \succ
             (\tau_0\times\tau_1\times\cdots\times\tau_n)
         }
-        {\foralldot{i}{\sigma_i\succ\tau_i}} &&
+        {\foralldot{i}{\sigma_i\succ\tau_i}} \\
     \infer[\rulename{SO-Ref}]
         {(\sigma\ \textsf{ref})\succ(\tau\ \textsf{ref})}
-        {\sigma\succ\tau} &&
+        {\sigma\succ\tau} \\
     \infer[\rulename{SO-Apply}]
         {(\rho\ \sigma)\succ(\tau\ \upsilon)}
         {\rho\succ\tau & \sigma\succ\upsilon}
-\end{aligned}
-\end{gathered}
-\end{equation}
+\end{gather}
+\end{subequations}
 $\sigma\succ\tau$のとき，$\sigma$に含まれるいくつかの型変数に対して置換$\Sigma$を適用することで，
 $\Sigma\sigma=\tau$となる．
 
@@ -662,24 +679,41 @@ $\Sigma\sigma=\tau$となる．
 まず，変数や型変数，型構築子の型の環境は次の様に定義される．
 \begin{equation}\label{eq:type-env} 
 \begin{array}{rcll}
-    \mathcal{E}  &\subset& \mathset{ExprVar}\times\mathset{TypeScheme} & \text{変数の型環境} \\
-    \mathcal{T}  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
-    \mathcal{V}  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
+    \envExpr  &\subset& \mathset{ExprVar}\times\mathset{TypeScheme} & \text{変数の型環境} \\
+    \envType  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
+    \envVariant  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
 \end{array}
 \end{equation}
 
 定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
 \begin{equation}\label{eq:func-const-type} 
     \mathfunc{ConstType}(c) = \begin{cases}
-        \typename{unit} & \text{if c is $\mathnkop{()}$.} \\
-        \typename{bool} & \text{if c is $\mathnkop{true}$ or $\mathnkop{false}$.} \\
-        \typename{int} & \text{if c is integer.} \\
-        \typename{float} & \text{if c is float.} \\
-        \typename{char} & \text{if c is char.} \\
-        \alpha\ \typename{list} & \text{if c is $\mathnkop{Nil}$. And $\alpha$ is fresh.}
+        \typename{unit} & \text{if $c$ is $\mathnkop{()}$.} \\
+        \typename{bool} & \text{if $c$ is $\mathnkop{true}$ or $\mathnkop{false}$.} \\
+        \typename{int} & \text{if $c$ is integer.} \\
+        \typename{float} & \text{if $c$ is float.} \\
+        \typename{char} & \text{if $c$ is char.} \\
+        \alpha\ \typename{list} & \text{if $c$ is $\mathnkop{Nil}$. And $\alpha$ is fresh.}
         \end{cases}
 \end{equation}
 
+式の持つ型は以下の様に定義される．
+但し，断りの無い限り
+$i,n\in\N$，
+$c\in\mathset{ExprConst}$, 
+$x\in\mathset{ExprVar}$，
+$e\in\mathset{Expr}$
+とする．
+\begin{subequations}
+\begin{gather}
+    \infer[\rulename{Const}]
+        {\envExpr;\envType;\envVariant\vdash c:\tau}
+        {\tau=\mathfunc{ConstType}(c)}
+    \infer[\rulename{Var-i}]
+        {\envExpr;\envType;\envVariant\vdash c:\tau}
+        {\tau=\mathfunc{ConstType}(c)}
+\end{gather}
+\end{subequations}
 %\section{内部の設計と実装}\label{sc:impl}
 %\section{サンプルプログラムと実行結果}\label{sc:sample}
 %\section{結論}\label{sc:conclu}
