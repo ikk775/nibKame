@@ -12,6 +12,7 @@
 \usepackage{url} % URL
 \usepackage{longtable} % 複数ページに亙る長い表
 \usepackage{yhmath} % 長い括弧など
+\usepackage{tablists}
 
 \input{preamble}
 
@@ -444,10 +445,10 @@ char型であるが，この型はC言語と同様に
 nibkameにおける式の定義は以下の様になる．
 \begin{equation}\label{eq:expr} 
 \begin{array}{rcll}
-e&\Coloneqq&                             & \text{式:} \\
- &\mid&  c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
+e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
  &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
  &\mid&  x                          & \text{変数 (\refSsc{ssc:expr-variable})} \\
+ &\mid&  g                          & \text{型構築子 (\refSsc{ssc:expr-constructor})} \\
  &\mid&  \lambdadot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
  &\mid&  e, \cdots, e               & \text{組 (\refSsc{ssc:expr-tuple})} \\
  &\mid&  e!                         & \text{参照 (\refSsc{ssc:expr-reference})} \\
@@ -456,15 +457,16 @@ e&\Coloneqq&                             & \text{式:} \\
  &\mid&  \fixdot{f}{\lambdadot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
  &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
  &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{条件 (\refSsc{ssc:expr-if})} \\
-\mathit{cls} &\Coloneqq& &\text{節:} \\
-             &\mid& p\rightarrow e & \\
+\mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
+\mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
+\mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
+\mathit{cls} &\Coloneqq& p\rightarrow e & \\
              &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
-\mathit{clss} &\Coloneqq& &\text{複数の節:} \\
-              &\mid& \mathit{cls} &\text{} \\
+\mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
+\mathit{clss} &\Coloneqq& \mathit{cls} &\text{} \\
               &\mid& \mathit{clss}|\mathit{cls} &\text{} \\
-
-p&\Coloneqq&                             & \text{パターン:} \\
- &\mid&  \_                         & \text{全て} \\
+\mathset{Clauses}&\triangleq& \varrange{\mathit{clss}}            & \text{節の並び} \\
+p&\Coloneqq&\_                         & \text{全て} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
  &\mid&  g                          & \text{型構築子} \\
@@ -473,9 +475,19 @@ p&\Coloneqq&                             & \text{パターン:} \\
  &\mid&  p @ p                      & \text{連言} \\
  &\mid&  p | p                      & \text{選言} \\
  &\mid&  \lnot p                    & \text{否定} \\
+\mathset{Pattern}&\triangleq& \varrange{p}            & \text{パターン} \\
+\mathset{Constructor}&\triangleq& \varrange{g}            & \text{型構築子} \\
 \end{array}
 \end{equation}
 
+\subsection{定数}\label{ssc:expr-constant}
+\subsection{外部定数}\label{ssc:expr-external}
+\subsection{変数}\label{ssc:expr-variable}
+\subsection{型構築子}\label{ssc:expr-constructor}
+\subsection{関数}\label{ssc:expr-function}
+\subsection{適用}\label{ssc:expr-apply}
+\subsection{組}\label{ssc:expr-tuple}
+\subsection{参照}\label{ssc:expr-reference}
 \section{型システム}\label{sc:型システム}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
 
@@ -495,16 +507,17 @@ Hindley-Milner型システムとはHaskellやMLのような静的型付け関数
 Hindley-Milner型システムを採用しているnibkameでは型は以下の様に定義される．
 \begin{equation}\label{eq:type} 
 \begin{array}{rcll}
-    \tau    &\Coloneqq&                             & \text{型:} \\
-            &\mid&  \iota                           & \text{型定数 (\refSsc{ssc:type-constant})} \\
+    \tau    &\Coloneqq& \iota                       & \text{型定数 (\refSsc{ssc:type-constant})} \\
             &\mid&  \alpha                          & \text{型変数 (\refSsc{ssc:type-variable})} \\
             &\mid&  \tau \rightarrow \tau           & \text{関数型 (\refSsc{ssc:type-function})} \\
             &\mid&  \tau \times \cdots \times \tau  & \text{直積型 (\refSsc{ssc:type-tuple})} \\
             &\mid&  \tau\ \textsf{ref}              & \text{参照型 (\refSsc{ssc:type-reference})} \\
             &\mid&  \tau\ \tau                      & \text{型適用 (\refSsc{ssc:type-apply})} \\
-    \sigma  &\Coloneqq &                            & \text{型スキーム:} \\
-            &\mid & \tau                            & \text{型} \\
-            &\mid&  \foralldot{\alpha}{\sigma}      & \text{全称量化}
+    \mathset{Type}&\triangleq& \varrange{\tau}            & \text{型} \\
+    \sigma  &\Coloneqq &\tau                            & \text{型} \\
+            &\mid&  \foralldot{\alpha}{\sigma}      & \text{全称量化}\\
+    \mathset{TypeScheme}&\triangleq& \varrange{\sigma}            & \text{型スキーム}\\
+    \mathset{TypeVar}&\triangleq& \varrange{\alpha}            & 
 \end{array}
 \end{equation}
 直和形については型推論部では扱わない．
@@ -515,13 +528,14 @@ Hindley-Milner型システムを採用しているnibkameでは型は以下の�
 nibkameにおいて型定数は次の様に定義される．
 \begin{equation}\label{eq:type-constant} 
 \begin{array}{rcll}
-    \iota   &\Coloneqq&                             & \text{型定数:} \\
-            &\mid&  \typename{int}                  & \text{整数型} \\
+    \iota   &\Coloneqq& \typename{int}                  & \text{整数型} \\
             &\mid&  \typename{float}                & \text{実数型} \\
             &\mid&  \typename{char}                 & \text{char型} \\
             &\mid&  \typename{list}                 & \text{リスト型} \\
             &\mid&  \typename{array}                & \text{配列型} \\
             &\mid&  \mathit{variant}                & \text{ヴァリアント型} \\
+    \mathset{TypeConstant}&\triangleq& \varrange{\iota}            & \text{型定数}\\
+    \mathset{TypeVariant}&\triangleq& \varrange{\mathit{variant}}  & \text{ヴァリアント型}
 \end{array}
 \end{equation}
 
@@ -564,6 +578,66 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 但し，ML系関数の記法と合わせるために，関数と引数の並びが通常と逆になる．
 
 \subsection{ヴァリアント型}\label{ssc:type-variant}
+
+
+\subsection{型変数への代入}\label{ssc:type-order}
+型についての半順序関係$\succ$を以下の様に定義する．
+但し，$i,n\in\N$，$\rho,\sigma,\tau,\upsilon,\sigma_n,\tau_n\in\mathset{Type}$とする．
+\begin{equation}\label{eq:type-order}
+\begin{gathered}
+\begin{aligned}
+    \infer[\rulename{SO-Id}]
+        {\tau\succ\tau}
+        {} &&
+    \infer[\rulename{SO-Var}]
+        {\alpha\succ\tau}
+        {\alpha\in\mathset{TypeVar}}  &&
+    \infer[\rulename{SO-Fun}]
+        {(\rho\rightarrow\sigma)\succ(\tau\rightarrow\upsilon)}
+        {\rho\succ\tau & \sigma\succ\upsilon}
+\end{aligned} \\
+\begin{aligned}
+    \infer[\rulename{SO-Tuple}]
+        {
+            (\sigma_0\times\sigma_1\times\cdots\times\sigma_n)
+            \succ
+            (\tau_0\times\tau_1\times\cdots\times\tau_n)
+        }
+        {\foralldot{i}{\sigma_i\succ\tau_i}} &&
+    \infer[\rulename{SO-Ref}]
+        {(\sigma\ \textsf{ref})\succ(\tau\ \textsf{ref})}
+        {\sigma\succ\tau} &&
+    \infer[\rulename{SO-Apply}]
+        {(\rho\ \sigma)\succ(\tau\ \upsilon)}
+        {\rho\succ\tau & \sigma\succ\upsilon}
+\end{aligned}
+\end{gathered}
+\end{equation}
+$\sigma\succ\tau$のとき，$\sigma$に含まれるいくつかの型変数に対して置換$\Sigma$を適用することで，
+$\Sigma\sigma=\tau$となる．
+
+
+\section{式の持つ型}\label{sc:type-inf}
+まず，変数や型変数，型構築子の型の環境は次の様に定義される．
+\begin{equation}\label{eq:type-env} 
+\begin{array}{rcll}
+    \mathcal{E}  &\subset& \mathset{ExprVar}\times\mathset{TypeScheme} & \text{変数の型環境} \\
+    \mathcal{T}  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
+    \mathcal{V}  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
+\end{array}
+\end{equation}
+
+定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
+\begin{equation}\label{eq:func-const-type} 
+    \mathfunc{ConstType}(c) = \begin{cases}
+        \typename{unit} & \text{if c is $\mathnkop{()}$.} \\
+        \typename{bool} & \text{if c is $\mathnkop{true}$ or $\mathnkop{false}$.} \\
+        \typename{int} & \text{if c is integer.} \\
+        \typename{float} & \text{if c is float.} \\
+        \typename{char} & \text{if c is char.} \\
+        \alpha\ \typename{list} & \text{if c is $\mathnkop{Nil}$. And $\alpha$ is fresh.}
+        \end{cases}
+\end{equation}
 
 %\section{内部の設計と実装}\label{sc:impl}
 %\section{サンプルプログラムと実行結果}\label{sc:sample}
