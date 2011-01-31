@@ -438,7 +438,9 @@ nibkameコンパイラはターゲットとしてx86機械語を生成する．�
 
 \subsection{char}\label{ssc:syntax-char}
 nibkameにおいて用意されている組み込みの文字型は
-char型であるが，この型はC言語と同様に
+char型であるが，この型は%C言語と同様に
+8ビットの符号付き整数である．
+%char型であり，計算機上での表現は処理系に依存する．
 
 \section{式}\label{sc:expr}
 nibkameにおける式の定義は以下の様になる．
