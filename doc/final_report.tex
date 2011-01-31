@@ -124,7 +124,8 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 \chapter{準備}\label{ch:preparation}
 \begin{abstract}
 本報告書で用いる理論・記法について概説する． 
-本章は直感的な解りやすさを最優先したため，
+本章で説かれる内容は本報告書で用いられる範囲に限定し，
+かつ，直感的な解りやすさを最優先としたため，
 論理的に不正確な箇所が多々あるがお赦し願いたい．
 \end{abstract}
 
@@ -155,35 +156,53 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
 \end{table}
 
 変数$e$の動く領域を$\varrange{e}$と表すこととする\footnote{一般的な方法ではない}．
+
+自然数$\N$は0を含むこととする．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{集合について}{\sakamoto}\label{sc:about-set}
-元として含むことを表す記号として$\in$，$\ni$を用いる.
-
-部分集合を表す記号として$\msubset$，$\msupset$を，
-真部分集合を表す記号として$\mpsubset$，$\mpsupset$を用いる． 
-
-空集合の記号としては$\emptyset$を用いる.
+元として含むことを表す記号として$\in$，$\ni$を用いる.  部分集合を表す記号として$\msubset$，$\msupset$を，真部分集合を表す記号として$\mpsubset$，$\mpsupset$を用いる． 空集合の記号としては$\emptyset$を用いる.
 
 集合$x$の羃集合は$\powerset x$若しくは$\powerset(x)$と書く
 \footnote{$2^x$や$\boldsymbol{2}^x$という表記も一般的．}．
 
-順序対若しくは単純に対は，$(x,y)$と表すことにする\footnote{標準的には$\left<x,y\right>$である．}．
+順序対若しくは単純に対は，$(x,y)$と表すことにする\footnote{標準的には$\left\langle x,y\right\rangle$である．}．
 順序対は
 \begin{equation}
 (x_0,x_1) = (y_0,y_1) \iff x_0 = y_0 \land x_1 = y_1
 \end{equation}
 という式によって特徴付けられる．
-
-組は$(x_0,x_1,\cdots,x_n)$と表すことにする\footnote{これも標準的には$\left<x_0,x_1,\cdots,x_n\right>$である．}．
+組は$(x_0,x_1,\cdots,x_n)$と表すことにする\footnote{これも標準的には$\left\langle x_0,x_1,\cdots,x_n\right\rangle$である．}．
 順序対と同様に
 \begin{equation}
 (x_0,x_1,\cdots,x_n) = (y_0,y_1,\cdots,x_n) \iff \foralldot{i\in\{0,1,\cdots,n\}}{x_i = y_i}
 \end{equation}
 となる．
+$(x_0,x_1,\cdots,x_n)$は$(x_i)_{i\in\{0,1,\cdots,n\}}$とも書く．
 
-標準射影とは，組または対からその構成要素を取り出す演算であり，
-順序対の集合\jpdash 例えば，$\{(x,y)|x\in\R,y\in\Z\}$などにおいて，
+積集合とはいくつかの集合の要素で組を作ったときの集合のことであり，
+\begin{equation}
+X_0\times X_1\times\cdots\times X_n\triangleq \{(x_0,x_1,\cdots,x_n)|\foralldot{i\in\{0,1,\cdots,n\}}{x_i\in X_i}\}
+\end{equation}
+と定義される．
+$X_0\times X_1\times\cdots\times X_n$は$\prod_{i\in\{0,1,\cdots,n\}} X_i$とも書く．
+
+標準射影$\pi_i:\left(\prod_{j\in\{0,1,\cdots,n\}} X_j\right)\rightarrow X_i$とは，組または対からその構成要素を取り出す演算であり，
+\begin{equation}
+\pi_i(X_0\times X_1\times\cdots\times X_n)\triangleq X_i
+\end{equation}
+である．
+
+順序対の集合$X$\jpdash 例えば，$X=\{(x,y)|x\in\R,y\in\Z\}$など\jpdash は二項関係とも呼ばれ，
+その始域$\domain X$，終域$\codomain X$は夫々，
+\begin{align}
+    \domain X &\triangleq \pi_0\\
+    \codomain X &\triangleq \pi_1
+\end{align}
+と定義される．
+
+$\{x_0,x_1,\cdots,x_n\}$ ($n\in\N$)を$\vec{x}$と書く．
+
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{論理について}{\sakamoto}\label{sc:about-logic}
@@ -239,12 +258,6 @@ e\Coloneqq \mathsf{abc}
 右辺において$\mid$は「または」の意味を表し，$\mid$で区切られたいずれかの式に当てはまる．例えば，
 \begin{equation}\label{eq:bnf-example-2} 
 e\Coloneqq \mathsf{a} \mid \mathsf{b} \mid \mathsf{c}
-\quad\text{または}\quad
-\begin{array}{rcl}
-    e    &\Coloneqq& \mathsf{a} \\
-            &\mid&   \mathsf{b} \\
-            &\mid&   \mathsf{c} 
-\end{array}
 \quad\text{または}\quad
 \begin{array}{rcl}
     e    &\Coloneqq& \mathsf{a} \\
@@ -600,7 +613,7 @@ Hindley-Milner型システムを採用しているnibkameでは型は以下の�
             &\mid&  \tau\ \tau                      & \text{型適用 (\refSsc{ssc:type-apply})} \\
     \mathset{Type}&\triangleq& \varrange{\tau}            & \text{型} \\
     \sigma  &\Coloneqq &\tau                            & \text{型} \\
-            &\mid&  \foralldot{\alpha}{\sigma}      & \text{全称量化}\\
+            &\mid&  \foralldot{\vec{\alpha}}{\tau}      & \text{全称量化}\\
     \mathset{TypeScheme}&\triangleq& \varrange{\sigma}            & \text{型スキーム}\\
     \mathset{TypeVar}&\triangleq& \varrange{\alpha}            & 
 \end{array}
@@ -709,6 +722,11 @@ $\Sigma\sigma=\tau$となる．
 \end{array}
 \end{equation}
 
+置換$\{v/e,\cdots\}$の適用は次のように定義される．
+\begin{equation}
+{v/e'}e =
+\end{equation}
+
 定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
 \begin{equation}\label{eq:func-const-type} 
     \mathfunc{ConstType}(c) = \begin{cases}
@@ -725,17 +743,20 @@ $\Sigma\sigma=\tau$となる．
 但し，断りの無い限り
 $i,n\in\N$，
 $c\in\mathset{ExprConst}$, 
-$x\in\mathset{ExprVar}$，
+$v\in\mathset{ExprVar}$，
 $e\in\mathset{Expr}$
 とする．
 \begin{subequations}
 \begin{gather}
     \infer[\rulename{Const}]
-        {\envExpr;\envType;\envVariant\vdash c:\tau}
-        {\tau=\mathfunc{ConstType}(c)}
-    \infer[\rulename{Var-i}]
-        {\envExpr;\envType;\envVariant\vdash c:\tau}
-        {\tau=\mathfunc{ConstType}(c)}
+        {\envExpr;\envType;\envVariant\vdash c:}
+        {\tau'=\mathfunc{ConstType}(c) & \tau' \succ \tau} \\
+    \infer[\rulename{Var}]
+        {\envExpr;\envType;\envVariant\vdash v:\tau}
+        {(v,\tau')\in\envExpr & \tau' \succ \tau}
+    \infer[\rulename{Var}]
+        {\envExpr;\envType;\envVariant\vdash v:\tau}
+        {(v,\tau')\in\envExpr & \tau' \succ \tau}
 \end{gather}
 \end{subequations}
 
