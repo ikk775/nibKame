@@ -6,8 +6,21 @@
 \renewcommand{\proofname}{\bf 証明}
 \pagestyle{myheadings}
 
+% 人名
+\newcommand{\sakamoto}{酒本 典明}
+\newcommand{\kobori}{小堀 育夫}
+
 % 見出し:
 \renewcommand{\lstlistlistingname}{プログラム一覧}
+\newsavebox{\articleauthor}
+\newcommand{\responsibility}[1]{\par\begin{flushright}[文責: #1]\end{flushright}}
+\newcommand{\defresponsible}[2]{\newenvironment{#1}[3][\relax]{%
+\ifx##1\relax#2[##2 (##3)]{##2}%
+\else#2[##1 (##3)]{##2}\fi%
+\sbox{\articleauthor}{##3}}%
+{\responsibility{\usebox{\articleauthor}}}}
+\defresponsible{resbonsiblechapter}{\chapter}
+\defresponsible{resbonsiblesection}{\section}
 
 % 略語:
 \newcommand{\algorithmW}{algorithm $\mathscr{W}$}
@@ -17,6 +30,7 @@
 \DeclareSymbolFont{symbolsC}{U}{txsyc}{m}{n}
 \DeclareMathSymbol{\strictif}{\mathrel}{symbolsC}{74}
 \DeclareMathSymbol{\boxright}{\mathrel}{symbolsC}{128}
+\newcommand{\R}{\mathbb{R}}
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\msubset}{\subseteq}
