@@ -68,17 +68,24 @@
 \newcommand{\envExpr}{\mathnkenv{E}}
 \newcommand{\envType}{\mathnkenv{T}}
 \newcommand{\envVariant}{\mathnkenv{V}}
-\newcommand{\substExpr}{\Sigma_\mathnkenv{E}}
-\newcommand{\substype}{\Sigma_\mathnkenv{T}}
-\newcommand{\substVariant}{\Sigma_\mathnkenv{V}}
+\newcommand{\envPattern}{{\mathnkenv{E}_p}}
+\newcommand{\substExpr}{{\Sigma_\mathnkenv{E}}}
+\newcommand{\substType}{{\Sigma_\mathnkenv{T}}}
+\newcommand{\substVariant}{{\Sigma_\mathnkenv{V}}}
 \newcommand{\applysubst}[2]{\mathfrak{S}\ #1\ #2}
 \newcommand{\removeassoc}[2]{\mathfrak{Rm}\ #1\ #2}
+\newcommand{\patternandenv}[2]{#1\Rsh#2}
+\newcommand{\domainrestrict}[2]{#1\mathop{\upharpoonright}#2}
+\newcommand{\freevars}[1]{\mathit{FV}(#1)}
+\newcommand{\freetypevars}[1]{\mathit{FTV}(#1)}
+\newcommand{\freevarsp}[1]{\mathit{FV}_p(#1)}
 
 % 日本語特有の記号
 \newcommand{\jpdash}{―\nobreak\hspace{-0.5zw}\nobreak―\nobreak\hspace{-0.5zw}\nobreak―}
 
-\newcommand{\rulename}[1]{\text{\scshape\bfseries #1}}
+\newcommand{\rulename}[1]{\text{\bfseries\scshape #1}}
 \newcommand{\typename}[1]{\text{\sffamily\bfseries #1}}
+\newcommand{\widevec}[1]{\overrightarrow{#1}}
 \newcommand{\varrange}[1]{\boldsymbol{\widetilde{#1}}} %\widetriangle \widering \wideparen \widetilde \widehat のいづれかが良いと思う
 \newcommand{\refEq}[1]{式\ref{#1}}
 \newcommand{\refTbl}[1]{表\ref{#1}}

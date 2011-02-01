@@ -196,12 +196,14 @@ $X_0\times X_1\times\cdots\times X_n$は$\prod_{i\in\{0,1,\cdots,n\}} X_i$とも
 順序対の集合$X$\jpdash 例えば，$X=\{(x,y)|x\in\R,y\in\Z\}$など\jpdash は二項関係とも呼ばれ，
 その始域$\domain X$，終域$\codomain X$は夫々，
 \begin{align}
-    \domain X &\triangleq \pi_0\\
-    \codomain X &\triangleq \pi_1
+    \domain X &\triangleq \{\pi_0 x|x\in X\}\\
+    \codomain X &\triangleq \{\pi_1 x|x\in X\}
 \end{align}
 と定義される．
+二項関係$R$に対して，始域を集合$C$に限定した二項関係$\{x|x\in R, \pi_0 x\in C\}$を
+$\domainrestrict{R}{C}$と書く．
 
-$\{x_0,x_1,\cdots,x_n\}$ ($n\in\N$)を$\vec{x}$と書く．
+$x_0,x_1,\cdots,x_n$ ($n\in\N$)という並びをを$\vec{x}$と略記する．
 
 \end{resbonsiblesection}
 
@@ -544,7 +546,7 @@ nibkameにおける式の定義は以下の様になる．
 \begin{array}{rcll}
 e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
  &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
- &\mid&  x                          & \text{変数 (\refSsc{ssc:expr-variable})} \\
+ &\mid&  v                          & \text{変数 (\refSsc{ssc:expr-variable})} \\
  &\mid&  g                          & \text{型構築子 (\refSsc{ssc:expr-constructor})} \\
  &\mid&  \lambdadot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
  &\mid&  e, \cdots, e               & \text{組 (\refSsc{ssc:expr-tuple})} \\
@@ -553,16 +555,13 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
  &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
  &\mid&  \fixdot{f}{\lambdadot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
  &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
- &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{条件 (\refSsc{ssc:expr-if})} \\
+ &\mid&  \mathnkop{match}e\mathnkop{with}\widevec{\mathit{cls}} & \text{条件 (\refSsc{ssc:expr-if})} \\
 \mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
 \mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
 \mathit{cls} &\Coloneqq& p\rightarrow e & \\
              &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
 \mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
-\mathit{clss} &\Coloneqq& \mathit{cls} &\text{} \\
-              &\mid& \mathit{clss}|\mathit{cls} &\text{} \\
-\mathset{Clauses}&\triangleq& \varrange{\mathit{clss}}            & \text{節の並び} \\
 p&\Coloneqq&\_                         & \text{全て} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
@@ -681,36 +680,12 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 
 
 \subsection{型変数への代入}\label{ssc:type-order}
-型についての半順序関係$\succ$を以下の様に定義する．
-但し，$i,n\in\N$，$\rho,\sigma,\tau,\upsilon,\sigma_n,\tau_n\in\mathset{Type}$とする．
-\begin{subequations}\label{eq:type-order}
-\begin{gather}
-    \infer[\rulename{SO-Id}]
-        {\tau\succ\tau}
-        {} \\
-    \infer[\rulename{SO-Var}]
-        {\alpha\succ\tau}
-        {\alpha\in\mathset{TypeVar}} \\
-    \infer[\rulename{SO-Fun}]
-        {(\rho\rightarrow\sigma)\succ(\tau\rightarrow\upsilon)}
-        {\rho\succ\tau & \sigma\succ\upsilon} \\
-    \infer[\rulename{SO-Tuple}]
-        {
-            (\sigma_0\times\sigma_1\times\cdots\times\sigma_n)
-            \succ
-            (\tau_0\times\tau_1\times\cdots\times\tau_n)
-        }
-        {\foralldot{i}{\sigma_i\succ\tau_i}} \\
-    \infer[\rulename{SO-Ref}]
-        {(\sigma\ \textsf{ref})\succ(\tau\ \textsf{ref})}
-        {\sigma\succ\tau} \\
-    \infer[\rulename{SO-Apply}]
-        {(\rho\ \sigma)\succ(\tau\ \upsilon)}
-        {\rho\succ\tau & \sigma\succ\upsilon}
-\end{gather}
-\end{subequations}
-$\sigma\succ\tau$のとき，$\sigma$に含まれるいくつかの型変数に対して置換$\Sigma$を適用することで，
-$\Sigma\sigma=\tau$となる．
+$\tau$に含まれるいくつかの型変数に対して置換$\substType$を適用することで，
+$\Sigma\tau=\tau'$となるとき，
+$\tau\succ\tau'$とかく．
+この$\succ$は半順序となる．
+$\tau\succ\tau'$かつ$\tau'\succ\tau$のとき型$\tau$，$\tau'$は$\alpha$等値といい，
+$\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
 \end{resbonsiblesection}
 
 
@@ -718,7 +693,7 @@ $\Sigma\sigma=\tau$となる．
 まず，変数や型変数，型構築子の型の環境は次の様に定義される．
 \begin{equation}\label{eq:env} 
 \begin{array}{rcll}
-    \envExpr  &\subset& \mathset{ExprVar}\times\mathset{TypeScheme} & \text{変数の型環境} \\
+    \envExpr  &\subset& \mathset{Var}\times\mathset{TypeScheme} & \text{変数の型環境} \\
     \envType  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
     \envVariant  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
 \end{array}
@@ -726,18 +701,23 @@ $\Sigma\sigma=\tau$となる．
 置換の集合は次のように定義される．
 \begin{equation}\label{eq:subst} 
 \begin{array}{rcll}
-    \substExpr  &\subset& \mathset{ExprVar}\times\mathset{Expr} & \text{変数の型環境} \\
-    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の型環境} \\
+    \substExpr  &\subset& \mathset{Var}\times\mathset{Expr} & \text{変数の置換} \\
+    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の置換} \\
 \end{array}
 \end{equation}
 置換の集合については特別に$\{(v,e),\cdots\}$を$[v/e,\cdots]$とも書く．
+式$e$，型$\tau$の中に現れる自由変数の集合は夫々$\freevars{e}$，$\freetypevars{\tau}$と書く．
 
 置換の適用$\applysubst{\Sigma}{x}$は次のように定義される．
 \begin{equation}
 \begin{aligned}
     \applysubst{\substExpr}{c} &= c \\
     \applysubst{\substExpr}{s:\tau} &= s:\tau \\
-    \applysubst{\substExpr}{x}
+    \applysubst{\substExpr}{x} &=\begin{cases}
+        e & \text{if $(v,e)\in\substExpr$.} \\
+        x & \text{otherwise.} \end{cases} \\
+    \applysubst{\substExpr}{\lambdadot{x}{e}} &= \applysubst{\substExpr'}{e} &
+            \text{which $\substExpr' = \domainrestrict{\substExpr}{(\domain\substExpr\setminus\{x\})}$.}\\
 \end{aligned}
 \end{equation}
 
@@ -753,24 +733,110 @@ $\Sigma\sigma=\tau$となる．
         \end{cases}
 \end{equation}
 
+パターンによる束縛の型環境$\patternandenv{p:\tau}{\envPattern}$は以下の様に定義される．
+\begin{subequations}
+\begin{gather}
+    \infer[\rulename{P-All}]
+        {\envExpr\vdash \patternandenv{\_:\tau}{\emptyset}}
+        {}\\
+    \infer[\rulename{P-Not}]
+        {\envExpr\vdash \patternandenv{\lnot p:\tau}{\emptyset}}
+        {\envExpr\vdash \patternandenv{p:\tau}{\envPattern}}\\
+    \infer[\rulename{P-Const}]
+        {\envExpr\vdash \patternandenv{c:\tau}{\emptyset}}
+        {\mathfunc{ConstType}(c) \succ \tau} \\
+    \infer[\rulename{P-Var}]
+        {\envExpr\vdash \patternandenv{x:\tau}{\{x:\tau\}}}
+        {x\in\mathset{ExprVar}}\\
+    \infer[\rulename{P-Constructor}]
+        {\envExpr\vdash \patternandenv{g:\tau}{\emptyset}}
+        {g\in\mathset{Constructor} & (g,\tau)\in\envExpr & \tau_1\rightarrow\tau_2\not\succ\tau}\\
+    \infer[\rulename{P-Apply}]
+        {\envExpr\vdash \patternandenv{g\ p:\tau}{\envPattern}}
+        {g\in\mathset{Constructor} & (g,\tau'\rightarrow\tau )\in\envExpr & \envExpr\vdash \patternandenv{p:\tau'}{\envPattern} }\\
+    \infer[\rulename{P-Tuple}]
+        {\envExpr\vdash \patternandenv{e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}{\bigcup_i \envPattern_i}}
+        {\envExpr\vdash\patternandenv{p_0:\tau_0}{\envPattern_0} &
+        \cdots &
+        \envExpr\vdash\patternandenv{p_n:\tau_n}{\envPattern_n} &
+        \foralldot{i,j}{i\not= j\limpl (\domain\envPattern_i \cap \domain\envPattern_j = \emptyset)}}\\
+    \infer[\rulename{P-And}]
+        {\envExpr\vdash \patternandenv{p_1 @ p_2:\tau}{\envPattern_1\cap\envPattern_2}}
+        {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern_1} &
+        \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern_2} &
+        \domain\envPattern_1 \cap \domain\envPattern_2 = \emptyset
+        }\\
+    \infer[\rulename{P-Or}]
+        {\envExpr\vdash \patternandenv{p_1 | p_2:\tau}{\envPattern}}
+        {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern} &
+        \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern}}
+\end{gather}
+\end{subequations}
 式の持つ型は以下の様に定義される．
 但し，断りの無い限り
-$i,n\in\N$，
+%$i,n\in\N$，
 $c\in\mathset{ExprConst}$, 
-$v\in\mathset{ExprVar}$，
+$x,v\in\mathset{ExprVar}$，
 $e\in\mathset{Expr}$
 とする．
 \begin{subequations}
 \begin{gather}
-    \infer[\rulename{Const}]
-        {\envExpr;\envType;\envVariant\vdash c:}
-        {\tau'=\mathfunc{ConstType}(c) & \tau' \succ \tau} \\
-    \infer[\rulename{Var}]
-        {\envExpr;\envType;\envVariant\vdash v:\tau}
-        {(v,\tau')\in\envExpr & \tau' \succ \tau}
-    \infer[\rulename{Var}]
-        {\envExpr;\envType;\envVariant\vdash v:\tau}
-        {(v,\tau')\in\envExpr & \tau' \succ \tau}
+    \infer[\rulename{E-Const}]
+        {\envExpr\vdash c:\tau}
+        {\mathfunc{ConstType}(c) \succ \tau} \\
+    \infer[\rulename{E-Var}]
+        {\envExpr\vdash v:\tau}
+        {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
+    \infer[\rulename{E-Fun}]
+        {\envExpr\vdash \lambdadot{x}{e}:\tau_1\rightarrow\tau_2}
+        {\envExpr+(x,\tau_1)\vdash e:\tau_2}\\
+    \infer[\rulename{E-Tuple}]
+        {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
+        {\envExpr\vdash e_0:\tau_0 &
+        \cdots &
+        \envExpr\vdash e_n:\tau_n}\\
+    \infer[\rulename{E-Ref}]
+        {\envExpr\vdash e!:\tau}
+        {\envExpr\vdash e:\tau\ \mathsf{ref}}\\
+    \infer[\rulename{E-Apply}]
+        {\envExpr\vdash e_1\ e_2:\tau}
+        {\envExpr\vdash e_1:\tau'\rightarrow\tau &
+        \envExpr\vdash e_2:\tau'} \\
+    \infer[\rulename{E-Let}]
+        {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
+        {\envExpr\vdash e_1:\tau' &
+        \envExpr+(x,\tau')\vdash e_2:\tau}\\
+    \infer[\rulename{E-If}]
+        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
+        {\envExpr\vdash e_1:\typename{bool} &
+        \envExpr\vdash e_2:\tau &
+        \envExpr\vdash e_3:\tau}\\
+    \infer[\rulename{E-Fix}]
+        {\envExpr\vdash \fixdot{f}e:\tau}
+        {\envExpr+(f,\tau)\vdash e:\tau}\\
+    \infer[\rulename{E-Match}]
+        {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\widevec{\mathit{cls}}:\tau}
+        {\envExpr\vdash e:\tau' &
+        \envExpr\vdash \widevec{\mathit{cls}}:\tau'\rightarrow\tau}
+\end{gather}
+\end{subequations}
+節の型は以下の様に定義される．
+\begin{subequations}
+\begin{gather}
+    \infer[\rulename{C-Always}]
+        {\envExpr\vdash p\rightarrow e:\tau'\rightarrow\tau}
+        {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
+        \envExpr+\envPattern\vdash e:\tau}\\
+    \infer[\rulename{C-Guarded}]
+        {\envExpr\vdash p\mathnkop{with}e_g\rightarrow e:\tau'\rightarrow\tau}
+        {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
+        \envExpr+\envPattern\vdash e_g:\typename{bool} &
+        \envExpr+\envPattern\vdash e:\tau}\\
+    \infer[\rulename{C-Seq}]
+        {\envExpr\vdash \mathit{cls}_0,\cdots,\mathit{cls}_n:\tau}
+        {\envExpr\vdash cls_0:\tau &
+        \cdots &
+        \envExpr\vdash cls_n:\tau}
 \end{gather}
 \end{subequations}
 
