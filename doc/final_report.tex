@@ -439,6 +439,29 @@ nibkameコンパイラはターゲットとしてx86機械語を生成する．�
 から入手できる)．}
 
 \subsection{命令セットの概要}\label{ssc:instruction_set}
+nibkameコンパイラが対象とするx86アーキテクチャは，8本の32ビット幅汎用レ
+ジスタとプログラムカウンタ(EIPという)，フラグレジスタ(EFLAGS)を持つ．ま
+た，浮動小数点数を格納するXMMレジスタ\footnote{本来は短いベクトル命令の
+為に用いるが，今回は使用しないため本報告書では触れない．}がある．
+
+汎用レジスタの名前と機能を次に示す．
+\begin{description}
+ \item[EAX] アキュームレータ．関数の戻り値の格納に用いる．一部の命令では
+	    命令長が短くなる．
+ \item[EBX] ベースレジスタ．相対アドレッシングのベースに用いられることが
+	    多い．
+ \item[ECX] カウントレジスタ．一部ではループカウンタとして用いられる．
+ \item[EDX] データレジスタ．一時的なデータの保管用に使われることが多い．
+ \item[ESI] ソースインデックス．転送元アドレスの格納に多く用いられる．
+ \item[EDI] ディスティネーションインデックス．転送先アドレスの格納に多く
+	    用いられる．
+ \item[ESP] スタックポインタ．命令で直接操作されるスタック（マシンスタッ
+	    ク）を指すために用いる．ユーザプログラムでは原則的に他の用途
+	    に用いてはならない．
+ \item[EBP] ベースポインタ．ローカル変数の領域（スタックフレーム）にアク
+	    セスするためのポインタ（フレームポインタ）として用いられる．
+	    他の用途に用いるべきではない． 
+\end{description}
 
 \subsection{呼び出し規約}\label{ssc:calling-convention}
 呼び出し規約とは，関数や手続きといったサブルーチンとのデータの引き渡し方
@@ -494,8 +517,28 @@ x86アーキテクチャにおいては汎用レジスタの本数が少ない�
 浮動小数点数を返すときは，使用する命令の種類によって2種類にわかれ
 る．\textbf{FPU命令を用いるとき} FPUスタックのトップへ積む．
 \textbf{SSE2命令を用いるとき} XMM0レジスタの下位ビット側に格納する．
-\end{resbonsiblesection}
 
+\subsubsection{手続き呼び出しとレジスタ}
+実行に必要な汎用レジスタは，関数の呼び出し側が保存するレジスタ
+(caller-save register)と呼ばれた関数が保存するレジスタ(callee-save
+register)の2種類にわけられる．その分類を\refTbl{tb:register-save}に表す．
+\begin{table}[htb]
+\begin{center}
+ \caption{レジスタの保存すべき場所}\label{tb:register-save}
+ \begin{tabular}{l|l}
+  \Hline
+  callee-save register & caller-save register \\
+  \hline
+  EBX & EAX \\
+  ESI & EDX \\
+  EDI & ECX \\
+  EBP & \\
+  ESP & \\
+  \Hline
+ \end{tabular}
+\end{center}
+\end{table}
+\end{resbonsiblesection}
 
 \chapter{対象言語の設計}\label{ch:lang_design}
 
