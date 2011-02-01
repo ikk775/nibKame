@@ -574,8 +574,10 @@ p&\Coloneqq&\_                         & \text{全て} \\
  &\mid&  \lnot p                    & \text{否定} \\
 \mathset{Pattern}&\triangleq& \varrange{p}            & \text{パターン} \\
 \mathset{Constructor}&\triangleq& \varrange{g}            & \text{型構築子} \\
+\mathset{Var}&\triangleq&\mathset{ExprVar}\cup\mathset{Constructor}
 \end{array}
 \end{equation}
+ここで，$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$である．
 
 \subsection{定数}\label{ssc:expr-constant}
 \subsection{外部定数}\label{ssc:expr-external}
@@ -712,19 +714,31 @@ $\Sigma\sigma=\tau$となる．
 \end{resbonsiblesection}
 
 
-\begin{resbonsiblesection}{式の持つ型}{\sakamoto}\label{sc:type-inf}
+\begin{resbonsiblesection}{意味論}{\sakamoto}\label{sc:type-evaluation}
 まず，変数や型変数，型構築子の型の環境は次の様に定義される．
-\begin{equation}\label{eq:type-env} 
+\begin{equation}\label{eq:env} 
 \begin{array}{rcll}
     \envExpr  &\subset& \mathset{ExprVar}\times\mathset{TypeScheme} & \text{変数の型環境} \\
     \envType  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
     \envVariant  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
 \end{array}
 \end{equation}
+置換の集合は次のように定義される．
+\begin{equation}\label{eq:subst} 
+\begin{array}{rcll}
+    \substExpr  &\subset& \mathset{ExprVar}\times\mathset{Expr} & \text{変数の型環境} \\
+    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の型環境} \\
+\end{array}
+\end{equation}
+置換の集合については特別に$\{(v,e),\cdots\}$を$[v/e,\cdots]$とも書く．
 
-置換$\{v/e,\cdots\}$の適用は次のように定義される．
+置換の適用$\applysubst{\Sigma}{x}$は次のように定義される．
 \begin{equation}
-{v/e'}e =
+\begin{aligned}
+    \applysubst{\substExpr}{c} &= c \\
+    \applysubst{\substExpr}{s:\tau} &= s:\tau \\
+    \applysubst{\substExpr}{x}
+\end{aligned}
 \end{equation}
 
 定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
