@@ -611,21 +611,24 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
  &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
  &\mid&  \fixdot{f}{\lambdadot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
  &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
- &\mid&  \mathnkop{match}e\mathnkop{with}\widevec{\mathit{cls}} & \text{条件 (\refSsc{ssc:expr-if})} \\
+ &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss}\clauseor\patternany\rightarrow e & \text{パターンマッチング (\refSsc{ssc:expr-match})} \\
 \mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
 \mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
 \mathit{cls} &\Coloneqq& p\rightarrow e & \\
              &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
+\mathit{clss} &\Coloneqq& \mathit{cls} & \\
+              &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
 \mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
-p&\Coloneqq&\_                         & \text{全て} \\
+\mathset{Clauses}&\triangleq& \varrange{\mathit{clss}}            & \text{節の並び} \\
+p&\Coloneqq&\patternany             & \text{全て} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
  &\mid&  g                          & \text{型構築子} \\
  &\mid&  g\ p                       & \text{型構築子適用} \\
  &\mid&  p,\cdots,p                 & \text{組} \\
- &\mid&  p @ p                      & \text{連言} \\
- &\mid&  p | p                      & \text{選言} \\
+ &\mid&  p \patternand p            & \text{連言} \\
+ &\mid&  p \patternor p             & \text{選言} \\
  &\mid&  \lnot p                    & \text{否定} \\
 \mathset{Pattern}&\triangleq& \varrange{p}            & \text{パターン} \\
 \mathset{Constructor}&\triangleq& \varrange{g}            & \text{型構築子} \\
@@ -823,7 +826,7 @@ $\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
         \domain\envPattern_1 \cap \domain\envPattern_2 = \emptyset
         }\\
     \infer[\rulename{P-Or}]
-        {\envExpr\vdash \patternandenv{p_1 | p_2:\tau}{\envPattern}}
+        {\envExpr\vdash \patternandenv{p_1 \patternor p_2:\tau}{\envPattern}}
         {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern} &
         \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern}}
 \end{gather}
@@ -871,9 +874,9 @@ $e\in\mathset{Expr}$
         {\envExpr\vdash \fixdot{f}e:\tau}
         {\envExpr+(f,\tau)\vdash e:\tau}\\
     \infer[\rulename{E-Match}]
-        {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\widevec{\mathit{cls}}:\tau}
+        {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\mathit{clss}:\tau}
         {\envExpr\vdash e:\tau' &
-        \envExpr\vdash \widevec{\mathit{cls}}:\tau'\rightarrow\tau}
+        \envExpr\vdash \mathit{clss}:\tau'\rightarrow\tau}
 \end{gather}
 \end{subequations}
 節の型は以下の様に定義される．
@@ -889,7 +892,7 @@ $e\in\mathset{Expr}$
         \envExpr+\envPattern\vdash e_g:\typename{bool} &
         \envExpr+\envPattern\vdash e:\tau}\\
     \infer[\rulename{C-Seq}]
-        {\envExpr\vdash \mathit{cls}_0,\cdots,\mathit{cls}_n:\tau}
+        {\envExpr\vdash \mathit{cls}_0\clauseor\cdots\clauseor\mathit{cls}_n:\tau}
         {\envExpr\vdash cls_0:\tau &
         \cdots &
         \envExpr\vdash cls_n:\tau}
