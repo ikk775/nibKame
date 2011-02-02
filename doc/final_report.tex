@@ -1217,6 +1217,24 @@ Schemeへ移植したライブラリ\footnote{Gaucheのソースコードに付�
 を用いて書かれている．
 \end{resbonsiblesection}
 
+\begin{resbonsiblesection}{S式表現の読み込み}{\kobori}\label{sc:impl-s-reader}
+S式表現の読み込みは3つのモジュールからなる．
+\begin{itemize}
+ \item Sexpr
+ \item Sread
+ \item Variant
+\end{itemize}
+
+Sexprモジュールは指定されたファイルストリームから，1つのS式を読み込む．
+Sexpr.read関数は，S式の括弧の対応を文字列のネストしたリストに読み込む．
+次に，各種リテラルと識別子へ分類し内部表現に変換する．
+
+SreadモジュールはSexprモジュールによって読み込まれたリストを，Syntaxモ
+ジュールで定義される抽象構文木へ変換する．このとき，Variantモジュールを
+用いて代数的データ型の構築子を管理する．
+
+\end{resbonsiblesection}
+
 \begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
 現在のところ，型推論部は
 \algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
@@ -1233,7 +1251,6 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
 \end{resbonsiblesection}
-
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 
