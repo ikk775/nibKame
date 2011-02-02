@@ -218,6 +218,9 @@ $X_0\times X_1\times\cdots\times X_n$は$\prod_{i\in\{0,1,\cdots,n\}} X_i$とも
 と定義される．
 二項関係$R$に対して，始域を集合$C$に限定した二項関係$\{x|x\in R, \pi_0 x\in C\}$を
 $\domainrestrict{R}{C}$と書く．
+二項関係への追加$R\uplus\mypair{x}{y}$は，
+$R\uplus\mypair{x}{y}\triangleq \domainrestrict{R}{\left(\domain R\setminus \{x\}\right)}$
+と定義される．
 
 $x_0,x_1,\cdots,x_n$ ($n\in\N$)という並びをを$\vec{x}$と略記する．
 
@@ -910,7 +913,11 @@ $\typename{list}$と$\typename{array}$，ヴァリアント型が型定数とな
 $s$型をとって$t$型を返す関数の型は$s\rightarrow t$となる．
 
 \subsection{直積型}\label{ssc:type-tuple}
+直積型は組の型であり，組の夫々の要素の型の組となっている．
+
 \subsection{参照型}\label{ssc:type-reference}
+参照が持つ型であり，例えば，\lstinline|int|型への参照であれば，その型は
+\lstinline|int ref|となる．
 
 \subsection{型適用}\label{ssc:type-apply}
 ML系言語の型には，
@@ -1044,7 +1051,7 @@ $e\in\mathset{Expr}$
         {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
     \infer[\rulename{E-Fun}]
         {\envExpr\vdash \fundot{x}{e}:\tau_1\rightarrow\tau_2}
-        {\envExpr+(x,\tau_1)\vdash e:\tau_2}\\
+        {\envExpr\uplus(x,\tau_1)\vdash e:\tau_2}\\
     \infer[\rulename{E-Tuple}]
         {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
         {\envExpr\vdash e_0:\tau_0 &
@@ -1067,7 +1074,7 @@ $e\in\mathset{Expr}$
     \infer[\rulename{E-Let}]
         {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
         {\envExpr\vdash e_1:\tau' &
-        \envExpr+(x,\tau')\vdash e_2:\tau}\\
+        \envExpr\uplus(x,\tau')\vdash e_2:\tau}\\
 %    \infer[\rulename{E-If}]
 %        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
 %        {\envExpr\vdash e_1:\typename{bool} &
@@ -1075,7 +1082,7 @@ $e\in\mathset{Expr}$
 %        \envExpr\vdash e_3:\tau}\\
     \infer[\rulename{E-Fix}]
         {\envExpr\vdash \fixdot{f}e:\tau}
-        {\envExpr+(f,\tau)\vdash e:\tau}\\
+        {\envExpr\uplus(f,\tau)\vdash e:\tau}\\
     \infer[\rulename{E-Match}]
         {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\mathit{clss}:\tau}
         {\envExpr\vdash e:\tau' &
@@ -1088,12 +1095,12 @@ $e\in\mathset{Expr}$
     \infer[\rulename{C-Always}]
         {\envExpr\vdash p\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
-        \envExpr+\envPattern\vdash e:\tau}\\
+        \envExpr\uplus\envPattern\vdash e:\tau}\\
     \infer[\rulename{C-Guarded}]
         {\envExpr\vdash p\mathnkop{with}e_g\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
-        \envExpr+\envPattern\vdash e_g:\typename{bool} &
-        \envExpr+\envPattern\vdash e:\tau}\\
+        \envExpr\uplus\envPattern\vdash e_g:\typename{bool} &
+        \envExpr\uplus\envPattern\vdash e:\tau}\\
     \infer[\rulename{C-Seq}]
         {\envExpr\vdash \mathit{cls}_0\clauseor\cdots\clauseor\mathit{cls}_n:\tau}
         {\envExpr\vdash cls_0:\tau &
@@ -1207,11 +1214,13 @@ nibkameコンパイラのモジュール構造と，各フェーズで行う操�
  \item 構文解析 (Schemeで実装)
  \item 翻訳単位を丸ごとモジュール化 (Moduleモジュール、TranslationUnitモ
        ジュール)
- \item S式表現の読み込み (Sexprモジュール、Sreadモジュール、Variantモジュー
-       ル)
- \item クロージャ化 (LLiftingモジュール)
- \item 型推論 (Typingモジュール)
- \item パターンマッチの展開 (Patternモジュール)
+ \begin{itemize}
+  \item S式表現の読み込み (Sexprモジュール、Sreadモジュール、Variantモジュー
+        ル)
+  \item クロージャ化 (LLiftingモジュール)
+  \item 型推論 (Typingモジュール)
+  \item パターンマッチの展開 (Patternモジュール)
+ \end{itemize}
  \item 多相関数の特殊化 (Instantiateモジュール)
  \item K正規形へ変換 (KNormalモジュール)
  \item 部分適用に関する処理 (Closureモジュール)
@@ -1232,6 +1241,8 @@ nibkameコンパイラのモジュール構造と，各フェーズで行う操�
 実装であるParsec\cite{Hutton96monadicparser}を
 Schemeへ移植したライブラリ\footnote{Gaucheのソースコードに付属}
 を用いて書かれている．
+
+nibkameコンパイラが動作するようになった暁にはnibkameに移植する予定である．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{S式表現の読み込み}{\kobori}\label{sc:impl-s-reader}
@@ -1251,6 +1262,35 @@ SreadモジュールはSexprモジュールによって読み込まれたリス�
 用いて代数的データ型の構築子を管理する．
 \end{resbonsiblesection}
 
+\begin{resbonsiblesection}{クロージャ変換部}{\sakamoto}\label{sc:impl-lambda-lifting}
+クロージャ変換(closure conversion)またはラムダリフティング(lambda lifting)は
+クロージャが参照している自由変数を引数に加え束縛変数にすることで，
+自由変数の使用をなくし，ネストした関数の定義を平坦にすることが出来るようにすることである．
+クロージャ変換を行うLLiftingモジュールでは，さらに，ネストした関数を平坦にする．
+例えば，
+\begin{lstlisting}
+let addn = fun a ->
+  let f = fun x ->
+    a + x in
+  f
+\end{lstlisting}
+というコードがあったとき，まず自由変数を引数に出し，
+\begin{lstlisting}
+let addn = fun a ->
+  let f = fun a -> fun x ->
+    a + x in
+  f a
+\end{lstlisting}
+関数定義をトップレベルまで引き上げる．
+\begin{lstlisting}
+let f = fun a -> fun x ->
+  a + x in
+let addn = fun a ->
+  f a
+\end{lstlisting}
+最終的にはこうなる．
+\end{resbonsiblesection}
+
 \begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
 現在のところ，型推論部は
 \algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
@@ -1266,6 +1306,21 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 現実的な時間・メモリ使用量で終わらせることが出来ない．
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{部分適用に関する処理}{\sakamoto}\label{sc:impl-partial-application}
+現在のところ，Closureモジュールはその名に反し
+部分適用に関する処理を行うこととしている．
+その理由は，参考としたMinCamlはこの位置でクロージャ変換を行っていること
+に由来するのだが，多相型を持つnibkameではこの位置でクロージャ変換を行うのは
+遅すぎるため，型推論以前にクロージャ変換部が移動した．
+移動以前にClosureモジュールに追加していた部分適用に関する処理は残ったため，
+名称と機能が乖離してしまっている．後に是正する．
+
+さて，2011年2月3日現在，
+nibkameコンパイラの全フェーズの中でこのフェーズの完成度は著しく低い．
+実質的にこのフェーズを境にフロントエンドとバックエンドとなっているのだが，
+このフェーズが動作しないため分離している．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{仮想機械語生成部}{\kobori}\label{sc:impl-virtualasm}
