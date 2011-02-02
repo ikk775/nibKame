@@ -1247,6 +1247,37 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
  成しエントリーポイントのかわりとしている．
 \end{resbonsiblesection}
 
+\begin{resbonsiblesection}{仮想機械語の直線化}{\kobori}\label{sc:impl-basicblock}
+ \refSc{sc:impl-virtualasm}で述べたように，仮想機械語にはif命令やSeq節な
+ ど木構造をしている(\refFig{fig:impl-instree})．現実の計算機の持つ命令は
+ 単純な並びとラベルへのジャンプで構成されている
+ (\refFig{fig:impl-insliner})．このギャップを埋めるために
+ \begin{enumerate}
+  \item Seq節の後半部分の先頭
+  \item If命令の分岐先
+ \end{enumerate}
+ へラベルを挿入し，ジャンプ命令を生成するようにした
+ (\cite{Apeel:2009-10-30}第8章を参照した)．
+
+ また，関数の末尾位置，つまり後続の命令がなく末尾がジャンプ命令でない位置
+ へ関数からの復帰命令を挿入する．
+
+\begin{figure}[b]
+\begin{minipage}{0.5\hsize}
+ \begin{center}
+  \includegraphics[scale=0.6]{instree.pdf}
+  \caption{木構造をした命令}\label{fig:impl-instree}
+ \end{center}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+ \begin{center}
+  \includegraphics[scale=0.6]{insliner.pdf}
+  \caption{直線化した命令}\label{fig:impl-insliner}
+ \end{center}
+\end{minipage}
+\end{figure}
+\end{resbonsiblesection}
+
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 
 \chapter{結論}\label{ch:conclude}
