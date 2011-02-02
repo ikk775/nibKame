@@ -326,6 +326,11 @@ let is_power2 n =
   let n = abs n in
     n land (n - 1) = 0
 
+let rec shift_width w n =
+  if n land 1 = 1 
+  then w
+  else shift_width (w + 1) (n lsr 1)
+
 (* 演算の値が返る部分は Let の子になるよう調節する．*)
 let rec asmgen = function
   | [] -> []
@@ -346,10 +351,10 @@ let rec asmgen = function
 	| BB.Add (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Add (twoOp_to_twoOp dst src2) :: asmgen tail
 	| BB.Sub (src1, VA.C 1) -> let t = TempR dst in Mov (t, TempR src1) :: DEC (R t) :: asmgen tail
 	| BB.Sub (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Sub (twoOp_to_twoOp dst src2) :: asmgen tail
-	(* | BB.Mul (src1, C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAL (twoOp_to_twoOp dst, C ) *)
+	| BB.Mul (src1, C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAL (twoOp_to_twoOp dst, shift_width 0 src2)
 	| BB.Mul (src1, VA.V src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (R (TempR src2))) :: asmgen tail
 	| BB.Mul (src1, VA.C src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (I (VA.Int_l src2))) :: asmgen tail
-	(* | BB.Div (src1, C src2) when is_power2 src2 -> MyUtil.undefined () *)
+	| BB.Div (src1, C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAR (twoOp_to_twoOp dst, shift_width 0 src2)
 	| BB.Div (src1, VA.C src2) -> let t = tempR () in Mov (EAX, TempR src1) :: Set (t, VA.Int_l src2) :: CDQ :: Div t :: asmgen tail
 	| BB.Div (src1, VA.V src2) -> Mov (EAX, TempR src1) :: CDQ :: Div (TempR src2) :: asmgen tail
 	| BB.SLL (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: SHL (twoOp_to_twoOp dst src2) :: asmgen tail
