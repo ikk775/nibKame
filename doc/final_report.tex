@@ -696,40 +696,6 @@ register)の2種類にわけられる．その分類を\refTbl{tb:register-save}
 そして，最終的に実装された言語機能と構文を示す．
 \end{abstract}
 
-\begin{resbonsiblesection}{主要な構文要素}{\sakamoto}\label{sc:syntax-element}
-\subsection{数}\label{sc:syntax-number}
-数は整数と実数の二種類があり，この二つは明確に区別される．
-いくつか例を挙げると\refTbl{tbl:int-float}のようになる．
-
-\begin{table}[h]
-    \caption{整数と実数}\label{tbl:int-float}
-    \begin{center}
-    \begin{tabular}{crl}
-    \Hline
-    整数の例&\lstinline|0|& \\
-            &\lstinline|1|& \\
-            &\lstinline|100|& \\
-            &\lstinline|-1|& 負号がついても整数 \\
-            &\lstinline|+20|& 正号がついても整数 \\
-    \hline
-    実数の例 &\lstinline|0.0|& \\
-             &\lstinline|1.0|& \\
-             &\lstinline|-1.0|& 負号がついても整数 \\
-             &\lstinline|+3.14|& 正号がついても整数 \\
-             &\lstinline|1.0e10|& 指数表記も可能 \\
-             &\lstinline|1.0e+10|& 指数にも正負号を付けられる \\
-    \Hline
-    \end{tabular}
-    \end{center}
-\end{table}
-
-\subsection{char}\label{ssc:syntax-char}
-nibkameにおいて用意されている組み込みの文字型は
-char型であるが，この型は%C言語と同様に
-8ビットの符号無し整数である．
-%char型であり，計算機上での表現は処理系に依存する．
-\end{resbonsiblesection}
-
 \begin{resbonsiblesection}{式の構文}{\sakamoto}\label{sc:expr-syntax}
 nibkameにおける式の定義は以下の様になる．
 \begin{equation}\label{eq:expr} 
@@ -756,7 +722,6 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
 \mathit{clss} &\Coloneqq& \mathit{cls} & \\
               &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
 \mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
-\mathset{Clauses}&\triangleq& \varrange{\mathit{clss}}            & \text{節の並び} \\
 p&\Coloneqq&\patternany             & \text{全て} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
@@ -789,17 +754,93 @@ p&\Coloneqq&\patternany             & \text{全て} \\
 \lstinline|Nil|はC言語で言うところのNULLのようなもので，
 リストの末尾であることを示す．
 
+数についていくつか例を挙げると\refTbl{tbl:int-float}のようになる．
+
+\begin{table}[h]
+    \caption{整数と浮動小数点数}\label{tbl:int-float}
+    \begin{center}
+    \begin{tabular}{crl}
+    \Hline
+    整数の例&\lstinline|0|,
+             \lstinline|1|,
+             \lstinline|100|,
+             \lstinline|-1| \\
+    \hline
+    浮動小数点数の例 &\lstinline|0.0|,
+             \lstinline|1.0|,
+             \lstinline|-1.0|,
+             \lstinline|1.0e10|,
+             \lstinline|1.0e-10|\\
+    \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
+
+nibkameにおいて用意されている組み込みの文字型は
+char型であるが，この型は%C言語と同様に
+8ビットの符号無し整数である．
+%char型であり，計算機上での表現は処理系に依存する．
+
 \subsection{外部定数}\label{ssc:expr-external}
+外部定数は，nibkameソースコード上で既に定義されているものとして使用することの出来る
+定数であり，具体的には外部のCランタイムの関数や加算・減算などのプリミティブ関数である．
 
 \subsection{変数}\label{ssc:expr-variable}
 変数は一般のプログラミング言語における概念と同じである．
 しかし，nibkameにおける変数は生成時に行われる束縛の後は一切の代入を行うことが出来ない．
+そのため，参照が用いられていない場合には，同じ式を評価すると同じ結果となる．
+
+\subsection{束縛}\label{ssc:expr-let}
+変数束縛を行うのが\lstinline|let|式である．
+nibkameにおける変数のスコープはレキシカルスコープ(lexical scope)である．
+
+例えば，
+\begin{lstlisting}
+let r =
+  let x = 5 in
+    let a = x in
+    let x = 3 in
+      let b = x in
+      a, b, x
+\end{lstlisting}
+というコードでは
+\lstinline|r|は\lstinline|5, 3, 3|となる．
+
+\subsection{参照}\label{ssc:expr-reference}
+nibkameにおいては一度束縛した変数の中身を変更することが出来ない．
+しかし，実際に副作用の一切無いコードを書くのは手間なので，
+参照という概念を導入し，
+変数に格納されている「データが格納されている場所への参照」は変化しないが，
+「データが格納されている場所への参照」をたどって，格納されているデータを得たり，変更したりすることが出来るようになっている．
+
+例えば，
+\begin{lstlisting}
+let p = ref 3
+let q =
+  let x = p := 7 in
+  p!
+\end{lstlisting}
+というコードは上から順に実行され，
+最終的に\lstinline|q|は\lstinline|7|，\lstinline|p|は\lstinline|7|が格納されている場所への参照が束縛されていることなる．
 
 \subsection{型構築子}\label{ssc:expr-constructor}
+型構築子とはいわゆる代数的データ構造を作るものである．
+集合で言うところの直和と等しい．
+
 \subsection{関数}\label{ssc:expr-function}
+関数はある値をとってある値を返す値である．
+nibkameにおいて関数は第一級のオブジェクト(first-class object)なので，
+変数に束縛したり，関数の返り値として返したりすることができる．
+
 \subsection{適用}\label{ssc:expr-apply}
+関数に値を与え値を得ることである．
+nibkameにおいて評価戦略(evaluation strategy)は
+値渡し(call-by-value)である．
+そのため，関数に渡される引数は事前に評価されてから渡されることになる．
+
 \subsection{組}\label{ssc:expr-tuple}
-\subsection{参照}\label{ssc:expr-reference}
+組とはいくつかの値の並びのことであり，
+集合における組とほぼ同じものである．
 \end{resbonsiblesection}
 \begin{resbonsiblesection}{型の構文}{\sakamoto}\label{sc:type-syntax}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
