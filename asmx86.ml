@@ -126,7 +126,8 @@ let str_of_reg = function
   | EDI -> "%edi"
   | EBP -> "%ebp"
   | ESP -> "%esp"
-  | TempR s -> failwith (Format.sprintf "Not assigned register, %s" s)
+  | TempR s -> (* failwith (Format.sprintf "Not assigned register, %s" s) *)
+      Format.sprintf "TempR.%s" s
 
 let str_of_regb = function
   | EAX -> "%al"
@@ -134,7 +135,8 @@ let str_of_regb = function
   | ECX -> "%cl"
   | EBX -> "%bl"
   | ESI | EDI | EBP | ESP as r -> failwith (Format.sprintf "Can't use with byte, %s" (str_of_reg r))
-  | TempR s -> failwith (Format.sprintf "Not assigned register, %s" s)
+  | TempR s -> (* failwith (Format.sprintf "Not assigned register, %s" s) *)
+      Format.sprintf "TempR.%s" s
 
 let str_of_freg = function
   | XMM0 -> "%xmm0"
@@ -145,7 +147,8 @@ let str_of_freg = function
   | XMM5 -> "%xmm5"
   | XMM6 -> "%xmm6"
   | XMM7 -> "%xmm7"
-  | TempF s -> failwith (Format.sprintf "Not assigned register, %s" s)
+  | TempF s -> (* failwith (Format.sprintf "Not assigned register, %s" s) *)
+      Format.sprintf "TempF.%s" s
 
 let isscale = function
   | 1 | 2 | 4 | 8 -> true
