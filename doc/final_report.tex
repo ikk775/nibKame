@@ -7,14 +7,15 @@
 \usepackage{jlisting}
 \usepackage{mathtools} % Ams-TeXの使用
 \usepackage{mathrsfs} % 数式フォント
-%\usepackage[cmsy]{MnSymbol} % 記号
+%\usepackage{MnSymbol} % 記号
 \usepackage{amssymb,amsthm} % 記号と定理環境
 \usepackage{proof} % 証明図
 \usepackage{url} % URL
 \usepackage{longtable} % 複数ページに亙る長い表
 \usepackage{yhmath} % 長い括弧など
 \usepackage{tablists}
-\usepackage{mathabx}
+%\usepackage[mathx]{mathabx}
+\usepackage{stmaryrd}
 
 \input{preamble}
 
@@ -610,8 +611,9 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
  &\mid&  g                          & \text{型構築子 (\refSsc{ssc:expr-constructor})} \\
  &\mid&  \fundot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
  &\mid&  e, \cdots, e               & \text{組 (\refSsc{ssc:expr-tuple})} \\
+ &\mid&  \mathnkop{ref}e            & \text{参照の生成 (\refSsc{ssc:expr-reference})} \\
  &\mid&  e!                         & \text{参照 (\refSsc{ssc:expr-reference})} \\
- &\mid&  e\coloneq e                & \text{代入 (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\coloneqq e                & \text{代入 (\refSsc{ssc:expr-reference})} \\
  &\mid&  e\ e                       & \text{適用 (\refSsc{ssc:expr-apply})} \\
  &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
  &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
@@ -878,11 +880,14 @@ $e\in\mathset{Expr}$
         {\envExpr\vdash e_0:\tau_0 &
         \cdots &
         \envExpr\vdash e_n:\tau_n}\\
+    \infer[\rulename{E-MakeRef}]
+        {\envExpr\vdash \mathnkop{ref}e:\tau\ \mathsf{ref}}
+        {\envExpr\vdash e:\tau}\\
     \infer[\rulename{E-Ref}]
         {\envExpr\vdash e!:\tau}
         {\envExpr\vdash e:\tau\ \mathsf{ref}}\\
-    \infer[\rulename{E-Set}]
-        {\envExpr\vdash e_1\coloneq e_2:\typename{unit}}
+    \infer[\rulename{E-SetRef}]
+        {\envExpr\vdash e_1\coloneqq e_2:\typename{unit}}
         {\envExpr\vdash e_1:\tau\ \mathsf{ref} &
         \envExpr\vdash e_2:\tau}\\
     \infer[\rulename{E-Apply}]
@@ -931,30 +936,47 @@ $e\in\mathset{Expr}$
 値$\upsilon$は
 \begin{equation}\label{eq:eval-value} 
 \begin{array}{rcll}
-\upsilon&\Coloneqq& \mypair{}{c:\tau}                          & \text{定数} \\
+\upsilon&\Coloneqq& c                          & \text{定数} \\
  &\mid&  s:\tau                     & \text{外部定数} \\
  &\mid&  v                          & \text{変数} \\
  &\mid&  \mypair{g}{\upsilon}       & \text{型構築子} \\
  &\mid&  \lambdadot{x}{e}           & \text{関数} \\
- &\mid&  e, \cdots, e               & \text{組}
+ &\mid&  e, \cdots, e               & \text{組} \\
+ &\mid&  \mathnkval{undefined}      & \text{未定義}\\
+\mathset{EvalVar}&\triangleq& \varrange{v} \\
+\mathset{EvalData}&\triangleq& \mathset{Constructor}\times\varrange{\upsilon}
 \end{array}
 \end{equation}
 と定義される．
 
 環境
-\begin{gather}\label{eq:eval-func} 
-\nu\msubset\mathit{Var}\times\mathit{Var} \\
-\rho\msubset\mathit{Var}\times\upsilon \\
-\end{gather}
+\begin{align}\label{eq:eval-func} 
+\nu&\msubset\mathit{ExprVar}\times\mathit{EvalVar} \\
+\rho&\msubset\mathit{EvalVar}\times\upsilon
+\end{align}
 
+以下の定義に登場する$\xi$は以前に使用されていない名前の変数を意味する．
 \begin{subequations}
 \begin{align}
-    \semanticS{c}\nu\rho &= \valueandenv{c}{\rho}\\
-    \semanticS{v}\nu\rho &= \valueandenv{\nu(v)}{\rho}\\
-    \semanticS{\mathnkop{if}e_1\tau_1\mathnkop{then}e_2\mathnkop{else}e_3}\nu\rho &= \begin{cases}
-        \semanticS{e_2}\nu\rho' &\text{if $\semanticS{e_1}\nu\rho = \valueandenv{\mathnkval{true}}{\rho'}$} \\
-        \semanticS{e_3}\nu\rho' &\text{if $\semanticS{e_1}\nu\rho = \valueandenv{\mathnkval{false}}{\rho'}$} \\
-        \end{cases}
+    \semanticS{c} &= \lambdadot{\nu\rho}{\valueandenv{c}{\rho}}\\
+    \semanticS{v} &= \lambdadot{\nu\rho}{\valueandenv{\nu(v)}{\rho}}\\
+    \semanticS{\mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3} &=
+        \lambdadot{\nu\rho}{\lambdaIf (\semanticSVal(\semanticS{e_1}\nu\rho) = \mathnkval{true}) \nonumber\\
+            &\lambdaThen \semanticS{e_2}{\nu(\semanticSVEnv(\semanticS{e_1}\nu\rho))} \nonumber\\
+            &\lambdaElse \semanticS{e_3}{\nu(\semanticSVEnv(\semanticS{e_1}\nu\rho))}} \\
+    \semanticS{g} &= \lambdadot{\nu\rho}{\valueandenv{\mypair{g}{\mathnkval{undefined}}}{\rho}}\nonumber\\
+    \semanticS{e_1\ e_2} &= \lambdadot{\nu\rho}{ \nonumber\\
+        &\lambdaLet \omega_1 = \semanticS{e_1}\nu\rho \lambdaIn \nonumber\\
+        &\lambdaIf \semanticSVal\omega_1 \in \mathset{EvalData} \nonumber\\
+        &\lambdaThen \mypair{\mypair{\pi_0(\semanticSVal\omega_1)}{\semanticSVal(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))}}{\semanticSVEnv(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))} \nonumber\\
+        &\lambdaElse \mypair{(\semanticSVal\omega_1)\ \semanticSVal(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))}{\semanticSVEnv(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))}
+    }\nonumber\\
+    \semanticS{\mathnkop{ref}e} &= \lambdadot{\nu\rho}{\valueandenv{\xi}{\semanticSVEnv(\semanticS{e}\nu\rho)\cup\mypair{\xi}{\semanticSVal(\semanticS{e}\nu\rho)}}}\\
+    \semanticS{e!} &= \lambdadot{\nu\rho}{\valueandenv{\rho(\semanticSVal(\semanticS{e}\nu\rho))}{\semanticSVEnv(\semanticS{e}\nu\rho)}}\\
+    \semanticS{e_1\coloneqq e_2} &= \lambdadot{\nu\rho}{ \nonumber\\
+        &\lambdaLet \omega_1 = \semanticS{e_1}\nu\rho \lambdaIn \nonumber\\
+        &\lambdaLet \omega_2 = \semanticS{e_2}\nu(\semanticSVEnv\omega_1) \lambdaIn \nonumber\\
+        &\mypair{\text{\lstinline|()|}}{\semanticSVEnv(\omega_2)+\mypair{\semanticSVal\omega_1}{\semanticSVal\omega_2}}}\\
 \end{align}
 \end{subequations}
 

@@ -62,8 +62,18 @@
 \newmonadicopdot{\lambdadot}{\lambda}
 \newmonadicopdot{\fixdot}{\mathnkop{fix}}
 \newmonadicopdot{\fundot}{\mathnkop{fun}}
-\newcommand{\semanticS}[1]{\mathcal{S}\left\ldbrack#1\right\rdbrack}
+\newcommand{\semanticS}[1]{\mathcal{S}\left\llbracket#1\right\rrbracket}
+\newcommand{\semanticM}[1]{\mathcal{M}\left\llbracket#1\right\rrbracket}
 \newcommand{\mypair}[2]{\left(#1,#2\right)}
+
+\newcommand{\lambdaIf}{\mathop{\mathrm{if}}}
+\newcommand{\lambdaThen}{\mathop{\mathrm{then}}}
+\newcommand{\lambdaElse}{\mathop{\mathrm{else}}}
+\newcommand{\lambdaLet}{\mathop{\mathrm{let}}}
+\newcommand{\lambdaIn}{\mathop{\mathrm{in}}}
+
+\newcommand{\semanticSVal}{\mathop{\pi_\mathrm{val}}}
+\newcommand{\semanticSVEnv}{\mathop{\pi_\rho}}
 
 \newcommand{\ltrue}{\top}
 \newcommand{\lfalse}{\bot}
@@ -79,7 +89,7 @@
 \newcommand{\applysubst}[2]{\mathfrak{S}\ #1\ #2}
 \newcommand{\removeassoc}[2]{\mathfrak{Rm}\ #1\ #2}
 \newcommand{\patternandenv}[2]{#1\Rsh#2}
-\newcommand{\valueandenv}[2]{#1\Rsh#2}
+\newcommand{\valueandenv}[2]{\mypair{#1}{#2}}
 \newcommand{\domainrestrict}[2]{#1\mathbin{\upharpoonright}#2}
 \newcommand{\freevars}[1]{\mathit{FV}(#1)}
 \newcommand{\freetypevars}[1]{\mathit{FTV}(#1)}
