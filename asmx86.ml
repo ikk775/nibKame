@@ -241,7 +241,7 @@ let str_of_inst = function
   | FComp (dst, src) -> Format.sprintf "comisd %s, %s" (str_of_freg src) (str_of_freg dst)
 
   | F2I (dst, src) -> Format.sprintf "cvtsi2sd %s, %s" (str_of_freg src) (str_of_reg dst)
-  | I2F (dst, src) -> Format.sprintf "cvttsdi2si %s, %s" (str_of_reg src) (str_of_freg dst)
+  | I2F (dst, src) -> Format.sprintf "cvtsd2si %s, %s" (str_of_reg src) (str_of_freg dst)
 
   | SAL op -> Format.sprintf "sall %s" (str_of_twoOp op)
   | SHL op -> Format.sprintf "shll %s" (str_of_twoOp op)
