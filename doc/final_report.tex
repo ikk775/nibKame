@@ -218,6 +218,9 @@ $X_0\times X_1\times\cdots\times X_n$は$\prod_{i\in\{0,1,\cdots,n\}} X_i$とも
 と定義される．
 二項関係$R$に対して，始域を集合$C$に限定した二項関係$\{x|x\in R, \pi_0 x\in C\}$を
 $\domainrestrict{R}{C}$と書く．
+二項関係への追加$R\uplus\mypair{x}{y}$は，
+$R\uplus\mypair{x}{y}\triangleq \domainrestrict{R}{\left(\domain R\setminus \{x\}\right)}$
+と定義される．
 
 $x_0,x_1,\cdots,x_n$ ($n\in\N$)という並びをを$\vec{x}$と略記する．
 
@@ -696,40 +699,6 @@ register)の2種類にわけられる．その分類を\refTbl{tb:register-save}
 そして，最終的に実装された言語機能と構文を示す．
 \end{abstract}
 
-\begin{resbonsiblesection}{主要な構文要素}{\sakamoto}\label{sc:syntax-element}
-\subsection{数}\label{sc:syntax-number}
-数は整数と実数の二種類があり，この二つは明確に区別される．
-いくつか例を挙げると\refTbl{tbl:int-float}のようになる．
-
-\begin{table}[h]
-    \caption{整数と実数}\label{tbl:int-float}
-    \begin{center}
-    \begin{tabular}{crl}
-    \Hline
-    整数の例&\lstinline|0|& \\
-            &\lstinline|1|& \\
-            &\lstinline|100|& \\
-            &\lstinline|-1|& 負号がついても整数 \\
-            &\lstinline|+20|& 正号がついても整数 \\
-    \hline
-    実数の例 &\lstinline|0.0|& \\
-             &\lstinline|1.0|& \\
-             &\lstinline|-1.0|& 負号がついても整数 \\
-             &\lstinline|+3.14|& 正号がついても整数 \\
-             &\lstinline|1.0e10|& 指数表記も可能 \\
-             &\lstinline|1.0e+10|& 指数にも正負号を付けられる \\
-    \Hline
-    \end{tabular}
-    \end{center}
-\end{table}
-
-\subsection{char}\label{ssc:syntax-char}
-nibkameにおいて用意されている組み込みの文字型は
-char型であるが，この型は%C言語と同様に
-8ビットの符号無し整数である．
-%char型であり，計算機上での表現は処理系に依存する．
-\end{resbonsiblesection}
-
 \begin{resbonsiblesection}{式の構文}{\sakamoto}\label{sc:expr-syntax}
 nibkameにおける式の定義は以下の様になる．
 \begin{equation}\label{eq:expr} 
@@ -756,7 +725,6 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
 \mathit{clss} &\Coloneqq& \mathit{cls} & \\
               &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
 \mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
-\mathset{Clauses}&\triangleq& \varrange{\mathit{clss}}            & \text{節の並び} \\
 p&\Coloneqq&\patternany             & \text{全て} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
@@ -789,17 +757,93 @@ p&\Coloneqq&\patternany             & \text{全て} \\
 \lstinline|Nil|はC言語で言うところのNULLのようなもので，
 リストの末尾であることを示す．
 
+数についていくつか例を挙げると\refTbl{tbl:int-float}のようになる．
+
+\begin{table}[h]
+    \caption{整数と浮動小数点数}\label{tbl:int-float}
+    \begin{center}
+    \begin{tabular}{crl}
+    \Hline
+    整数の例&\lstinline|0|,
+             \lstinline|1|,
+             \lstinline|100|,
+             \lstinline|-1| \\
+    \hline
+    浮動小数点数の例 &\lstinline|0.0|,
+             \lstinline|1.0|,
+             \lstinline|-1.0|,
+             \lstinline|1.0e10|,
+             \lstinline|1.0e-10|\\
+    \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
+
+nibkameにおいて用意されている組み込みの文字型は
+char型であるが，この型は%C言語と同様に
+8ビットの符号無し整数である．
+%char型であり，計算機上での表現は処理系に依存する．
+
 \subsection{外部定数}\label{ssc:expr-external}
+外部定数は，nibkameソースコード上で既に定義されているものとして使用することの出来る
+定数であり，具体的には外部のCランタイムの関数や加算・減算などのプリミティブ関数である．
 
 \subsection{変数}\label{ssc:expr-variable}
 変数は一般のプログラミング言語における概念と同じである．
 しかし，nibkameにおける変数は生成時に行われる束縛の後は一切の代入を行うことが出来ない．
+そのため，参照が用いられていない場合には，同じ式を評価すると同じ結果となる．
+
+\subsection{束縛}\label{ssc:expr-let}
+変数束縛を行うのが\lstinline|let|式である．
+nibkameにおける変数のスコープはレキシカルスコープ(lexical scope)である．
+
+例えば，
+\begin{lstlisting}
+let r =
+  let x = 5 in
+    let a = x in
+    let x = 3 in
+      let b = x in
+      a, b, x
+\end{lstlisting}
+というコードでは
+\lstinline|r|は\lstinline|5, 3, 3|となる．
+
+\subsection{参照}\label{ssc:expr-reference}
+nibkameにおいては一度束縛した変数の中身を変更することが出来ない．
+しかし，実際に副作用の一切無いコードを書くのは手間なので，
+参照という概念を導入し，
+変数に格納されている「データが格納されている場所への参照」は変化しないが，
+「データが格納されている場所への参照」をたどって，格納されているデータを得たり，変更したりすることが出来るようになっている．
+
+例えば，
+\begin{lstlisting}
+let p = ref 3
+let q =
+  let x = p := 7 in
+  p!
+\end{lstlisting}
+というコードは上から順に実行され，
+最終的に\lstinline|q|は\lstinline|7|，\lstinline|p|は\lstinline|7|が格納されている場所への参照が束縛されていることなる．
 
 \subsection{型構築子}\label{ssc:expr-constructor}
+型構築子とはいわゆる代数的データ構造を作るものである．
+集合で言うところの直和と等しい．
+
 \subsection{関数}\label{ssc:expr-function}
+関数はある値をとってある値を返す値である．
+nibkameにおいて関数は第一級のオブジェクト(first-class object)なので，
+変数に束縛したり，関数の返り値として返したりすることができる．
+
 \subsection{適用}\label{ssc:expr-apply}
+関数に値を与え値を得ることである．
+nibkameにおいて評価戦略(evaluation strategy)は
+値渡し(call-by-value)である．
+そのため，関数に渡される引数は事前に評価されてから渡されることになる．
+
 \subsection{組}\label{ssc:expr-tuple}
-\subsection{参照}\label{ssc:expr-reference}
+組とはいくつかの値の並びのことであり，
+集合における組とほぼ同じものである．
 \end{resbonsiblesection}
 \begin{resbonsiblesection}{型の構文}{\sakamoto}\label{sc:type-syntax}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
@@ -869,7 +913,11 @@ $\typename{list}$と$\typename{array}$，ヴァリアント型が型定数とな
 $s$型をとって$t$型を返す関数の型は$s\rightarrow t$となる．
 
 \subsection{直積型}\label{ssc:type-tuple}
+直積型は組の型であり，組の夫々の要素の型の組となっている．
+
 \subsection{参照型}\label{ssc:type-reference}
+参照が持つ型であり，例えば，\lstinline|int|型への参照であれば，その型は
+\lstinline|int ref|となる．
 
 \subsection{型適用}\label{ssc:type-apply}
 ML系言語の型には，
@@ -1003,7 +1051,7 @@ $e\in\mathset{Expr}$
         {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
     \infer[\rulename{E-Fun}]
         {\envExpr\vdash \fundot{x}{e}:\tau_1\rightarrow\tau_2}
-        {\envExpr+(x,\tau_1)\vdash e:\tau_2}\\
+        {\envExpr\uplus(x,\tau_1)\vdash e:\tau_2}\\
     \infer[\rulename{E-Tuple}]
         {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
         {\envExpr\vdash e_0:\tau_0 &
@@ -1026,7 +1074,7 @@ $e\in\mathset{Expr}$
     \infer[\rulename{E-Let}]
         {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
         {\envExpr\vdash e_1:\tau' &
-        \envExpr+(x,\tau')\vdash e_2:\tau}\\
+        \envExpr\uplus(x,\tau')\vdash e_2:\tau}\\
 %    \infer[\rulename{E-If}]
 %        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
 %        {\envExpr\vdash e_1:\typename{bool} &
@@ -1034,7 +1082,7 @@ $e\in\mathset{Expr}$
 %        \envExpr\vdash e_3:\tau}\\
     \infer[\rulename{E-Fix}]
         {\envExpr\vdash \fixdot{f}e:\tau}
-        {\envExpr+(f,\tau)\vdash e:\tau}\\
+        {\envExpr\uplus(f,\tau)\vdash e:\tau}\\
     \infer[\rulename{E-Match}]
         {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\mathit{clss}:\tau}
         {\envExpr\vdash e:\tau' &
@@ -1047,12 +1095,12 @@ $e\in\mathset{Expr}$
     \infer[\rulename{C-Always}]
         {\envExpr\vdash p\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
-        \envExpr+\envPattern\vdash e:\tau}\\
+        \envExpr\uplus\envPattern\vdash e:\tau}\\
     \infer[\rulename{C-Guarded}]
         {\envExpr\vdash p\mathnkop{with}e_g\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
-        \envExpr+\envPattern\vdash e_g:\typename{bool} &
-        \envExpr+\envPattern\vdash e:\tau}\\
+        \envExpr\uplus\envPattern\vdash e_g:\typename{bool} &
+        \envExpr\uplus\envPattern\vdash e:\tau}\\
     \infer[\rulename{C-Seq}]
         {\envExpr\vdash \mathit{cls}_0\clauseor\cdots\clauseor\mathit{cls}_n:\tau}
         {\envExpr\vdash cls_0:\tau &
@@ -1166,11 +1214,13 @@ nibkameコンパイラのモジュール構造と，各フェーズで行う操�
  \item 構文解析 (Schemeで実装)
  \item 翻訳単位を丸ごとモジュール化 (Moduleモジュール、TranslationUnitモ
        ジュール)
- \item S式表現の読み込み (Sexprモジュール、Sreadモジュール、Variantモジュー
-       ル)
- \item クロージャ化 (LLiftingモジュール)
- \item 型推論 (Typingモジュール)
- \item パターンマッチの展開 (Patternモジュール)
+ \begin{itemize}
+  \item S式表現の読み込み (Sexprモジュール、Sreadモジュール、Variantモジュー
+        ル)
+  \item クロージャ化 (LLiftingモジュール)
+  \item 型推論 (Typingモジュール)
+  \item パターンマッチの展開 (Patternモジュール)
+ \end{itemize}
  \item 多相関数の特殊化 (Instantiateモジュール)
  \item K正規形へ変換 (KNormalモジュール)
  \item 部分適用に関する処理 (Closureモジュール)
@@ -1191,6 +1241,8 @@ nibkameコンパイラのモジュール構造と，各フェーズで行う操�
 実装であるParsec\cite{Hutton96monadicparser}を
 Schemeへ移植したライブラリ\footnote{Gaucheのソースコードに付属}
 を用いて書かれている．
+
+nibkameコンパイラが動作するようになった暁にはnibkameに移植する予定である．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{S式表現の読み込み}{\kobori}\label{sc:impl-s-reader}
@@ -1210,6 +1262,35 @@ SreadモジュールはSexprモジュールによって読み込まれたリス�
 用いて代数的データ型の構築子を管理する．
 \end{resbonsiblesection}
 
+\begin{resbonsiblesection}{クロージャ変換部}{\sakamoto}\label{sc:impl-lambda-lifting}
+クロージャ変換(closure conversion)またはラムダリフティング(lambda lifting)は
+クロージャが参照している自由変数を引数に加え束縛変数にすることで，
+自由変数の使用をなくし，ネストした関数の定義を平坦にすることが出来るようにすることである．
+クロージャ変換を行うLLiftingモジュールでは，さらに，ネストした関数を平坦にする．
+例えば，
+\begin{lstlisting}
+let addn = fun a ->
+  let f = fun x ->
+    a + x in
+  f
+\end{lstlisting}
+というコードがあったとき，まず自由変数を引数に出し，
+\begin{lstlisting}
+let addn = fun a ->
+  let f = fun a -> fun x ->
+    a + x in
+  f a
+\end{lstlisting}
+関数定義をトップレベルまで引き上げる．
+\begin{lstlisting}
+let f = fun a -> fun x ->
+  a + x in
+let addn = fun a ->
+  f a
+\end{lstlisting}
+最終的にはこうなる．
+\end{resbonsiblesection}
+
 \begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
 現在のところ，型推論部は
 \algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
@@ -1225,6 +1306,21 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 現実的な時間・メモリ使用量で終わらせることが出来ない．
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{部分適用に関する処理}{\sakamoto}\label{sc:impl-partial-application}
+現在のところ，Closureモジュールはその名に反し
+部分適用に関する処理を行うこととしている．
+その理由は，参考としたMinCamlはこの位置でクロージャ変換を行っていること
+に由来するのだが，多相型を持つnibkameではこの位置でクロージャ変換を行うのは
+遅すぎるため，型推論以前にクロージャ変換部が移動した．
+移動以前にClosureモジュールに追加していた部分適用に関する処理は残ったため，
+名称と機能が乖離してしまっている．後に是正する．
+
+さて，2011年2月3日現在，
+nibkameコンパイラの全フェーズの中でこのフェーズの完成度は著しく低い．
+実質的にこのフェーズを境にフロントエンドとバックエンドとなっているのだが，
+このフェーズが動作しないため分離している．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{仮想機械語生成部}{\kobori}\label{sc:impl-virtualasm}
