@@ -1203,7 +1203,7 @@ nibkame言語で標準で使用できる関数の仕様について述べる．
 \chapter{コンパイラの設計と実装}\label{ch:impl}
 
 \begin{abstract}
-はじめに，nibkameコンパイラの構造とフェーズを示し，後に工程の詳細を説明
+はじめにnibkameコンパイラの構造とフェーズを示し，後に工程の詳細を説明
 していく．
 \end{abstract}
 
@@ -1288,7 +1288,8 @@ let f = fun a -> fun x ->
 let addn = fun a ->
   f a
 \end{lstlisting}
-最終的にはこうなる．
+%最終的にはこうなる．
+このようにして関数のネストを取り除く．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
@@ -1358,7 +1359,7 @@ nibkameコンパイラの全フェーズの中でこのフェーズの完成度�
  また，関数の末尾位置，つまり後続の命令がなく末尾がジャンプ命令でない位置
  へ関数からの復帰命令を挿入する．
 
-\begin{figure}[b]
+\begin{figure}[htb]
 \begin{minipage}{0.5\hsize}
  \begin{center}
   \includegraphics[scale=0.6]{instree.pdf}
@@ -1372,6 +1373,72 @@ nibkameコンパイラの全フェーズの中でこのフェーズの完成度�
  \end{center}
 \end{minipage}
 \end{figure}
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{生成するデータ構造}{\kobori}\label{sc:impl-data-structure}%正直位置が微妙
+ 実行時にメモリ上へ生成するデータ構造：タプルや配列，クロージャについて
+ 説明する．
+
+\subsection{データ型の表現}
+プログラム中のデータは大きく次の2通りに分かれる．
+\begin{itemize}
+ \item \typename{int}や\typename{float}などの基底型
+ \item タプルや配列などの複合型
+\end{itemize}
+
+基底型は目的とする計算機に対して自然な表現を採用する．たとえば
+\typename{int}型はマシンワード\footnote{ある計算機にとってもっとも扱いや
+すいビット幅のこと．IA-32アーキテクチャならば32ビット幅となる．}と等しい
+ビット幅を持ち``タグ''などが付加されることはない．また全て値型であり，直
+接スタックやレジスタに置かれる．\typename{float}型には倍精度浮動小数点数
+を採用した．これもスタックやレジスタに直接確保される．
+
+タプルと配列はヘッダとして，長さやデータがポインタであるかを示すLayout
+Bitmap\cite{Nguyen:2006:CMP:1140335.1140364}を持つ．これは，将来的にガベー
+ジコレクタを実装する為に使用し，また比較演算の実装に用いる(詳しくは
+\refSc{sc:impl-runtime}を参照のこと)．
+
+クロージャは先頭に関数のアドレス，続きに自由変数の値を持つタプルとして表
+現される．ヴァリアントは型構築子を示す整数と後続にデータ本体を持つ``ドッ
+トリスト''のように表現される．
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{命令選択部}{\kobori}\label{sc:impl-inst}
+ 一旦，データを割付けるレジスタを決定しないままにIA-32アーキテクチャに存
+ 在する命令に仮想機械語を変換する．仮想機械語では独立したデスティネーショ
+ ンオペランドを持つが，IA-32アーキテクチャでは2オペランドの片側が兼用に
+ なっている命令が殆どである．元の値を保存する必要があるため，データの複
+ 製を行い，そのコピーに対して演算を行うようにした．
+
+ 一部の命令は使用できるレジスタが固定であるので，それはこの段階で割り当
+ てることとした．それには呼び出し規約を満足させるために，戻り値を適切な
+ レジスタに移動することも含む．
+
+ また一部の命令に対しては，演算強度の低減に当たるような命令選択も行なっ
+ ている．
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{レジスタ割り当て}{\kobori}\label{sc:impl-regalloc}
+ まず，末尾から走査することで，ある命令の実行時点で生存している一時変数の
+ 一覧を作成する．その後，上から飽食的に一時変数へレジスタを割り当ててい
+ く．制御フローの合流地点においては，生存している変数を全てスタックフレー
+ ム上に割り当てることで相互間でのレジスタの位置合せを軽減する．
+
+ できる限り寿命となった変数の割り当てられたレジスタから優先的に使用する
+ ことでレジスタ間転送を削減させる．
+
+ レジスタ割り当てを実行し，スタックにスピルするデータを決定したことでス
+ タックへ確保する駆動フレームのサイズと値の型がわかる．これを用い
+ て，\lstinline|Entry|というスタブの位置にスタックフレームを確保する命令
+ を挿入する．
+
+ 2011年2月3日時点，まだRegAllocモジュールは実装されていない．このため，
+ 現在出力できるアセンブリ言語ではレジスタ名のかわりに一時変数名が出力さ
+ れる．
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{実行時ランタイム}{\kobori}\label{sc:impl-runtime}
+ 
 \end{resbonsiblesection}
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
