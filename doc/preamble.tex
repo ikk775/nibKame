@@ -53,6 +53,7 @@
 
 \newcommand{\mathnkop}[1]{\mathop{\mathsf{#1}}}
 \newcommand{\mathnkenv}[1]{\mathcal{#1}}
+\newcommand{\mathnkval}[1]{\mathsf{#1}}
 \newcommand{\mathset}[1]{\mathit{#1}}
 \newcommand{\mathfunc}[1]{\mathit{#1}}
 \newcommand{\newmonadicopdot}[2]{\newcommand{#1}[2]{#2##1.\,##2}}
@@ -60,6 +61,9 @@
 \newmonadicopdot{\existsdot}{\exists}
 \newmonadicopdot{\lambdadot}{\lambda}
 \newmonadicopdot{\fixdot}{\mathnkop{fix}}
+\newmonadicopdot{\fundot}{\mathnkop{fun}}
+\newcommand{\semanticS}[1]{\mathcal{S}\left\ldbrack#1\right\rdbrack}
+\newcommand{\mypair}[2]{\left(#1,#2\right)}
 
 \newcommand{\ltrue}{\top}
 \newcommand{\lfalse}{\bot}
@@ -75,6 +79,7 @@
 \newcommand{\applysubst}[2]{\mathfrak{S}\ #1\ #2}
 \newcommand{\removeassoc}[2]{\mathfrak{Rm}\ #1\ #2}
 \newcommand{\patternandenv}[2]{#1\Rsh#2}
+\newcommand{\valueandenv}[2]{#1\Rsh#2}
 \newcommand{\domainrestrict}[2]{#1\mathbin{\upharpoonright}#2}
 \newcommand{\freevars}[1]{\mathit{FV}(#1)}
 \newcommand{\freetypevars}[1]{\mathit{FTV}(#1)}
