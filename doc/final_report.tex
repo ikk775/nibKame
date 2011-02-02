@@ -592,7 +592,7 @@ register)の2種類にわけられる．その分類を\refTbl{tb:register-save}
 \subsection{char}\label{ssc:syntax-char}
 nibkameにおいて用意されている組み込みの文字型は
 char型であるが，この型は%C言語と同様に
-8ビットの符号付き整数である．
+8ビットの符号無し整数である．
 %char型であり，計算機上での表現は処理系に依存する．
 \end{resbonsiblesection}
 
@@ -981,7 +981,7 @@ nibkame言語で標準で使用できる関数の仕様について述べる．
 \lstinline|array-from-list|はリストと同じ長さで同じ要素を持つ配列を生成
 する関数である．
 \lstinline|array-from-list-with-length|はリストの内，指定されただけの先
-頭要素を持つ配列を生成する．リストより長い値が指定されたとき，それ以降の % 本当に？
+頭要素を持つ配列を生成する．リストより長い値が指定されたとき，それ以降の% 本当に？
 値は未定義である．
 
 \end{resbonsiblesection}
