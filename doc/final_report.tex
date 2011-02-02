@@ -1217,6 +1217,7 @@ nibkameコンパイラのモジュール構造と，各フェーズで行う操�
  \item 部分適用に関する処理 (Closureモジュール)
  \item 仮想機械語に変換 (VirtualAsmモジュール)
  \item 仮想機械語の線形化 (Basicblockモジュール)
+ \item IA-32アーキテクチャ向け命令選択 (Asmx86モジュール)
  \item レジスタ割付 (RegAllocモジュール)
  \item 機械語を出力 (Asmx86モジュール)
 \end{itemize}
@@ -1248,7 +1249,6 @@ Sexpr.read関数は，S式の括弧の対応を文字列のネストしたリス
 SreadモジュールはSexprモジュールによって読み込まれたリストを，Syntaxモ
 ジュールで定義される抽象構文木へ変換する．このとき，Variantモジュールを
 用いて代数的データ型の構築子を管理する．
-
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
@@ -1266,6 +1266,26 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 現実的な時間・メモリ使用量で終わらせることが出来ない．
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{仮想機械語生成部}{\kobori}\label{sc:impl-virtualasm}
+ VirtualAsmモジュールでは，実際の計算機から独立した仮想の機械語へ変換す
+ る．命令は3つのオペランドを持ち，デスティネーションオペランドは独立した
+ 3番地形式になっている．この段階において，タプルや配列といった必ずメモリ
+ に割り付けられるデータ構造へのアクセスはメモリへのロード及びストアに変
+ 換される．
+
+ この命令セットが``仮想''であるのは次の点による．
+ \begin{itemize}
+  \item 無限個のレジスタの存在を仮定していること
+  \item if命令といった高度な制御命令が存在すること
+  \item 関数として実現されるようなプリミティブが存在すること
+ \end{itemize}
+
+ 仮想機械語を生成する時点で，浮動小数点数は即値オペランドに取れない計算
+ 機が多いため，定数テーブルを作成しそれからロードするような命令を生成す
+ る．また，トップレベルでの関数以外の変数束縛を定義順に実行する関数を生
+ 成しエントリーポイントのかわりとしている．
 \end{resbonsiblesection}
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
