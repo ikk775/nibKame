@@ -1,4 +1,4 @@
-\documentclass[a4paper,titlepage,report]{jsbook}
+\documentclass[a4paper,titlepage,report,disablejfam]{jsbook}
 
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{emp} % 図の描画用
@@ -7,12 +7,14 @@
 \usepackage{jlisting}
 \usepackage{mathtools} % Ams-TeXの使用
 \usepackage{mathrsfs} % 数式フォント
+%\usepackage[cmsy]{MnSymbol} % 記号
 \usepackage{amssymb,amsthm} % 記号と定理環境
 \usepackage{proof} % 証明図
 \usepackage{url} % URL
 \usepackage{longtable} % 複数ページに亙る長い表
 \usepackage{yhmath} % 長い括弧など
 \usepackage{tablists}
+\usepackage{mathabx}
 
 \input{preamble}
 
@@ -688,7 +690,9 @@ register)の2種類にわけられる．その分類を\refTbl{tb:register-save}
 \chapter{対象言語の設計}\label{ch:lang_design}
 
 \begin{abstract}
-この章では，言語の仕様とその背景，設計思想について述べる．
+この章では，
+まずnibkame言語のコア部分の仕様を定義し，
+後に，その拡張としてnibkame言語本体とライブラリの仕様について述べる．
 そして，最終的に実装された言語機能と構文を示す．
 \end{abstract}
 
@@ -726,7 +730,7 @@ char型であるが，この型は%C言語と同様に
 %char型であり，計算機上での表現は処理系に依存する．
 \end{resbonsiblesection}
 
-\begin{resbonsiblesection}{式}{\sakamoto}\label{sc:expr}
+\begin{resbonsiblesection}{式の構文}{\sakamoto}\label{sc:expr-syntax}
 nibkameにおける式の定義は以下の様になる．
 \begin{equation}\label{eq:expr} 
 \begin{array}{rcll}
@@ -734,13 +738,14 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
  &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
  &\mid&  v                          & \text{変数 (\refSsc{ssc:expr-variable})} \\
  &\mid&  g                          & \text{型構築子 (\refSsc{ssc:expr-constructor})} \\
- &\mid&  \lambdadot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
+ &\mid&  \fundot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
  &\mid&  e, \cdots, e               & \text{組 (\refSsc{ssc:expr-tuple})} \\
  &\mid&  e!                         & \text{参照 (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\coloneq e                & \text{代入 (\refSsc{ssc:expr-reference})} \\
  &\mid&  e\ e                       & \text{適用 (\refSsc{ssc:expr-apply})} \\
  &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
- &\mid&  \fixdot{f}{\lambdadot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
- &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
+ &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
+% &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
  &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss}\clauseor\patternany\rightarrow e & \text{パターンマッチング (\refSsc{ssc:expr-match})} \\
 \mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
@@ -768,15 +773,34 @@ p&\Coloneqq&\patternany             & \text{全て} \\
 ここで，$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$である．
 
 \subsection{定数}\label{ssc:expr-constant}
+定数とは
+\begin{itemize}
+    \item \lstinline|()|
+    \item \lstinline|Nil|
+    \item 整数
+    \item 浮動小数点数
+    \item 文字
+\end{itemize}
+の五つである．
+
+このうち，\lstinline|()|はC言語で言うところのvoidのようなもので，
+関数が引数を取らない若しくは返さないことを明示するのに用いる．
+\lstinline|Nil|はC言語で言うところのNULLのようなもので，
+リストの末尾であることを示す．
+
 \subsection{外部定数}\label{ssc:expr-external}
+
 \subsection{変数}\label{ssc:expr-variable}
+変数は一般のプログラミング言語における概念と同じである．
+しかし，nibkameにおける変数は生成時に行われる束縛の後は一切の代入を行うことが出来ない．
+
 \subsection{型構築子}\label{ssc:expr-constructor}
 \subsection{関数}\label{ssc:expr-function}
 \subsection{適用}\label{ssc:expr-apply}
 \subsection{組}\label{ssc:expr-tuple}
 \subsection{参照}\label{ssc:expr-reference}
 \end{resbonsiblesection}
-\begin{resbonsiblesection}{型システム}{\sakamoto}\label{sc:型システム}
+\begin{resbonsiblesection}{型の構文}{\sakamoto}\label{sc:type-syntax}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
 
 Hindley-Milner型システムとはHaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムであり，
@@ -808,7 +832,6 @@ Hindley-Milner型システムを採用しているnibkameでは型は以下の�
     \mathset{TypeVar}&\triangleq& \varrange{\alpha}            & 
 \end{array}
 \end{equation}
-直和形については型推論部では扱わない．
 
 \subsection{実例}\label{ssc:example}
 
@@ -878,7 +901,7 @@ $\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
 \end{resbonsiblesection}
 
 
-\begin{resbonsiblesection}{意味論}{\sakamoto}\label{sc:type-evaluation}
+\begin{resbonsiblesection}{意味論}{\sakamoto}\label{sc:semantics}
 まず，変数や型変数，型構築子の型の環境は次の様に定義される．
 \begin{equation}\label{eq:env} 
 \begin{array}{rcll}
@@ -887,29 +910,30 @@ $\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
     \envVariant  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
 \end{array}
 \end{equation}
-置換の集合は次のように定義される．
-\begin{equation}\label{eq:subst} 
-\begin{array}{rcll}
-    \substExpr  &\subset& \mathset{Var}\times\mathset{Expr} & \text{変数の置換} \\
-    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の置換} \\
-\end{array}
-\end{equation}
-置換の集合については特別に$\{(v,e),\cdots\}$を$[v/e,\cdots]$とも書く．
+%置換の集合は次のように定義される．
+%\begin{equation}\label{eq:subst} 
+%\begin{array}{rcll}
+%    \substExpr  &\subset& \mathset{Var}\times\mathset{Expr} & \text{変数の置換} \\
+%    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の置換} \\
+%\end{array}
+%\end{equation}
+%置換の集合については特別に$\{(v,e),\cdots\}$を$[e/v,\cdots]$とも書く．
 式$e$，型$\tau$の中に現れる自由変数の集合は夫々$\freevars{e}$，$\freetypevars{\tau}$と書く．
 
-置換の適用$\applysubst{\Sigma}{x}$は次のように定義される．
-\begin{equation}
-\begin{aligned}
-    \applysubst{\substExpr}{c} &= c \\
-    \applysubst{\substExpr}{s:\tau} &= s:\tau \\
-    \applysubst{\substExpr}{x} &=\begin{cases}
-        e & \text{if $(v,e)\in\substExpr$.} \\
-        x & \text{otherwise.} \end{cases} \\
-    \applysubst{\substExpr}{\lambdadot{x}{e}} &= \applysubst{\substExpr'}{e} &
-            \text{which $\substExpr' = \domainrestrict{\substExpr}{(\domain\substExpr\setminus\{x\})}$.}\\
-\end{aligned}
-\end{equation}
+%式に対する置換の適用$\applysubst{\Sigma}{x}$は次のように定義される．
+%\begin{equation}
+%\begin{aligned}
+%    \applysubst{\substExpr}{c} &= c \\
+%    \applysubst{\substExpr}{s:\tau} &= s:\tau \\
+%    \applysubst{\substExpr}{x} &=\begin{cases}
+%        e & \text{if $(v,e)\in\substExpr$.} \\
+%        x & \text{otherwise.} \end{cases} \\
+%    \applysubst{\substExpr}{\fundot{x}{e}} &= \applysubst{\substExpr'}{e} &
+%            \text{which $\substExpr' = \domainrestrict{\substExpr}{(\domain\substExpr\setminus\{x\})}$.}\\
+%\end{aligned}
+%\end{equation}
 
+\subsection{型}\label{sc:type}
 定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
 \begin{equation}\label{eq:func-const-type} 
     \mathfunc{ConstType}(c) = \begin{cases}
@@ -977,7 +1001,7 @@ $e\in\mathset{Expr}$
         {\envExpr\vdash v:\tau}
         {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
     \infer[\rulename{E-Fun}]
-        {\envExpr\vdash \lambdadot{x}{e}:\tau_1\rightarrow\tau_2}
+        {\envExpr\vdash \fundot{x}{e}:\tau_1\rightarrow\tau_2}
         {\envExpr+(x,\tau_1)\vdash e:\tau_2}\\
     \infer[\rulename{E-Tuple}]
         {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
@@ -987,6 +1011,10 @@ $e\in\mathset{Expr}$
     \infer[\rulename{E-Ref}]
         {\envExpr\vdash e!:\tau}
         {\envExpr\vdash e:\tau\ \mathsf{ref}}\\
+    \infer[\rulename{E-Set}]
+        {\envExpr\vdash e_1\coloneq e_2:\typename{unit}}
+        {\envExpr\vdash e_1:\tau\ \mathsf{ref} &
+        \envExpr\vdash e_2:\tau}\\
     \infer[\rulename{E-Apply}]
         {\envExpr\vdash e_1\ e_2:\tau}
         {\envExpr\vdash e_1:\tau'\rightarrow\tau &
@@ -995,11 +1023,11 @@ $e\in\mathset{Expr}$
         {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
         {\envExpr\vdash e_1:\tau' &
         \envExpr+(x,\tau')\vdash e_2:\tau}\\
-    \infer[\rulename{E-If}]
-        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
-        {\envExpr\vdash e_1:\typename{bool} &
-        \envExpr\vdash e_2:\tau &
-        \envExpr\vdash e_3:\tau}\\
+%    \infer[\rulename{E-If}]
+%        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
+%        {\envExpr\vdash e_1:\typename{bool} &
+%        \envExpr\vdash e_2:\tau &
+%        \envExpr\vdash e_3:\tau}\\
     \infer[\rulename{E-Fix}]
         {\envExpr\vdash \fixdot{f}e:\tau}
         {\envExpr+(f,\tau)\vdash e:\tau}\\
@@ -1027,6 +1055,37 @@ $e\in\mathset{Expr}$
         \cdots &
         \envExpr\vdash cls_n:\tau}
 \end{gather}
+\end{subequations}
+
+\subsection{付値}\label{sc:evaluation}
+値$\upsilon$は
+\begin{equation}\label{eq:eval-value} 
+\begin{array}{rcll}
+\upsilon&\Coloneqq& \mypair{}{c:\tau}                          & \text{定数} \\
+ &\mid&  s:\tau                     & \text{外部定数} \\
+ &\mid&  v                          & \text{変数} \\
+ &\mid&  \mypair{g}{\upsilon}       & \text{型構築子} \\
+ &\mid&  \lambdadot{x}{e}           & \text{関数} \\
+ &\mid&  e, \cdots, e               & \text{組}
+\end{array}
+\end{equation}
+と定義される．
+
+環境
+\begin{gather}\label{eq:eval-func} 
+\nu\msubset\mathit{Var}\times\mathit{Var} \\
+\rho\msubset\mathit{Var}\times\upsilon \\
+\end{gather}
+
+\begin{subequations}
+\begin{align}
+    \semanticS{c}\nu\rho &= \valueandenv{c}{\rho}\\
+    \semanticS{v}\nu\rho &= \valueandenv{\nu(v)}{\rho}\\
+    \semanticS{\mathnkop{if}e_1\tau_1\mathnkop{then}e_2\mathnkop{else}e_3}\nu\rho &= \begin{cases}
+        \semanticS{e_2}\nu\rho' &\text{if $\semanticS{e_1}\nu\rho = \valueandenv{\mathnkval{true}}{\rho'}$} \\
+        \semanticS{e_3}\nu\rho' &\text{if $\semanticS{e_1}\nu\rho = \valueandenv{\mathnkval{false}}{\rho'}$} \\
+        \end{cases}
+\end{align}
 \end{subequations}
 
 \end{resbonsiblesection}
