@@ -486,12 +486,38 @@ IA-32アーキテクチャの持つ命令の内，nibkameコンパイラが生�
 使用する命令は大きく次の様に分類できる．
 \begin{itemize}
  \item データ転送命令
- \item 算術命令
+ \item 演算命令
  \item 比較命令
  \item 分岐命令
  \item スタック操作命令
  \item 浮動小数点数命令
 \end{itemize}
+
+\subsubsection{記号の説明}
+IA-32アーキテクチャは，命令長は可変で，0から3のオペランドをとる．命令の
+多くは2オペランドで片方にメモリオペランドを取ることができる．以下ではオ
+ペランドを次のように総称することにする．
+\begin{description}
+ \item[reg] 32ビット汎用レジスタ
+ \item[mem] メモリオペランド
+ \item[xmm] 浮動小数点数演算でのレジスタ
+ \item[imm] 即値オペランド
+\end{description}
+ただし，immに関しては，必要に応じてimm32の様に後ろにビット幅を明記するこ
+ととする．
+
+メモリオペランドのアドレッシングには次の形式がある．
+\begin{itemize}
+ \item \lstinline|[imm]|
+ \item \lstinline|[reg]|
+ \item \lstinline|[imm+reg*n]|
+ \item \lstinline|[reg+reg*n]|
+ \item \lstinline|[imm+reg+reg*n]|
+\end{itemize}
+ここで，nは1,2,4,8のいずれかである．
+
+2オペランド形式のとき，左にデスティネーションオペランドを，右にソースオ
+ペランドを取る\footnote{この方法をIntel記法という．逆に書く方法をAT\&T記法という．出力するアセンブリ言語はこれを採用しているが詳細には触れない．}．
 
 \subsubsection{データ転送命令}
 汎用レジスタ-汎用レジスタ間，汎用レジスタ-メモリ間など，全ての汎用レジス
@@ -505,6 +531,82 @@ IA-32アーキテクチャの持つ命令の内，nibkameコンパイラが生�
  \item \lstinline|MOV reg, imm|
  \item \lstinline|MOV mem, imm|
 \end{itemize}
+多くの2オペランド形式の命令も同じ形をしている．
+
+また，メモリからデータを転送するのでなく，メモリオペランドのアドレスを計
+算して汎用レジスタに格納する\lstinline|LEA|命令が存在する．
+
+\subsubsection{演算命令}
+2オペランド形式の算術命令を次に示す．
+\begin{description}
+ \item[ADD] 加算
+ \item[Sub] 減算
+ \item[AND] 論理積
+ \item[OR] 論理和
+ \item[XOR] 排他的論理和
+ \item[SAL] 算術左シフト
+ \item[SHL] 論理左シフト
+ \item[SAR] 算術右シフト
+ \item[SHR] 論理右シフト
+\end{description}
+
+乗算命令\lstinline|imul|はオペランドを2つ取るが，デスティネーションオペ
+ランドには汎用レジスタした取ることができない．
+除算命令\lstinline|idiv|はデスティネーションオペランドは
+\lstinline|EDX:EAX|レジスタ対に固定になっており，ソースオペランドにレジ
+スタ，メモリ，即値のいずれかを用いる．\lstinline|EAX|レジスタを
+\lstinline|EDX|レジスタに符号拡張する命令\lstinline|cdq|が存在する．
+
+オペランドの論理否定と符号反転を行う\lstinline|NOT|命令と\lstinline|NEG|
+命令が存在する．1を加減算する専用命令として\lstinline|INC|命令と
+\lstinline|DEC|命令が存在する．
+
+\subsubsection{比較命令}
+フラグレジスタだけを更新し，汎用レジスタに書き込みを行わない比較命令には
+次が存在する．
+\begin{description}
+ \item[CMP] 算術比較．減算によって比較する．
+ \item[TEST] 論理比較．論理積によって比較する．
+\end{description}
+あるレジスタが0かどうかを判定するときに論理比較は多く用いられる．
+
+\subsubsection{分岐命令}
+フラグレジスタの内容によって分岐する命令と，無条件ジャンプ命令
+\lstinline|jmp|が存在する．
+
+手続きの呼び出しと復帰には\lstinline|call|命令と\lstinline|ret|命令を用
+いる．\lstinline|call|命令はマシンスタックに次の命令のアドレスを積んでか
+らジャンプする．\lstinline|ret|命令はスタックトップをプログラムカウンタ
+へポップする．
+
+\subsubsection{スタック操作命令}
+\lstinline|ESP|レジスタで指されるマシンスタックは，値をプッシュしたりポッ
+プしたりする専用命令が存在する．\lstinline|push|命令はスタックポインタを
+更新し値を格納する．\lstinline|pop|命令はデータを読み出した後にスタック
+ポインタを更新する．なお，スタックはメモリ空間の下位から上位へ向かって伸
+びていく．
+
+スタック上に駆動フレームを確保したり開放したりする専用命令として
+\lstinline|enter|命令と\lstinline|leave|命令が存在する．
+
+\subsubsection{浮動小数点数演算命令}
+ここではXMMレジスタに格納されるスカラ倍精度浮動小数点数を扱うものについ
+て説明する．これらは，即値オペランドを取ることができないことに注意する必
+要がある．
+
+XMMレジスタに対するデータ転送には\lstinline|movsd|命令を用いる．
+
+整数データとの変換には\lstinline|cvtsi2sd|命令と\lstinline|cvtsd2si|命
+令を用いる．
+
+算術命令は次の通り．
+\begin{description}
+ \item[addsd] 加算
+ \item[subsd] 減算
+ \item[mulsd] 乗算
+ \item[divsd] 除算
+ \item[comisd] 算術比較
+\end{description}
 
 \subsection{呼び出し規約}\label{ssc:calling-convention}
 呼び出し規約とは，関数や手続きといったサブルーチンとのデータの引き渡し方
