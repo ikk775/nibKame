@@ -351,10 +351,10 @@ let rec asmgen = function
 	| BB.Add (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Add (twoOp_to_twoOp dst src2) :: asmgen tail
 	| BB.Sub (src1, VA.C 1) -> let t = TempR dst in Mov (t, TempR src1) :: DEC (R t) :: asmgen tail
 	| BB.Sub (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Sub (twoOp_to_twoOp dst src2) :: asmgen tail
-	| BB.Mul (src1, C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAL (twoOp_to_twoOp dst, shift_width 0 src2)
+	| BB.Mul (src1, VA.C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAL (RI (t, VA.Int_l (shift_width 0 src2))) :: asmgen tail
 	| BB.Mul (src1, VA.V src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (R (TempR src2))) :: asmgen tail
 	| BB.Mul (src1, VA.C src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (I (VA.Int_l src2))) :: asmgen tail
-	| BB.Div (src1, C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAR (twoOp_to_twoOp dst, shift_width 0 src2)
+	| BB.Div (src1, VA.C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAR (RI (t, VA.Int_l (shift_width 0 src2))) :: asmgen tail
 	| BB.Div (src1, VA.C src2) -> let t = tempR () in Mov (EAX, TempR src1) :: Set (t, VA.Int_l src2) :: CDQ :: Div t :: asmgen tail
 	| BB.Div (src1, VA.V src2) -> Mov (EAX, TempR src1) :: CDQ :: Div (TempR src2) :: asmgen tail
 	| BB.SLL (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: SHL (twoOp_to_twoOp dst src2) :: asmgen tail
