@@ -77,7 +77,7 @@ nibkameではそういった機能と，その他にも生産性に高い影響�
 加することでより実用的な言語を開発することを目指した．
 MinCamlコンパイラはターゲットとする計算機としてSPARCとPowerPCをサポート
 している．しかし実行する計算機の確保の容易さから，nibkameコンパイラはター
-ゲットをx86プロセッサとした．
+ゲットをIA-32アーキテクチャとした．
 
 詳しくは\refCh{ch:lang_design}で述べるが，これらの目標を達成するために次
 に挙げる機能の追加を行った．
@@ -86,7 +86,7 @@ MinCamlコンパイラはターゲットとする計算機としてSPARCとPower
  \item 多相関数
  \item 代数的データ型
  \item パターンマッチング
- \item x86アーキテクチャ向け機械語の生成
+ \item IA-32アーキテクチャ向け機械語の生成
 \end{itemize}
 また，これを達成するために，複数の定義をひとまとめに扱うモジュール機構と
 3番地形式の中間言語の2番地形式への変換，メモリ管理機構の強化が必要となっ
@@ -446,18 +446,19 @@ $f$の型は$t\rightarrow s$であるとする．
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{目的とする計算機}{\kobori}\label{sc:target-machine}
-nibkameコンパイラはターゲットとしてx86機械語を生成する．それの理解のため
-に必要となるx86アーキテクチャの機能について説明する．
+nibkameコンパイラはターゲットとしてIA-32機械語を生成する．それの理解のため
+に必要となるIA-32アーキテクチャの機能について説明する．
 
-いわゆるx86は，1978年に発表されたIntel 8086とそれを元に開発された互換性
-のあるマイクロプロセッサの総称である．以下では特にIntel Pentium 4プロセッ
-サ以降のSSE2命令に対応したものについて扱う．\footnote{詳細について
-は，「IA-32 インテル アーキテクチャー・ソフトウェア・デベロッパーズ・マ
-ニュアル」を参照のこと(\url{http://www.intel.com/jp/download/index.htm}
-から入手できる)．}
+いわゆるIA-32は，1978年に発表されたIntel 8086とそれを元に開発された互換性
+のあるマイクロプロセッサの内，80386以降のマイクロプロセッサの総称である．以
+下では特にIntel Pentium 4プロセッサ以降のSSE2命令に対応したものについて
+扱う．\footnote{詳細については，「IA-32 インテル アーキテクチャー・ソフ
+トウェア・デベロッパーズ・マニュアル」を参照のこと
+(\url{http://www.intel.com/jp/download/index.htm}から入手できる)．}
 
-\subsection{命令セットの概要}\label{ssc:instruction_set}
-nibkameコンパイラが対象とするx86アーキテクチャは，8本の32ビット幅汎用レ
+
+\subsection{レジスタセットの概要}\label{ssc:register_set}
+nibkameコンパイラが対象とするIA-32アーキテクチャは，8本の32ビット幅汎用レ
 ジスタとプログラムカウンタ(EIPという)，フラグレジスタ(EFLAGS)を持つ．ま
 た，浮動小数点数を格納するXMMレジスタ\footnote{本来は短いベクトル命令の
 為に用いるが，今回は使用しないため本報告書では触れない．}が8本ある．
@@ -481,11 +482,140 @@ nibkameコンパイラが対象とするx86アーキテクチャは，8本の32�
 	    他の用途に用いるべきではない． 
 \end{description}
 
+\subsection{命令セットの概要}
+IA-32アーキテクチャの持つ命令の内，nibkameコンパイラが生成しうる命令につ
+いて説明する．
+
+使用する命令は大きく次の様に分類できる．
+\begin{itemize}
+ \item データ転送命令
+ \item 演算命令
+ \item 比較命令
+ \item 分岐命令
+ \item スタック操作命令
+ \item 浮動小数点数命令
+\end{itemize}
+
+\subsubsection{記号の説明}
+IA-32アーキテクチャは，命令長は可変で，0から3のオペランドをとる．命令の
+多くは2オペランドで片方にメモリオペランドを取ることができる．以下ではオ
+ペランドを次のように総称することにする．
+\begin{description}
+ \item[reg] 32ビット汎用レジスタ
+ \item[mem] メモリオペランド
+ \item[xmm] 浮動小数点数演算でのレジスタ
+ \item[imm] 即値オペランド
+\end{description}
+ただし，immに関しては，必要に応じてimm32の様に後ろにビット幅を明記するこ
+ととする．
+
+メモリオペランドのアドレッシングには次の形式がある．
+\begin{itemize}
+ \item \lstinline|[imm]|
+ \item \lstinline|[reg]|
+ \item \lstinline|[imm+reg*n]|
+ \item \lstinline|[reg+reg*n]|
+ \item \lstinline|[imm+reg+reg*n]|
+\end{itemize}
+ここで，nは1,2,4,8のいずれかである．
+
+2オペランド形式のとき，左にデスティネーションオペランドを，右にソースオ
+ペランドを取る\footnote{この方法をIntel記法という．逆に書く方法をAT\&T記法という．出力するアセンブリ言語はこれを採用しているが詳細には触れない．}．
+
+\subsubsection{データ転送命令}
+汎用レジスタ-汎用レジスタ間，汎用レジスタ-メモリ間など，全ての汎用レジス
+タを取るデータ転送命令は，一つのオペコード\lstinline|MOV|で表わす．即値
+のメモリないし汎用レジスタへの転送も同様である．即ち，\lstinline|MOV|命
+令は次の形式を持つ．
+\begin{itemize}
+ \item \lstinline|MOV reg, reg|
+ \item \lstinline|MOV reg, mem|
+ \item \lstinline|MOV mem, reg|
+ \item \lstinline|MOV reg, imm|
+ \item \lstinline|MOV mem, imm|
+\end{itemize}
+多くの2オペランド形式の命令も同じ形をしている．
+
+また，メモリからデータを転送するのでなく，メモリオペランドのアドレスを計
+算して汎用レジスタに格納する\lstinline|LEA|命令が存在する．
+
+\subsubsection{演算命令}
+2オペランド形式の算術命令を次に示す．
+\begin{description}
+ \item[ADD] 加算
+ \item[SUB] 減算
+ \item[AND] 論理積
+ \item[OR] 論理和
+ \item[XOR] 排他的論理和
+ \item[SAL] 算術左シフト
+ \item[SHL] 論理左シフト
+ \item[SAR] 算術右シフト
+ \item[SHR] 論理右シフト
+\end{description}
+
+乗算命令\lstinline|imul|はオペランドを2つ取るが，デスティネーションオペ
+ランドには汎用レジスタした取ることができない．
+除算命令\lstinline|idiv|はデスティネーションオペランドは
+\lstinline|EDX:EAX|レジスタ対に固定になっており，ソースオペランドにレジ
+スタ，メモリ，即値のいずれかを用いる．\lstinline|EAX|レジスタを
+\lstinline|EDX|レジスタに符号拡張する命令\lstinline|cdq|が存在する．
+
+オペランドの論理否定と符号反転を行う\lstinline|NOT|命令と\lstinline|NEG|
+命令が存在する．1を加減算する専用命令として\lstinline|INC|命令と
+\lstinline|DEC|命令が存在する．
+
+\subsubsection{比較命令}
+フラグレジスタだけを更新し，汎用レジスタに書き込みを行わない比較命令には
+次が存在する．
+\begin{description}
+ \item[CMP] 算術比較．減算によって比較する．
+ \item[TEST] 論理比較．論理積によって比較する．
+\end{description}
+あるレジスタが0かどうかを判定するときに論理比較は多く用いられる．
+
+\subsubsection{分岐命令}
+フラグレジスタの内容によって分岐する命令と，無条件ジャンプ命令
+\lstinline|jmp|が存在する．
+
+手続きの呼び出しと復帰には\lstinline|call|命令と\lstinline|ret|命令を用
+いる．\lstinline|call|命令はマシンスタックに次の命令のアドレスを積んでか
+らジャンプする．\lstinline|ret|命令はスタックトップをプログラムカウンタ
+へポップする．
+
+\subsubsection{スタック操作命令}
+\lstinline|ESP|レジスタで指されるマシンスタックは，値をプッシュしたりポッ
+プしたりする専用命令が存在する．\lstinline|push|命令はスタックポインタを
+更新し値を格納する．\lstinline|pop|命令はデータを読み出した後にスタック
+ポインタを更新する．なお，スタックはメモリ空間の下位から上位へ向かって伸
+びていく．
+
+スタック上に駆動フレームを確保したり開放したりする専用命令として
+\lstinline|enter|命令と\lstinline|leave|命令が存在する．
+
+\subsubsection{浮動小数点数演算命令}
+ここではXMMレジスタに格納されるスカラ倍精度浮動小数点数を扱うものについ
+て説明する．これらは，即値オペランドを取ることができないことに注意する必
+要がある．
+
+XMMレジスタに対するデータ転送には\lstinline|movsd|命令を用いる．
+
+整数データとの変換には\lstinline|cvtsi2sd|命令と\lstinline|cvtsd2si|命
+令を用いる．
+
+算術命令は次の通り．
+\begin{description}
+ \item[addsd] 加算
+ \item[subsd] 減算
+ \item[mulsd] 乗算
+ \item[divsd] 除算
+ \item[comisd] 算術比較
+\end{description}
+
 \subsection{呼び出し規約}\label{ssc:calling-convention}
 呼び出し規約とは，関数や手続きといったサブルーチンとのデータの引き渡し方
 法の規約のことをいう．
 
-x86計算機上のC言語で広く用いられる呼び出し規約には次のようなものがある．
+IA-32計算機上のC言語で広く用いられる呼び出し規約には次のようなものがある．
 \begin{itemize}
  \item cdecl
  \item stdcall
@@ -505,9 +635,8 @@ x86計算機上のC言語で広く用いられる呼び出し規約には次の�
 \subsubsection{stdcall呼び出し規約}
 前述のcdecl呼び出し規約と同様に，関数引数は右から順に積み，最後は戻りア
 ドレスを積む方法である．しかし，スタック上の引数は呼ばれた関数側が破棄を
-行う\footnote{x86命令セットはこのための特化命令を持っている．}．このた
+行う\footnote{IA-32アーキテクチャはこのための特化命令を持っている．}．このた
 め，可変長な引数を持つ関数の実現は難しくなる．
-
 Win32APIにおいてはこれがデフォルトである\footnote{WinMainなどにつける
 WINAPIは，stdcall呼び出し規約を用いることを示す\_\_stdcallに展開されるよう
 マクロ定義してある．}．
@@ -516,7 +645,7 @@ WINAPIは，stdcall呼び出し規約を用いることを示す\_\_stdcallに�
 引数の一部をレジスタに置くことで高速化を目指す方法である．引数をレジスタ
 やその個数などは処理系により異なる．
 
-x86アーキテクチャにおいては汎用レジスタの本数が少ないためメモリ転送が少な
+IA-32アーキテクチャにおいては汎用レジスタの本数が少ないためメモリ転送が少な
 くなるとは限らず，また処理系間での互換性も低いため，あまり用いられること
 はない．
 
@@ -1063,6 +1192,24 @@ Schemeへ移植したライブラリ\footnote{Gaucheのソースコードに付�
 を用いて書かれている．
 \end{resbonsiblesection}
 
+\begin{resbonsiblesection}{S式表現の読み込み}{\kobori}\label{sc:impl-s-reader}
+S式表現の読み込みは3つのモジュールからなる．
+\begin{itemize}
+ \item Sexpr
+ \item Sread
+ \item Variant
+\end{itemize}
+
+Sexprモジュールは指定されたファイルストリームから，1つのS式を読み込む．
+Sexpr.read関数は，S式の括弧の対応を文字列のネストしたリストに読み込む．
+次に，各種リテラルと識別子へ分類し内部表現に変換する．
+
+SreadモジュールはSexprモジュールによって読み込まれたリストを，Syntaxモ
+ジュールで定義される抽象構文木へ変換する．このとき，Variantモジュールを
+用いて代数的データ型の構築子を管理する．
+
+\end{resbonsiblesection}
+
 \begin{resbonsiblesection}{型推論部}{\sakamoto}\label{sc:impl-type-inference}
 現在のところ，型推論部は
 \algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
@@ -1079,7 +1226,6 @@ CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつ�
 
 ヴァリアントの扱いは\cite{DBLP:conf/ctcs/Hagino87}を参考にした．
 \end{resbonsiblesection}
-
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 
