@@ -1082,8 +1082,6 @@ Hindley-Milner型システムを採用しているnibkameでは型は以下の�
 \end{array}
 \end{equation}
 
-\subsection{実例}\label{ssc:example}
-
 \subsection{型定数}\label{ssc:type-constant}
 nibkameにおいて型定数は次の様に定義される．
 \begin{equation}\label{eq:type-constant} 
@@ -1142,6 +1140,36 @@ $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
 但し，ML系関数の記法と合わせるために，関数と引数の並びが通常と逆になる．
 
 \subsection{ヴァリアント型}\label{ssc:type-variant}
+代数的データ型ともいう．これはユーザが新しく定義できる型である．ヴァリア
+ントは定義のたびにまったく独立した新しい型となる．
+ヴァリアント型の値は型構築子によって生成される．
+
+たとえば，
+\begin{lstlisting}
+type season = Spring | Summer | Fall | Winter
+\end{lstlisting}
+とすれば
+\lstinline|Spring|，\lstinline|Summer|，\lstinline|Fall|，\lstinline|Winter|
+を型構築子とするヴァリアント型\lstinline|season|が定義される．
+
+また各型構築子は値引数を取ることができ，ヴァリアント型は型引数を取ること
+ができる．これを用いて
+\begin{lstlisting}
+type 'a tree = Node of 'a tree * 'a * 'a tree | Leaf of 'a
+\end{lstlisting}
+のように二分木などを定義することができる．
+
+\subsection{実例}\label{ssc:example}
+1と3.14，'c'はそれぞれ定数型
+\typename{int}，\typename{float}，\typename{char}である．
+
+整数を1つ取り，後続の整数を返す関数add1を考える．するとこの型は
+\lstinline|int -> int|となる．
+
+任意の要素が2つの組を引数に取り，1つめの値を返す関数fstを考える．引数に
+は任意の型を取れるから，\lstinline|(int, char) -> int|，
+\lstinline|(float array, int) -> float array|などが考えられる．もっとも
+一般的な型は\lstinline|('a, 'b) -> 'a|である．
 
 
 \subsection{型変数への代入}\label{ssc:type-order}
@@ -1433,7 +1461,7 @@ nibkame言語で標準で使用できる関数の仕様について述べる．
  map : ('a -> 'b) -> 'a list -> 'b list
  length : 'a list -> int
 \end{lstlisting}
-\lstinline|hd|と\lstinline|tl|はそれぞれ，リストから先頭の要素か後続のリ
+\lstinline|hd|と\lstinline|tl|は，リストから先頭の要素か後続のリ
 ストを取り出す関数である．空のリストを適用した場合の動作は未定義である．
 \lstinline|null|はリストの末尾であるか判定する関数である．
 \lstinline|map|は，第2引数のリストの各要素に第1引数の関数を適用し，結果
