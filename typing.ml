@@ -160,6 +160,9 @@ let rec typevars : result -> Id.t list = fun r ->
   in
   List.concat (g r)
 
+let is_variable = function
+  | R_Constant _ -> true
+
 let gen_var_num = ref 0
 
 let gen_varname () =

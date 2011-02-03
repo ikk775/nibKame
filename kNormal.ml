@@ -1,6 +1,7 @@
 open MyUtil
 
 module T = Typing
+module R = Typing
 module TE = TypingExpr
 module TT = TypingType
 module L = LLifting
@@ -319,119 +320,124 @@ let internal_operator name t =
       operator (name ^ "_" ^ tn) [t; t] bool (function [v1; v2] -> If (comp, v1, v2, Int 1, Int 0) | _ -> fail ())
     | _ -> Sexpr.failwith_captioned_sexprs "invalid internal operator" ["name", Sexpr.Sident name; "type", TT.oType_to_sexpr t]
 
-let rec from_typing_result r =(undefined ())
 
 let rec from_llifting r = (undefined ())
-(*
+
+let rec from_typing_result r =
   let ext_decls = ref [] in
   let add_decl decl = ext_decls := decl :: !ext_decls in
   let applied_type n t = times n TT.dest_type t in
   let rec f env r =
 (*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
     match r with
-    | L.Constant (Syntax.Unit, TypingType.O_Constant Type.Unit) -> Unit, Type.Unit
-    | L.Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
+    | R.R_Constant (Syntax.Unit, _) -> Unit, Type.Unit
+    | R.R_Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
       Nil Type.List_Float, TypingType.oType_to_type t
-    | L.Constant (Syntax.Nil, t) ->
+    | R.R_Constant (Syntax.Nil, t) ->
       Nil Type.List_Other, TypingType.oType_to_type t
-    | L.Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
-    | L.Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
-    | L.Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
-    | L.Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
-    | L.Constant (Syntax.ExtFun f, _) -> (undefined ())
-    | L.Constant (_, _) -> failwith "invalid constant type."
-    | L.External (v, t) when v.[0] = '%' ->
+    | R.R_Constant (Syntax.Bool b, TypingType.O_Constant Type.Bool) -> Int (if b then 1 else 0), Type.Int
+    | R.R_Constant (Syntax.Int i, TypingType.O_Constant Type.Int) -> Int i, Type.Int
+    | R.R_Constant (Syntax.Float x, TypingType.O_Constant Type.Float) -> Float x, Type.Float
+    | R.R_Constant (Syntax.Char c, TypingType.O_Constant Type.Float) -> Char c, Type.Char
+    | R.R_Constant (Syntax.ExtFun f, _) -> (undefined ())
+    | R.R_Constant (_, _) -> failwith "invalid constant type."
+    | R.R_External (v, t) when v.[0] = '%' ->
       let decl, name = internal_operator v t in
       add_decl decl; Var v, TypingType.oType_to_type t
-    | L.External (v, t) -> Sexpr.failwith_captioned_sexprs "external function is not supported yet. but got:" ["name", Sexpr.Sident v; "type", TT.oType_to_sexpr t]
-    | L.Let ((v, t), e1, e2) ->
+    | R.R_External (v, t) -> Sexpr.failwith_captioned_sexprs "external function is not supported yet. but got:" ["name", Sexpr.Sident v; "type", TT.oType_to_sexpr t]
+    | R.R_Let ((v, t), e1, e2) ->
       let e1', t1' = f env e1 in
       let e2', t2' = f (Id.Map.add v t1' env) e2 in
       Let ((v, TT.oType_to_type t), e1', e2'), t2'
-    | L.Variable (v, t) -> Var v, TypingType.oType_to_type t
-    | L.Apply (L.Variable (v, t), args) when List.for_all L.is_variable args ->
-      let argns = List.map L.varname args in
-      Debug.dbgprint (Printf.sprintf "var: %s" v);
-      Debug.dbgprintsexpr (TT.oType_to_sexpr t);
-      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map Sexpr.ident argns));
-      Apply ((v, TT.oType_to_type t), argns), TT.oType_to_type (applied_type (List.length args) t)
-    | L.Apply (L.External (v, t), args) when List.for_all L.is_variable args ->
-      let argns = List.map L.varname args in
-      Debug.dbgprint (Printf.sprintf "external: %s" v);
-      Debug.dbgprintsexpr (TT.oType_to_sexpr t);
-      Debug.dbgprintsexpr (Sexpr.Sexpr (List.map Sexpr.ident argns));
-      ExtFunApply ((v, TT.oType_to_type t), argns), TT.oType_to_type (applied_type (List.length args) t)
-    | L.Apply (L.Variable _ as vf, args)
-    | L.Apply (L.External _ as vf, args) ->
-      let vrs = List.map (function L.Variable (v, t) -> (v, t), None | r -> (L.gen_varname (), L.get_type r), Some r) args in
-      let vs = List.map fst vrs in
-      let vrs' = List.filter (function _, None -> false | _, _ -> true) vrs in
-      let defs = List.map (function v, Some r -> v, r | _, _ -> failwith "something went wrong.") vrs' in
-      let g r = function v', r' -> L.Let (v', r', r) in
-      f env (List.fold_left g (L.Apply (vf, List.map (function v, t -> L.Variable (v, t)) vs)) defs)
-    | L.Apply (lf, args) ->
-      let bn = L.gen_varname () in
-      let t = L.get_type lf in
-      f env (L.Let ((bn, t), lf, L.Apply (L.Variable (bn, t), args)))
-    | L.Tuple (es, t) when List.for_all (function L.Variable _ -> true | _ -> false) es ->
-      Tuple (List.map L.varname es), TT.oType_to_type t
-    | L.Tuple (es, t) ->
-      let bns = L.gen_varnames (List.length es) in
-      let bs = List.map2 (fun x e -> L.Variable (x, L.get_type e)) bns es in
+    | R.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
+    | R.R_Apply (R.R_Variable (v, t), R.R_Variable (v', t')) ->
+      Apply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
+    | R.R_Apply (R.R_External (v, t), R.R_Variable (v', t')) ->
+      ExtFunApply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
+    | R.R_Apply (R.R_Variable _ as vf, arg)
+    | R.R_Apply (R.R_External _ as vf, arg) ->
+      let bn = R.gen_varname () in
+      let t = R.result_type arg in
+      f env (R.R_Let ((bn, t), arg, (R.R_Apply (vf, R.R_Variable (bn, t)))))
+    | R.R_Apply (lf, args) ->
+      let bn = R.gen_varname () in
+      let t = R.result_type lf in
+      f env (R.R_Let ((bn, t), lf, R.R_Apply (R.R_Variable (bn, t), args)))
+    | R.R_Tuple (es, t) when List.for_all (function R.R_Variable _ -> true | _ -> false) es ->
+      Tuple (List.map R.varname es), TT.oType_to_type t
+    | R.R_Tuple (es, t) ->
+      let bns = R.gen_varnames (List.length es) in
+      let bs = List.map2 (fun x e -> R.R_Variable (x, R.result_type e)) bns es in
       let e' = List.fold_left2 (fun e' e b ->
-        L.Let ((b, L.get_type e), e, e'))
-        (L.Tuple (bs, t)) es bns
+        R.R_Let ((b, R.result_type e), e, e'))
+        (R.R_Tuple (bs, t)) es bns
       in
       f env e'
-    | L.Vector (es, t) when List.for_all (function L.Variable _ -> true | _ -> false) es ->
+    | R.R_Vector (es, t) when List.for_all (function R.R_Variable _ -> true | _ -> false) es ->
       undefined ()
-    | L.Vector (es, t) ->
-      let bns = L.gen_varnames (List.length es) in
-      let bs = List.map2 (fun x e -> L.Variable (x, L.get_type e)) bns es in
+    | R.R_Vector (es, t) ->
+      let bns = R.gen_varnames (List.length es) in
+      let bs = List.map2 (fun x e -> R.R_Variable (x, R.result_type e)) bns es in
       let e' = List.fold_left2 (fun e' e b ->
-        L.Let ((b, L.get_type e), e, e'))
-        (L.Vector (bs, t)) es bns
+        R.R_Let ((b, R.result_type e), e, e'))
+        (R.R_Vector (bs, t)) es bns
       in
       f env e'
-    | L.If (L.Variable (v, t), e2, e3) ->
+    | R.R_If (R.R_Variable (v, t), e2, e3) ->
       let e2', t2' = f env e2 in
       let e3', t3' = f env e3 in
       If (Eq, v, "%true", e2', e3'), t2'
-    | L.If (e1, e2, e3) ->
-      let bn = L.gen_varname () in
-      let t1 = L.get_type e1 in
-      let e' = L.Let((bn, t1), e1, L.If (L.Variable (bn, t1), e2, e3)) in
+    | R.R_If (e1, e2, e3) ->
+      let bn = R.gen_varname () in
+      let t1 = R.result_type e1 in
+      let e' = R.R_Let((bn, t1), e1, R.R_If (R.R_Variable (bn, t1), e2, e3)) in
       f env e'
-    | L.LetFun _ -> Sexpr.failwith_sexpr "LetFun must be eliminated in the lamda lifting phase. but got:" (L.to_sexpr r)
-    | L.Match _ -> Sexpr.failwith_sexpr "Match is not supported yet. but got:" (L.to_sexpr r)
-(*    | L.Match (L.Variable (v, _), [L.P_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
+    | R.R_Fix _ -> Sexpr.failwith_sexpr "R_Fix must be eliminated in the lamda lifting phase. but got:" (R.to_sexpr r)
+    | R.R_Fun _ -> Sexpr.failwith_sexpr "R_Fun must be eliminated in the lamda lifting phase. but got:" (R.to_sexpr r)
+    | R.R_Match _ -> Sexpr.failwith_sexpr "Match is not supported yet. but got:" (R.to_sexpr r)
+(*    | R.R_Match (R.R_Variable (v, _), [R.R_P_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
       let g = function
         | Some v, t -> v, TT.oType_to_type t
-        | None, t -> L.gen_varname (), TT.oType_to_type t in
+        | None, t -> R.R_gen_varname (), TT.oType_to_type t in
       let h = function
-        | L.RP_Variable (ov, t) -> g (ov, t)
+        | R.R_RP_Variable (ov, t) -> g (ov, t)
         | _ -> failwith "something went wrong." in
-      LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (L.get_type expr)
-    | L.Match (e, cls) when (match e with L.Variable _ -> false | _ -> true) ->
-      let te = L.get_type e in
-      let b = L.gen_var te in
-      let bn = L.varname b in
-      f env (L.Let ((bn, te), e, L.Match (b, cls)))
+      LetTuple (List.map h pts, v, fst (f env expr)), TT.oType_to_type (R.R_get_type expr)
+    | R.R_Match (e, cls) when (match e with R.R_Variable _ -> false | _ -> true) ->
+      let te = R.R_get_type e in
+      let b = R.R_gen_var te in
+      let bn = R.R_varname b in
+      f env (R.R_Let ((bn, te), e, R.R_Match (b, cls)))
       *)
   in
   let k, t = f Id.Map.empty r in
-  Let (("%true", Type.Int), Int 1, k), List.unique ~eq:is_same_name_decl !ext_decls
+  k, List.unique ~eq:is_same_name_decl (VarDecl {var_name = ("%true", Type.Int); expr= Int 1} :: !ext_decls)
 
+let typing_result_split r =
+	let rec f args = function
+		| R.R_Fun (v, r) -> f (v :: args) r
+		| r' -> args, r' in
+  let args, r' = f [] r in
+	List.rev args, r'
+	
+let from_module_expr_decl = function
+  | Module.Expr (name, (qtvs, ts, r)) ->
+		let args, r' = typing_result_split r in
+		let k, extdecls = from_typing_result r' in
+		if args = []
+		then VarDecl {var_name=name, TT.oType_to_type (R.result_type r); expr=k}, extdecls
+		else FunDecl {name=name, TT.oType_to_type (R.result_type r); args=List.map (function v, t -> v, TT.oType_to_type t) args; body=k}, extdecls
+  | Module.Type _ -> undefined ()
 
-let from_ll_decl = function
-  | L.FunDecl {L.fun_name = (v, t); L.args = args; L.body = r} -> 
-    let args' = List.map (function v, t -> v, TT.oType_to_type t) args in
-    let r', decls = from_llifting r in
-    FunDecl {name = (v, TT.oType_to_type t); args = args'; body = r'} :: decls
-  | L.VarDecl {L.var_name = (v, t); L.expr = r} -> 
-    let r', decls = from_llifting r in
-    VarDecl {var_name = (v, TT.oType_to_type t); expr = r'} :: decls
-
+let from_module_expr_decls decls =
+	let deds = List.map from_module_expr_decl decls in
+	let ds, eds = List.split deds in
+	let eds' = List.unique ~eq:is_same_name_decl (List.concat eds) in
+	ds @ eds'
+	
+let from_module m =
+	from_module_expr_decls (Module.defs_expr m)
+	
+(*
 let from_ll_decls decls = List.unique ~eq:is_same_name_decl (List.concat (List.map from_ll_decl decls))
-
 *)

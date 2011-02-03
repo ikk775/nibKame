@@ -48,3 +48,4 @@ val of_sexpr : Sexpr.t -> result
 val gather : resultVar * TypingType.oType * result -> result -> result
 val to_sexpr : result -> Sexpr.t
 val result_type : result -> TypingType.oType
+val is_variable : result -> bool

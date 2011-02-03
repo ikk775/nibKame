@@ -58,7 +58,8 @@ val freevars_set : t -> Id.Set.t
 val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
-val from_typing_result : Typing.result -> (t * Type.t)
+val from_typing_result : Typing.result -> (t * topDecl list)
+val from_module : Module.t -> topDecl list
 (*
 val from_llifting : LLifting.t -> (t * topDecl list)
 val from_ll_decl : LLifting.topDecl -> topDecl list

@@ -27,7 +27,6 @@ SOURCES +=asmx86.ml
 SOURCES +=instantiate.ml
 SOURCES +=translationUnit.ml
 SOURCES +=predefined.ml
-SOURCES +=alpha.ml
 SOURCES +=asmx86.ml
 SOURCES +=main.ml
 
