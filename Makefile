@@ -16,6 +16,7 @@ SOURCES +=variant.ml
 SOURCES +=sread.ml
 SOURCES +=typingExpr.ml
 SOURCES +=typing.ml
+SOURCES +=lLifting.ml
 SOURCES +=module.ml
 SOURCES +=pattern.ml
 SOURCES +=kNormal.ml
