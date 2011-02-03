@@ -1729,22 +1729,200 @@ Bitmap\cite{Nguyen:2006:CMP:1140335.1140364}を持つ．これは，将来的に
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
 ユークリッドの互除法に似た，2つの整数の最大公約数を求める関数を例に
 nibkameコンパイラの動作を説明する．このサンプルプログラムを
-\refFig{fig:impl-sample}に表す．
-
+\refFig{fig:impl-sample}に表す．構文解析を実施しS式表現へ変換すると
+\refFig{fig:impl-s-sample}となる．
 \begin{figure}[htb]
-\begin{center} 
-\begin{lstlisting}
-let rec gcd = fun m n ->
+\begin{minipage}{0.5\hsize}
+ \begin{center} 
+ \begin{lstlisting}
+ let rec gcd = fun m n ->
  if m = 0
  then n
  else if m <= n then
    gcd m (n - m)
  else
    gcd n (m - n)   
+ \end{lstlisting}
+ \caption{最大公約数を求める関数}\label{fig:impl-sample}
+ \end{center}
+\end{minipage}
+\begin{minipage}{0.5\hsize} 
+ \begin{center} 
+ \begin{lstlisting}[language=lisp]
+ (letrec gcd
+   (fun (m n)
+     (if (= m 0)
+       n
+       (if (<= m n)
+         (gcd m (- n m))
+         (gcd n (- m n))))))  
+ \end{lstlisting}
+ \caption{最大公約数を求める関数(S式表現)}\label{fig:impl-s-sample}
+ \end{center}
+\end{minipage}
+\end{figure}
+
+これをクロージャ変換すると\refFig{fig:impl-sample-closure}となる．さらに
+仮想機械語へ変換すると\refFig{fig:impl-va-sample}になる．この段階で実行
+開始地点となるnibkame\_entry関数が生成されている．これを線形化すると
+\refFig{fig:impl-sample-liner}になる．この段階でifの中から式は消えて，所々
+にラベルと無条件ジャンプが挿入されている．
+これにIA-32アーキテクチャの持つ命令を割り当てて出力すると
+\refFig{fig:imple-sample-asm}となる．この段階ではまだレジスタ割り当てが行
+われていないので，レジスタ名でなく一時変数名が出力されている．現状で実装
+されているのは以上となる．
+
+\begin{figure}[htb]
+\begin{center} 
+\begin{lstlisting}
+  Closure.FunDecl
+   {Closure.fun_name =
+     (Id.L ``gcd'', Type.Fun ([Type.Int; Type.Int], Type.Int));
+    Closure.args = [(``m'', Type.Int); (``n'', Type.Int)];
+    Closure.formal_fv = [];
+    Closure.body =
+     Closure.Let ((``t'', Type.Int), Closure.Int 0,
+      Closure.If (Closure.Eq, ``m'', ``t'', Closure.Var ``n'',
+       Closure.If (Closure.LsEq, ``m'', ``n'',
+        Closure.Let ((``r'', Type.Int), Closure.Sub (``n'', ``m''),
+         Closure.ApplyDir
+          ((Id.L ``gcd'', Type.Fun ([Type.Int; Type.Int], Type.Int)),
+          [''m''; ``r''])),
+        Closure.Let ((``r2'', Type.Int), Closure.Sub (``m'', ``n''),
+         Closure.ApplyDir
+          ((Id.L ``gcd'', Type.Fun ([Type.Int; Type.Int], Type.Int)),
+          [''n''; ``r2''])))))}
 \end{lstlisting}
-\caption{最大公約数を求める関数}\label{fig:impl-sample}
+\caption{クロージャ変換された関数}\label{fig:impl-sample-closure}
 \end{center}
 \end{figure}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{lstlisting}
+  [{VirtualAsm.name = Id.L ``nibkame_entry''; VirtualAsm.args = [];
+    VirtualAsm.body = VirtualAsm.Ans (VirtualAsm.Set (VirtualAsm.Int_l 0));
+    VirtualAsm.ret = VirtualAsm.Int};
+   {VirtualAsm.name = Id.L ``gcd'';
+    VirtualAsm.args = [(``m'', VirtualAsm.Int); (``n'',
+   VirtualAsm.Int)];
+    VirtualAsm.body =
+     VirtualAsm.Let ((``t'', VirtualAsm.Int),
+      VirtualAsm.Set (VirtualAsm.Int_l 0),
+      VirtualAsm.Ans
+       (VirtualAsm.If
+         (VirtualAsm.Comp (VirtualAsm.Eq, VirtualAsm.Int, ``m'', VirtualAsm.V ``t''),
+         VirtualAsm.Ans (VirtualAsm.Mov (VirtualAsm.V ``n'')),
+         VirtualAsm.Ans
+          (VirtualAsm.If
+            (VirtualAsm.Comp (VirtualAsm.LsEq, VirtualAsm.Int, ``m'',
+              VirtualAsm.V ``n''),
+            VirtualAsm.Let ((``r'', VirtualAsm.Int),
+             VirtualAsm.Sub (``n'', VirtualAsm.V ``m''),
+             VirtualAsm.Ans
+              (VirtualAsm.ApplyDir
+                ((Id.L ``gcd'',
+                  VirtualAsm.Fun ([VirtualAsm.Int; VirtualAsm.Int],
+                   VirtualAsm.Int)),
+                [''m''; ``r'']))),
+            VirtualAsm.Let ((``r2'', VirtualAsm.Int),
+             VirtualAsm.Sub (``m'', VirtualAsm.V ``n''),
+             VirtualAsm.Ans
+              (VirtualAsm.ApplyDir
+                ((Id.L ``gcd'',
+                  VirtualAsm.Fun ([VirtualAsm.Int; VirtualAsm.Int],
+                   VirtualAsm.Int)),
+                [''n''; ``r2'']))))))));
+    VirtualAsm.ret = VirtualAsm.Int}]
+  \end{lstlisting}
+\caption{仮想機械語のgcd関数}\label{fig:impl-va-sample}
+ \end{center}
+\end{figure}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{lstlisting}
+  [{Basicblock.name = Id.L ``nibkame_entry''; Basicblock.args = [];
+    Basicblock.body =
+     [Basicblock.Label (Id.L ``nibkame_entry''); Basicblock.Entry;
+      Basicblock.Set (VirtualAsm.Int_l 0); Basicblock.Ret];
+    Basicblock.ret = VirtualAsm.Int; Basicblock.block_labels = []};
+   {Basicblock.name = Id.L ``gcd'';
+    Basicblock.args = [(``m'', VirtualAsm.Int); (``n'', VirtualAsm.Int)];
+    Basicblock.body =
+     [Basicblock.Label (Id.L ``gcd''); Basicblock.Entry;
+      Basicblock.Let ((``t'', VirtualAsm.Int),
+       Basicblock.Set (VirtualAsm.Int_l 0));
+      Basicblock.If
+       (Basicblock.Comp (VirtualAsm.Eq, VirtualAsm.Int, ``m'',
+         VirtualAsm.V ``t''),
+       Id.L ``block1'');
+      Basicblock.If
+       (Basicblock.Comp (VirtualAsm.LsEq, VirtualAsm.Int, ``m'',
+         VirtualAsm.V ``n''),
+       Id.L ``block2'');
+      Basicblock.Let ((``r2'', VirtualAsm.Int),
+       Basicblock.Sub (``m'', VirtualAsm.V ``n''));
+      Basicblock.ApplyDir
+       ((Id.L ``gcd'',
+         VirtualAsm.Fun ([VirtualAsm.Int; VirtualAsm.Int], VirtualAsm.Int)),
+       [''n''; ``r2'']);
+      Basicblock.Ret; Basicblock.Label (Id.L ``block2'');
+      Basicblock.Let ((``r'', VirtualAsm.Int),
+       Basicblock.Sub (``n'', VirtualAsm.V ``m''));
+      Basicblock.ApplyDir
+       ((Id.L ``gcd'',
+         VirtualAsm.Fun ([VirtualAsm.Int; VirtualAsm.Int], VirtualAsm.Int)),
+       [''m''; ``r'']);
+      Basicblock.Ret; Basicblock.Label (Id.L ``block1'');
+      Basicblock.Mov (VirtualAsm.V ``n''); Basicblock.Ret];
+    Basicblock.ret = VirtualAsm.Int;
+    Basicblock.block_labels = [Id.L ``block2''; Id.L ``block1'']}]
+\end{lstlisting}
+\end{center}
+\caption{線形化された仮想機械語}\label{fig:impl-sample-liner}
+\end{figure}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{lstlisting}
+.global gcd
+
+gcd:
+# function entry.
+movl $0, TempR.t
+cmp TempR.t, TempR.m
+je block1
+cmp TempR.n, TempR.m
+jle block2
+movl TempR.m, TempR.r2
+subl TempR.n, TempR.r2
+pushl TempR.r2
+pushl TempR.n
+call gcd
+addl $8, %esp
+movl %eax, TempR.tmp5
+leave
+ret
+block2:
+movl TempR.n, TempR.r
+subl TempR.m, TempR.r
+pushl TempR.r
+pushl TempR.m
+call gcd
+addl $8, %esp
+movl %eax, TempR.tmp6
+leave
+ret
+block1:
+movl TempR.n, TempR.tmp7
+leave
+ret
+\end{lstlisting}
+\caption{生成される機械語}\label{fig:imple-sample-asm}
+\end{center}
+\end{figure}
+
 
 \chapter{結論}\label{ch:conclude}
 我々は関数型言語に特徴的な機能，第一級の関数やクロージャ，型推論などの複
