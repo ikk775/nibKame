@@ -237,7 +237,13 @@
    alsodigit=->,%
    morecomment=[l];,%
    morecomment=[s]{\#|}{|\#},%
-   morestring=[b]"%"
+   morestring=[b]",%"
+   literate=%
+       {[|}{[\hskip -1pt$|$}2%
+       {|]}{$|$\hskip -1pt]}2%
+%      {[]}{\ensuremath{[\hskip -0.1em]}}2%
+       {->}{\ensuremath{\rightarrow}~}2%
+       {::}{\ensuremath{:\hskip -0.1em:}~}2%
 }[keywords,comments,strings]
 
 \lstdefinelanguage[Objective display]{Caml}[Objective]{Caml}{%
