@@ -114,7 +114,7 @@ Gauche\footnote{\url{http://practical-scheme.net/gauche/index-j.html}})
         本体        & O'Caml & 実装             & 5763 \\
 	                & O'Caml & インターフェース & 800 \\
 	                & Scheme &                  & 337 \\
-	                & C言語  &                  & 0 \\
+	実行時ランタイム& C言語  &                  & 0 \\
         単体テスト  & O'Caml & 実装             & 1063 \\
         \Hline
     \end{tabular}
@@ -1482,6 +1482,24 @@ Bitmap\cite{Nguyen:2006:CMP:1140335.1140364}を持つ．これは，将来的に
 \end{resbonsiblesection}
 
 \chapter{サンプルプログラムと実行結果}\label{ch:sample-program}
+ユークリッドの互除法に似た，2つの整数の最大公約数を求める関数を例に
+nibkameコンパイラの動作を説明する．このサンプルプログラムを
+\refFig{fig:impl-sample}に表す．
+
+\begin{figure}[htb]
+\begin{center} 
+\begin{lstlisting}
+let rec gcd = fun m n ->
+ if m = 0
+ then n
+ else if m <= n then
+   gcd m (n - m)
+ else
+   gcd n (m - n)   
+\end{lstlisting}
+\caption{最大公約数を求める関数}\label{fig:impl-sample}
+\end{center}
+\end{figure}
 
 \chapter{結論}\label{ch:conclude}
 我々は関数型言語に特徴的な機能，第一級の関数やクロージャ，型推論などの複
