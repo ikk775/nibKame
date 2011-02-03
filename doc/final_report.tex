@@ -718,6 +718,7 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
  &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
 % &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
  &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{パターンマッチング (\refSsc{ssc:expr-match})} \\
+ &\mid&  \mathnkop{match}\clauseor e\mathnkop{with}\mathit{clss} & \text{同上．最初の$\clauseor$は無視される．} \\
 \mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
 \mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
@@ -1355,6 +1356,22 @@ $e\in\mathset{Expr}$
 \end{subequations}
 
 
+\end{resbonsiblesection}
+
+\begin{resbonsiblesection}{nibkame追加構文}{\sakamoto}\label{sc;additional-syntax}
+以上で定義したnibkameコア言語に
+if文などの糖衣構文(syntax sugar)を追加し，nibkame言語とする．
+
+構文上の変換規則$\mathcal{A}$は以下のように定義される．
+\begin{equation}
+\begin{aligned}
+    \semanticA{\mathnkop{if}e_c\mathnkop{then}e_\top\mathnkop{else}e_\bot} &=
+        \mathnkop{match}\semanticA{e_c}\mathnkop{with}
+            \mathnkval{true}\rightarrow \semanticA{e_\top}
+            \clauseor \mathnkval{false}\rightarrow \semanticA{e_\bot} \\
+    \semanticA{e} &= e \qquad\text{if $e$ is not matched in the definitions above.}
+\end{aligned}
+\end{equation}
 \end{resbonsiblesection}
 
 \begin{resbonsiblesection}{標準ライブラリ}{\kobori}
