@@ -1,0 +1,56 @@
+\documentclass[a4paper]{jsarticle}
+
+\usepackage[dvipdfmx]{graphicx}
+%\usepackage{emp} % 図の描画用
+\usepackage[sc,slantedGreek]{mathpazo}
+\usepackage{listings}
+\usepackage{jlisting}
+\usepackage{mathtools} % Ams-TeXの使用
+\usepackage{mathrsfs} % 数式フォント
+%\usepackage{MnSymbol} % 記号
+\usepackage{amssymb,amsthm} % 記号と定理環境
+\usepackage{proof} % 証明図
+\usepackage{url} % URL
+\usepackage{longtable} % 複数ページに亙る長い表
+\usepackage{yhmath} % 長い括弧など
+%\usepackage{tablists}
+%\usepackage[mathx]{mathabx}
+\usepackage{stmaryrd}
+
+\input{preamble}
+
+\pagestyle{empty}
+\title{操作マニュアル}
+\date{\relax}
+\begin{document}
+\maketitle
+\section{要求}
+環境としてはUNIX系の環境もしくは，Cygwinを要求する．
+コンパイルのためにはOCamlとGNU makeを必要とする．
+
+\section{コンパイル方法}
+ターミナル上でnibkameのディレクトリに移動し，
+
+{\tt
+\$ \textbf{make}
+}
+
+と入力する．
+
+\section{操作方法}
+まず，ターミナル上でnibkameのディレクトリに移動する．
+
+次に拡張子が\verb|.nkl|のnibkameソースコードを用意する．
+提出したUSBメモリ上にはすでに\verb|test.nkl|が存在する．
+
+\verb|test.nkl|をコンパイルする場合は
+
+{\tt
+\$ \textbf{./nibkamec\ test}
+}
+と入力する．
+
+未実装部分があるため，コンパイルが途中で停止するが，途中までのデバッグ出力は
+標準入力に出力される．
+
+\end{document}
