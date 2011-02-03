@@ -700,8 +700,9 @@ register)の2種類にわけられる．その分類を\refTbl{tb:register-save}
 \end{abstract}
 
 \begin{resbonsiblesection}{式の構文}{\sakamoto}\label{sc:expr-syntax}
-nibkameにおける式の定義は以下の様になる．
-\begin{equation}\label{eq:expr} 
+nibkameコア言語における式の定義は以下の様になる．
+\begin{subequations}
+\begin{equation}\label{eq:def-expr} 
 \begin{array}{rcll}
 e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
  &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
@@ -716,16 +717,24 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
  &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
  &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
 % &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
- &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss}\clauseor\patternany\rightarrow e & \text{パターンマッチング (\refSsc{ssc:expr-match})} \\
+ &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{パターンマッチング (\refSsc{ssc:expr-match})} \\
 \mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
 \mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
+\end{array}
+\end{equation}
+\begin{equation}\label{eq:def-clause}
+\begin{array}{rcll}
 \mathit{cls} &\Coloneqq& p\rightarrow e & \\
              &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
 \mathit{clss} &\Coloneqq& \mathit{cls} & \\
               &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
 \mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
-p&\Coloneqq&\patternany             & \text{全て} \\
+\end{array}
+\end{equation}
+\begin{equation}\label{eq:def-pattern}
+\begin{array}{rcll}
+p&\Coloneqq&\patternany             & \text{ワイルドカード} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
  &\mid&  g                          & \text{型構築子} \\
@@ -739,6 +748,7 @@ p&\Coloneqq&\patternany             & \text{全て} \\
 \mathset{Var}&\triangleq&\mathset{ExprVar}\cup\mathset{Constructor}
 \end{array}
 \end{equation}
+\end{subequations}
 ここで，$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$である．
 
 \subsection{定数}\label{ssc:expr-constant}
@@ -746,6 +756,8 @@ p&\Coloneqq&\patternany             & \text{全て} \\
 \begin{itemize}
     \item \lstinline|()|
     \item \lstinline|Nil|
+    \item \lstinline|true|
+    \item \lstinline|false|
     \item 整数
     \item 浮動小数点数
     \item 文字
@@ -779,14 +791,19 @@ p&\Coloneqq&\patternany             & \text{全て} \\
     \end{center}
 \end{table}
 
-nibkameにおいて用意されている組み込みの文字型は
+nibkameコア言語において用意されている組み込みの文字型は
 char型であるが，この型は%C言語と同様に
 8ビットの符号無し整数である．
 %char型であり，計算機上での表現は処理系に依存する．
+文字のコード上での表現は\lstinline|'c'|のようになる．
 
 \subsection{外部定数}\label{ssc:expr-external}
-外部定数は，nibkameソースコード上で既に定義されているものとして使用することの出来る
+外部定数は，nibkameコア言語ソースコード上で既に定義されているものとして使用することの出来る
 定数であり，具体的には外部のCランタイムの関数や加算・減算などのプリミティブ関数である．
+
+\subsection{組}\label{ssc:expr-tuple}
+組とはいくつかの値の並びのことであり，
+集合における組とほぼ同じものである．
 
 \subsection{変数}\label{ssc:expr-variable}
 変数は一般のプログラミング言語における概念と同じである．
@@ -794,20 +811,22 @@ char型であるが，この型は%C言語と同様に
 そのため，参照が用いられていない場合には，同じ式を評価すると同じ結果となる．
 
 \subsection{束縛}\label{ssc:expr-let}
-変数束縛を行うのが\lstinline|let|式である．
+変数束縛を行うのが$\mathnkop{let}$式である．
 nibkameにおける変数のスコープはレキシカルスコープ(lexical scope)である．
 
 例えば，
-\begin{lstlisting}
-let r =
-  let x = 5 in
-    let a = x in
-    let x = 3 in
-      let b = x in
-      a, b, x
-\end{lstlisting}
+\begin{equation}
+\begin{aligned}
+&\mathnkop{let} r = \\
+&\quad \mathnkop{let} x = 5 \mathnkop{in} \\
+&\quad \mathnkop{let} a = x \mathnkop{in} \\
+&\quad \mathnkop{let} x = 3 \mathnkop{in} \\
+&\quad \mathnkop{let} b = x \mathnkop{in} \\
+&\quad\quad a, b, x
+\end{aligned}
+\end{equation}
 というコードでは
-\lstinline|r|は\lstinline|5, 3, 3|となる．
+$r$は$5, 3, 3$となる．
 
 \subsection{参照}\label{ssc:expr-reference}
 nibkameにおいては一度束縛した変数の中身を変更することが出来ない．
@@ -817,12 +836,14 @@ nibkameにおいては一度束縛した変数の中身を変更することが�
 「データが格納されている場所への参照」をたどって，格納されているデータを得たり，変更したりすることが出来るようになっている．
 
 例えば，
-\begin{lstlisting}
-let p = ref 3
-let q =
-  let x = p := 7 in
-  p!
-\end{lstlisting}
+\begin{equation}
+\begin{aligned}
+&\mathnkop{let} p = \mathnkop{ref} 3 \\
+&\mathnkop{let} q = \\
+&\quad \mathnkop{let} x = p \coloneqq 7 \mathnkop{in} \\
+&\quad\quad p!
+\end{aligned}
+\end{equation}
 というコードは上から順に実行され，
 最終的に\lstinline|q|は\lstinline|7|，\lstinline|p|は\lstinline|7|が格納されている場所への参照が束縛されていることなる．
 
@@ -830,10 +851,195 @@ let q =
 型構築子とはいわゆる代数的データ構造を作るものである．
 集合で言うところの直和と等しい．
 
+\subsection{パターンマッチング}\label{ssc:expr-match}
+パターンマッチングは，条件分岐を行ったり，
+型構築子によって作られた代数的データ型の値から，
+中身を取り出して変数に束縛したりできる．
+
+$\mathnkop{match}e\mathnkop{with}\mathit{clss}$
+という式の場合だと，
+節$p\mathnkop{with}e_g\rightarrow e_c$を先頭から順に
+パターン$p$を$e$の値に当てはめることができるかどうかと，ガード$e_g$の値が$\mathnkval{true}$どうかを調べ，
+両方成立する場合は式$e_c$を評価し，その値がmatch式の値となる．
+ただし，ガードのない節$p\rightarrow e_c$は$p\mathnkop{with}\mathnkval{true}\rightarrow e_c$と等価である．
+
+\paragraph{定数}
+定数パターンは定数にのみマッチする．たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\text{\lstinline|'b'|}\mathnkop{with} \\
+&\quad \clauseor \text{\lstinline|'a'|}\rightarrow 1 \\
+&\quad \clauseor \text{\lstinline|'b'|}\rightarrow 2 \\
+&\quad \clauseor \text{\lstinline|'c'|}\rightarrow 3 \\
+&\quad \clauseor \text{\lstinline|'d'|}\rightarrow 4
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$2$となる．
+
+\paragraph{ワイルドカード}
+ワイルドカードパターンは型構築子を除く全てにマッチする．たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}e\mathnkop{with} \\
+&\quad \clauseor \patternany \rightarrow 1
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は，
+変数$e$の値がなんであろうと常に$1$である．
+
+また，パターンの評価順序より，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\text{\lstinline|'d'|}\mathnkop{with} \\
+&\quad \clauseor \text{\lstinline|'a'|}\rightarrow 1 \\
+&\quad \clauseor \text{\lstinline|'b'|}\rightarrow 2 \\
+&\quad \clauseor \patternany \rightarrow 3 \\
+&\quad \clauseor \text{\lstinline|'d'|}\rightarrow 4
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は，
+ワイルドカードパターンにマッチするため$3$となる．
+
+\paragraph{変数}
+変数パターンはワイルドカードパターンとほぼ同じであり，型構築子を除く全てにマッチする．
+ワイルドカードパターンとの違いは，
+変数パターン$x$に値$e$が当てはまったとき，
+変数$x$に値$e$が束縛された状態で
+節のガード$e_g$と式$e_c$が評価されることである．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\text{\lstinline|'a'|}\mathnkop{with} \\
+&\quad \clauseor x\rightarrow 1,x \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は，
+$1,\text{\lstinline|a|}$となる．
+
+\paragraph{型構築子・型構築子適用}
+型構築子パターンと型構築子適用パターンは代数的データ型に対して適用される．
+型構築子の型によってどちらが使われなくてはいけないかが決まり，
+引数を取らない型構築子に対しては型構築子パターン，
+引数を取る型構築子に対しては型構築子適用パターンが使われる．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+\mathnkvariant{Left} : \typename{int}\rightarrow \typename{intEither}\\
+\mathnkvariant{Right} : \typename{int}\rightarrow \typename{intEither}
+\end{aligned}
+\end{equation}
+という型構築子があった場合，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\mathnkvariant{Left}\ 2\mathnkop{with} \\
+&\quad \clauseor \mathnkvariant{Left}\ x\rightarrow 1,x \\
+&\quad \clauseor \mathnkvariant{Left}\ 2\rightarrow 2,x \\
+&\quad \clauseor \mathnkvariant{Right}\ x\rightarrow 3,x
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$2,2$となる．
+
+また，
+\begin{equation}
+\begin{aligned}
+\mathnkvariant{MyTrue} : \typename{mybool}\\
+\mathnkvariant{MyFalse} : \typename{mybool}
+\end{aligned}
+\end{equation}
+という型構築子があった場合，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\mathnkvariant{MyTrue}\mathnkop{with} \\
+&\quad \clauseor \mathnkvariant{MyTrue}\rightarrow 1 \\
+&\quad \clauseor \mathnkvariant{MyFalse}\rightarrow 0 \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1$となる．
+
+\paragraph{組}
+組パターンは組に対して適用される．
+組の数は一致している必要がある．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,2,\mathnkval{false}\mathnkop{with} \\
+&\quad \clauseor x,y,\mathnkval{true}\rightarrow x,y \\
+&\quad \clauseor x,y,\mathnkval{false}\rightarrow y,x \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$2,1$となる．
+
+\paragraph{連言}
+連言パターン$p_1\patternand \cdots\patternand p_n$は
+全てのパターン$p_i$がマッチしたときのみマッチする．
+ただし，各パターンに出現する変数パターンの名前は，他のパターンに出現してはいけない．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
+&\quad \clauseor x,((1, z)\patternand(y,(b\patternand\mathnkval{false})))\rightarrow x,b,z \\
+&\quad \clauseor x,((2, c)\patternand(y,\mathnkval{false}))\rightarrow x,y,c \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,2,\mathnkval{false}$となる．
+
+\paragraph{選言}
+選言パターン$p_1\patternor \cdots\patternor p_n$は
+全てのパターン$p_i$がマッチしたときのみマッチする．
+ただし，各パターンに出現する変数パターンの名前と型の集合
+は全て同じでなければいけない．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
+&\quad \clauseor x,((1, z)\patternor(\patternany,(z\patternand\mathnkval{true})))\rightarrow z,x \\
+&\quad \clauseor x,((1, z)\patternor(\patternany,(z\patternand\mathnkval{false})))\rightarrow x,z \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,\mathnkval{false}$となる．
+
+\paragraph{否定}
+否定パターン$\lnot p$はパターン$p$がその位置でマッチしなかった時に，マッチする．
+ただし，パターン$p$の中に変数パターンを含んではならない．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1\mathnkop{with} \\
+&\quad \clauseor \lnot 1\rightarrow \mathnkval{true} \\
+&\quad \clauseor \lnot 2\rightarrow \mathnkval{false} \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,\mathnkval{false}$となる．
+また，否定パターンは連言・選言パターンとともに使用すると便利であり，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
+&\quad \clauseor x,((\lnot 1, z)\patternand(y,(b\patternand\mathnkval{false})))\rightarrow x,b,z \\
+&\quad \clauseor x,((2, c)\patternand(y,\mathnkval{false}))\rightarrow x,y,c \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,\mathnkval{false},2$となる．
+
 \subsection{関数}\label{ssc:expr-function}
 関数はある値をとってある値を返す値である．
 nibkameにおいて関数は第一級のオブジェクト(first-class object)なので，
 変数に束縛したり，関数の返り値として返したりすることができる．
+
+\subsection{不動点演算子}\label{ssc:expr-fix}
+nibkameコア言語において，
+$\mathnkop{let} x = e_1 \mathnkop{in} e_2$という束縛の式において
+変数$x$の定義$e_1$の中で$x$を使用することができない．
+よって，再帰関数を定義するために不動点演算子(不動点コンビネータとも)を用いる．
+不動点演算子$\mathnkop{fix}$は以下の特徴を持つ．
+\begin{equation}
+\mathnkop{fix}f= f(\mathnkop{fix}f)
+\end{equation}
 
 \subsection{適用}\label{ssc:expr-apply}
 関数に値を与え値を得ることである．
@@ -841,11 +1047,8 @@ nibkameにおいて評価戦略(evaluation strategy)は
 値渡し(call-by-value)である．
 そのため，関数に渡される引数は事前に評価されてから渡されることになる．
 
-\subsection{組}\label{ssc:expr-tuple}
-組とはいくつかの値の並びのことであり，
-集合における組とほぼ同じものである．
 \end{resbonsiblesection}
-\begin{resbonsiblesection}{型の構文}{\sakamoto}\label{sc:type-syntax}
+\begin{resbonsiblesection}{型}{\sakamoto}\label{sc:type}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
 
 Hindley-Milner型システムとはHaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムであり，
@@ -982,7 +1185,7 @@ $\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
 %\end{aligned}
 %\end{equation}
 
-\subsection{型}\label{sc:type}
+\subsection{型付け}\label{sc:typing}
 定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
 \begin{equation}\label{eq:func-const-type} 
     \mathfunc{ConstType}(c) = \begin{cases}
@@ -997,42 +1200,58 @@ $\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
 
 パターンによる束縛の型環境$\patternandenv{p:\tau}{\envPattern}$は以下の様に定義される．
 \begin{subequations}
-\begin{gather}
+\begin{equation}
     \infer[\rulename{P-All}]
         {\envExpr\vdash \patternandenv{\_:\tau}{\emptyset}}
         {}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Not}]
         {\envExpr\vdash \patternandenv{\lnot p:\tau}{\emptyset}}
-        {\envExpr\vdash \patternandenv{p:\tau}{\envPattern}}\\
+        {\envExpr\vdash \patternandenv{p:\tau}{\emptyset}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Const}]
         {\envExpr\vdash \patternandenv{c:\tau}{\emptyset}}
         {\mathfunc{ConstType}(c) \succ \tau} \\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Var}]
         {\envExpr\vdash \patternandenv{x:\tau}{\{x:\tau\}}}
         {x\in\mathset{ExprVar}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Constructor}]
         {\envExpr\vdash \patternandenv{g:\tau}{\emptyset}}
         {g\in\mathset{Constructor} & (g,\tau)\in\envExpr & \tau_1\rightarrow\tau_2\not\succ\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Apply}]
         {\envExpr\vdash \patternandenv{g\ p:\tau}{\envPattern}}
         {g\in\mathset{Constructor} & (g,\tau'\rightarrow\tau )\in\envExpr & \envExpr\vdash \patternandenv{p:\tau'}{\envPattern} }\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Tuple}]
         {\envExpr\vdash \patternandenv{e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}{\bigcup_i \envPattern_i}}
         {\envExpr\vdash\patternandenv{p_0:\tau_0}{\envPattern_0} &
         \cdots &
         \envExpr\vdash\patternandenv{p_n:\tau_n}{\envPattern_n} &
         \foralldot{i,j}{i\not= j\limpl (\domain\envPattern_i \cap \domain\envPattern_j = \emptyset)}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-And}]
-        {\envExpr\vdash \patternandenv{p_1 @ p_2:\tau}{\envPattern_1\cap\envPattern_2}}
+        {\envExpr\vdash \patternandenv{p_1 \patternand p_2:\tau}{\envPattern_1\cap\envPattern_2}}
         {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern_1} &
         \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern_2} &
         \domain\envPattern_1 \cap \domain\envPattern_2 = \emptyset
         }\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Or}]
         {\envExpr\vdash \patternandenv{p_1 \patternor p_2:\tau}{\envPattern}}
         {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern} &
         \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern}}
-\end{gather}
+\end{equation}
 \end{subequations}
 式の持つ型は以下の様に定義される．
 但し，断りの無い限り
@@ -1042,71 +1261,97 @@ $x,v\in\mathset{ExprVar}$，
 $e\in\mathset{Expr}$
 とする．
 \begin{subequations}
-\begin{gather}
+\begin{equation}
     \infer[\rulename{E-Const}]
         {\envExpr\vdash c:\tau}
         {\mathfunc{ConstType}(c) \succ \tau} \\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Var}]
         {\envExpr\vdash v:\tau}
         {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Fun}]
         {\envExpr\vdash \fundot{x}{e}:\tau_1\rightarrow\tau_2}
         {\envExpr\uplus(x,\tau_1)\vdash e:\tau_2}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Tuple}]
         {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
         {\envExpr\vdash e_0:\tau_0 &
         \cdots &
         \envExpr\vdash e_n:\tau_n}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-MakeRef}]
         {\envExpr\vdash \mathnkop{ref}e:\tau\ \mathsf{ref}}
         {\envExpr\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Ref}]
         {\envExpr\vdash e!:\tau}
         {\envExpr\vdash e:\tau\ \mathsf{ref}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-SetRef}]
         {\envExpr\vdash e_1\coloneqq e_2:\typename{unit}}
         {\envExpr\vdash e_1:\tau\ \mathsf{ref} &
         \envExpr\vdash e_2:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Apply}]
         {\envExpr\vdash e_1\ e_2:\tau}
         {\envExpr\vdash e_1:\tau'\rightarrow\tau &
         \envExpr\vdash e_2:\tau'} \\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Let}]
         {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
         {\envExpr\vdash e_1:\tau' &
         \envExpr\uplus(x,\tau')\vdash e_2:\tau}\\
+\end{equation}
+%\begin{equation}
 %    \infer[\rulename{E-If}]
 %        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
 %        {\envExpr\vdash e_1:\typename{bool} &
 %        \envExpr\vdash e_2:\tau &
 %        \envExpr\vdash e_3:\tau}\\
+%\end{equation}
+\begin{equation}
     \infer[\rulename{E-Fix}]
         {\envExpr\vdash \fixdot{f}e:\tau}
         {\envExpr\uplus(f,\tau)\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Match}]
         {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\mathit{clss}:\tau}
         {\envExpr\vdash e:\tau' &
         \envExpr\vdash \mathit{clss}:\tau'\rightarrow\tau}
-\end{gather}
+\end{equation}
 \end{subequations}
 節の型は以下の様に定義される．
 \begin{subequations}
-\begin{gather}
+\begin{equation}
     \infer[\rulename{C-Always}]
         {\envExpr\vdash p\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
         \envExpr\uplus\envPattern\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{C-Guarded}]
         {\envExpr\vdash p\mathnkop{with}e_g\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
         \envExpr\uplus\envPattern\vdash e_g:\typename{bool} &
         \envExpr\uplus\envPattern\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{C-Seq}]
         {\envExpr\vdash \mathit{cls}_0\clauseor\cdots\clauseor\mathit{cls}_n:\tau}
         {\envExpr\vdash cls_0:\tau &
         \cdots &
         \envExpr\vdash cls_n:\tau}
-\end{gather}
+\end{equation}
 \end{subequations}
 
 
