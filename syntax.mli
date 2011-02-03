@@ -19,24 +19,6 @@ type pat =
   | P_Not of pat
 type t =
     Literal of lit
-  | Add of t * t
-  | Sub of t * t
-  | Mul of t * t
-  | Div of t * t
-  | Fadd of t * t
-  | Fsub of t * t
-  | Fmul of t * t
-  | Fdiv of t * t
-  | Cons of t * t
-  | Seq of t * t
-  | And of t * t
-  | Or of t * t
-  | Eq of t * t
-  | NotEq of t * t
-  | LsEq of t * t
-  | Ls of t * t
-  | Gt of t * t
-  | GtEq of t * t
   | Let of pat * t * t
   | LetSimp of (Id.t * Type.t) * t * t
   | LetRec of (Id.t * Type.t) * t * t
@@ -59,5 +41,6 @@ val pat_to_sexpr : pat -> Sexpr.t
 val pat_of_sexpr : Sexpr.t -> pat
 val of_sexpr : t -> Sexpr.t
 val to_sexpr : Sexpr.t -> lit
+val varname : t -> Id.t
 val mangle : string list -> string -> string -> Type.t -> string
 val demangle : char Stream.t -> string list * string * string * Type.t

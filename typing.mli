@@ -38,6 +38,7 @@ val substitute_result_type : TypingType.substitution list -> result -> result
 val result_to_expr : result -> TypingExpr.expr
 val w : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.substitution list * TypingType.oType * result
 val w_pattern : TypingExpr.exprEnv -> TypingExpr.pattern -> TypingType.substitution list * TypingType.oType * pattern
+val typing_without_value_restriction : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.oType * result * TypingType.substitution list
 val typing_with_subst : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.typeScheme * result * TypingType.substitution list
 val typing : TypingExpr.exprEnv -> TypingExpr.expr -> TypingType.typeScheme * result
 val substitute : substitution list -> result -> result

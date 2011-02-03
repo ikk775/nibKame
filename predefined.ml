@@ -56,7 +56,7 @@ let pervasives =
     "-", intop_t "%sub" tygiie tyi;
     "*", intop_t "%mul" tygiie tyi;
     "/", intop_t "%div" tygiie tyi;
-    "~.", intop_t "%fneg" tygfe tyi;
+    "~.", intop_t "%fneg" tygfe tyf;
     "+.", intop_t "%fadd" tygffe tyf;
     "-.", intop_t "%fsub" tygffe tyf;
     "*.", intop_t "%fmul" tygffe tyf;

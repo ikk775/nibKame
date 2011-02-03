@@ -51,6 +51,7 @@ val get_expr_type : expr -> TypingType.oType
 val substitution_domain : substitution list -> exprVar list
 val reverse_substitution : substitution list -> substitution list
 val substitute_expr : (exprVar * expr) list -> expr -> expr
+val substitute_varname : (exprVar * exprVar) list -> expr -> expr
 val substitute_expr_type : TypingType.substitution list -> expr -> expr
 val compose_expr_subst : substitution list -> substitution list -> substitution list
 val from_syntax : Syntax.t -> expr

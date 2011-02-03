@@ -1,3 +1,4 @@
+type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
     Unit
   | Nil of Type.listCategory
@@ -14,15 +15,9 @@ type t =
   | FSub of Id.t * Id.t
   | FMul of Id.t * Id.t
   | FDiv of Id.t * Id.t
-  | IfEq of Id.t * Id.t * t * t
-  | IfNotEq of Id.t * Id.t * t * t
-  | IfLs of Id.t * Id.t * t * t
-  | IfLsEq of Id.t * Id.t * t * t
-  | IfGt of Id.t * Id.t * t * t
-  | IfGtEq of Id.t * Id.t * t * t
+  | If of comp * Id.t * Id.t * t * t
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
-  | LetFun of fundef * t
   | Apply of (Id.t * Type.t) * Id.t list
   | Tuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
@@ -40,6 +35,14 @@ type t =
   | ExtArray of Id.t
   | ExtFunApply of (Id.t * Type.t) * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t; }
+type topvar = {
+  var_name : Id.t * Type.t;
+  expr : t
+}
+type topDecl =
+  | FunDecl of fundef
+  | VarDecl of topvar
+
 type substitution = Substitution of Id.t * Id.t
 
 val gen_varname : unit -> string
@@ -56,8 +59,12 @@ val freevars : t -> Id.Set.elt list
 val substitute_map : 'a -> t -> t
 val fundef_to_sexpr : t -> Sexpr.t
 val from_typing_result : Typing.result -> (t * Type.t)
-
-val internal_operator : string -> TypingType.oType -> (t * Type.t)
+(*
+val from_llifting : LLifting.t -> (t * topDecl list)
+val from_ll_decl : LLifting.topDecl -> topDecl list
+val from_ll_decls : LLifting.topDecl list -> topDecl list
+*)
+val internal_operator : string -> TypingType.oType -> (topDecl * Id.t)
 (** A internal symbol name must begin with the letter '%'. *)
 (** A internal symbol as a function represents a primitive function. *)
 (** A primitive function takes one argument and should not return a function to represent a multi-argument function.
