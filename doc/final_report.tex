@@ -701,7 +701,8 @@ register)の2種類にわけられる．その分類を\refTbl{tb:register-save}
 
 \begin{resbonsiblesection}{式の構文}{\sakamoto}\label{sc:expr-syntax}
 nibkameコア言語における式の定義は以下の様になる．
-\begin{equation}\label{eq:expr} 
+\begin{subequations}
+\begin{equation}\label{eq:def-expr} 
 \begin{array}{rcll}
 e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
  &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
@@ -720,11 +721,19 @@ e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constan
 \mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
 \mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
+\end{array}
+\end{equation}
+\begin{equation}\label{eq:def-clause}
+\begin{array}{rcll}
 \mathit{cls} &\Coloneqq& p\rightarrow e & \\
              &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
 \mathit{clss} &\Coloneqq& \mathit{cls} & \\
               &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
 \mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
+\end{array}
+\end{equation}
+\begin{equation}\label{eq:def-pattern}
+\begin{array}{rcll}
 p&\Coloneqq&\patternany             & \text{ワイルドカード} \\
  &\mid&  c                          & \text{定数} \\
  &\mid&  x                          & \text{変数} \\
@@ -739,6 +748,7 @@ p&\Coloneqq&\patternany             & \text{ワイルドカード} \\
 \mathset{Var}&\triangleq&\mathset{ExprVar}\cup\mathset{Constructor}
 \end{array}
 \end{equation}
+\end{subequations}
 ここで，$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$である．
 
 \subsection{定数}\label{ssc:expr-constant}
@@ -790,6 +800,10 @@ char型であるが，この型は%C言語と同様に
 \subsection{外部定数}\label{ssc:expr-external}
 外部定数は，nibkameコア言語ソースコード上で既に定義されているものとして使用することの出来る
 定数であり，具体的には外部のCランタイムの関数や加算・減算などのプリミティブ関数である．
+
+\subsection{組}\label{ssc:expr-tuple}
+組とはいくつかの値の並びのことであり，
+集合における組とほぼ同じものである．
 
 \subsection{変数}\label{ssc:expr-variable}
 変数は一般のプログラミング言語における概念と同じである．
@@ -1033,9 +1047,6 @@ nibkameにおいて評価戦略(evaluation strategy)は
 値渡し(call-by-value)である．
 そのため，関数に渡される引数は事前に評価されてから渡されることになる．
 
-\subsection{組}\label{ssc:expr-tuple}
-組とはいくつかの値の並びのことであり，
-集合における組とほぼ同じものである．
 \end{resbonsiblesection}
 \begin{resbonsiblesection}{型}{\sakamoto}\label{sc:type}
 nibkameでは型システムとして，Hindley-Milner型システムを採用した．
@@ -1189,42 +1200,58 @@ $\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
 
 パターンによる束縛の型環境$\patternandenv{p:\tau}{\envPattern}$は以下の様に定義される．
 \begin{subequations}
-\begin{gather}
+\begin{equation}
     \infer[\rulename{P-All}]
         {\envExpr\vdash \patternandenv{\_:\tau}{\emptyset}}
         {}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Not}]
         {\envExpr\vdash \patternandenv{\lnot p:\tau}{\emptyset}}
         {\envExpr\vdash \patternandenv{p:\tau}{\emptyset}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Const}]
         {\envExpr\vdash \patternandenv{c:\tau}{\emptyset}}
         {\mathfunc{ConstType}(c) \succ \tau} \\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Var}]
         {\envExpr\vdash \patternandenv{x:\tau}{\{x:\tau\}}}
         {x\in\mathset{ExprVar}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Constructor}]
         {\envExpr\vdash \patternandenv{g:\tau}{\emptyset}}
         {g\in\mathset{Constructor} & (g,\tau)\in\envExpr & \tau_1\rightarrow\tau_2\not\succ\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Apply}]
         {\envExpr\vdash \patternandenv{g\ p:\tau}{\envPattern}}
         {g\in\mathset{Constructor} & (g,\tau'\rightarrow\tau )\in\envExpr & \envExpr\vdash \patternandenv{p:\tau'}{\envPattern} }\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Tuple}]
         {\envExpr\vdash \patternandenv{e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}{\bigcup_i \envPattern_i}}
         {\envExpr\vdash\patternandenv{p_0:\tau_0}{\envPattern_0} &
         \cdots &
         \envExpr\vdash\patternandenv{p_n:\tau_n}{\envPattern_n} &
         \foralldot{i,j}{i\not= j\limpl (\domain\envPattern_i \cap \domain\envPattern_j = \emptyset)}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-And}]
         {\envExpr\vdash \patternandenv{p_1 \patternand p_2:\tau}{\envPattern_1\cap\envPattern_2}}
         {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern_1} &
         \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern_2} &
         \domain\envPattern_1 \cap \domain\envPattern_2 = \emptyset
         }\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{P-Or}]
         {\envExpr\vdash \patternandenv{p_1 \patternor p_2:\tau}{\envPattern}}
         {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern} &
         \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern}}
-\end{gather}
+\end{equation}
 \end{subequations}
 式の持つ型は以下の様に定義される．
 但し，断りの無い限り
@@ -1234,71 +1261,97 @@ $x,v\in\mathset{ExprVar}$，
 $e\in\mathset{Expr}$
 とする．
 \begin{subequations}
-\begin{gather}
+\begin{equation}
     \infer[\rulename{E-Const}]
         {\envExpr\vdash c:\tau}
         {\mathfunc{ConstType}(c) \succ \tau} \\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Var}]
         {\envExpr\vdash v:\tau}
         {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Fun}]
         {\envExpr\vdash \fundot{x}{e}:\tau_1\rightarrow\tau_2}
         {\envExpr\uplus(x,\tau_1)\vdash e:\tau_2}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Tuple}]
         {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
         {\envExpr\vdash e_0:\tau_0 &
         \cdots &
         \envExpr\vdash e_n:\tau_n}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-MakeRef}]
         {\envExpr\vdash \mathnkop{ref}e:\tau\ \mathsf{ref}}
         {\envExpr\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Ref}]
         {\envExpr\vdash e!:\tau}
         {\envExpr\vdash e:\tau\ \mathsf{ref}}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-SetRef}]
         {\envExpr\vdash e_1\coloneqq e_2:\typename{unit}}
         {\envExpr\vdash e_1:\tau\ \mathsf{ref} &
         \envExpr\vdash e_2:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Apply}]
         {\envExpr\vdash e_1\ e_2:\tau}
         {\envExpr\vdash e_1:\tau'\rightarrow\tau &
         \envExpr\vdash e_2:\tau'} \\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Let}]
         {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
         {\envExpr\vdash e_1:\tau' &
         \envExpr\uplus(x,\tau')\vdash e_2:\tau}\\
+\end{equation}
+%\begin{equation}
 %    \infer[\rulename{E-If}]
 %        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
 %        {\envExpr\vdash e_1:\typename{bool} &
 %        \envExpr\vdash e_2:\tau &
 %        \envExpr\vdash e_3:\tau}\\
+%\end{equation}
+\begin{equation}
     \infer[\rulename{E-Fix}]
         {\envExpr\vdash \fixdot{f}e:\tau}
         {\envExpr\uplus(f,\tau)\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{E-Match}]
         {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\mathit{clss}:\tau}
         {\envExpr\vdash e:\tau' &
         \envExpr\vdash \mathit{clss}:\tau'\rightarrow\tau}
-\end{gather}
+\end{equation}
 \end{subequations}
 節の型は以下の様に定義される．
 \begin{subequations}
-\begin{gather}
+\begin{equation}
     \infer[\rulename{C-Always}]
         {\envExpr\vdash p\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
         \envExpr\uplus\envPattern\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{C-Guarded}]
         {\envExpr\vdash p\mathnkop{with}e_g\rightarrow e:\tau'\rightarrow\tau}
         {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
         \envExpr\uplus\envPattern\vdash e_g:\typename{bool} &
         \envExpr\uplus\envPattern\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
     \infer[\rulename{C-Seq}]
         {\envExpr\vdash \mathit{cls}_0\clauseor\cdots\clauseor\mathit{cls}_n:\tau}
         {\envExpr\vdash cls_0:\tau &
         \cdots &
         \envExpr\vdash cls_n:\tau}
-\end{gather}
+\end{equation}
 \end{subequations}
 
 
