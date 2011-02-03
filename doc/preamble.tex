@@ -218,11 +218,23 @@
 % listings用設定
 \lstdefinelanguage{nibkame}{%
    morekeywords={%
-        let,letrec,if,match,type,fun,+,-,*,/,+.,-.,*.,\.,(),~-,;,
+        let,letrec,if,match,with,type,fun,+,-,*,/,+.,-.,*.,\.,(),~-,;,
         and,or,not,unit,Nil%
-   }%
+   },%
+%   morekeywords={%
+%        ignore
+%   },%
+%   morekeywords={%
+%        print_int,print_float,print_char,print_string
+%   },%
+%   morekeywords={%
+%        hd,tl,null,map,length
+%   },%
+%   morekeywords={%
+%        array-create,array-set,array-ref,array-from-list,array-from-list-with-length
+%   },%
    sensitive,% ???
-   alsodigit=-+e.,%
+   alsodigit=->,%
    morecomment=[l];,%
    morecomment=[s]{\#|}{|\#},%
    morestring=[b]"%"
@@ -242,7 +254,9 @@
         {->}{\ensuremath{\rightarrow}~}2%
         {::}{\ensuremath{:\hskip -0.1em:}~}2%
 }
-\lstset{language=[Objective display]Caml,%
+\lstset{%
+  %language=[Objective display]Caml,%
+  language=nibkame,%
   basicstyle={\normalfont\normalsize\sffamily},%
   commentstyle={\small\ttfamily\itshape\bfseries\upshape},%
   classoffset=1,%
