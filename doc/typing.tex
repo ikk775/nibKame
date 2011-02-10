@@ -1,0 +1,170 @@
+\subsection{型付け}\label{sc:typing}
+定数の型を返す関数$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$は次の様に定義される．
+\begin{equation}\label{eq:func-const-type} 
+    \mathfunc{ConstType}(c) = \begin{cases}
+        \typename{unit} & \text{if $c$ is $\mathnkop{()}$.} \\
+        \typename{bool} & \text{if $c$ is $\mathnkop{true}$ or $\mathnkop{false}$.} \\
+        \typename{int} & \text{if $c$ is integer.} \\
+        \typename{float} & \text{if $c$ is float.} \\
+        \typename{char} & \text{if $c$ is char.} \\
+        \alpha\ \typename{list} & \text{if $c$ is $\mathnkop{Nil}$. And $\alpha$ is fresh.}
+        \end{cases}
+\end{equation}
+
+パターンによる束縛の型環境$\patternandenv{p:\tau}{\envPattern}$は以下の様に定義される．
+\begin{subequations}
+\begin{equation}
+    \infer[\rulename{P-All}]
+        {\envExpr\vdash \patternandenv{\_:\tau}{\emptyset}}
+        {}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Not}]
+        {\envExpr\vdash \patternandenv{\lnot p:\tau}{\emptyset}}
+        {\envExpr\vdash \patternandenv{p:\tau}{\emptyset}}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Const}]
+        {\envExpr\vdash \patternandenv{c:\tau}{\emptyset}}
+        {\mathfunc{ConstType}(c) \succ \tau} \\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Var}]
+        {\envExpr\vdash \patternandenv{x:\tau}{\{x:\tau\}}}
+        {x\in\mathset{ExprVar}}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Constructor}]
+        {\envExpr\vdash \patternandenv{g:\tau}{\emptyset}}
+        {g\in\mathset{Constructor} & (g,\tau)\in\envExpr & \tau_1\rightarrow\tau_2\not\succ\tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Apply}]
+        {\envExpr\vdash \patternandenv{g\ p:\tau}{\envPattern}}
+        {g\in\mathset{Constructor} & (g,\tau'\rightarrow\tau )\in\envExpr & \envExpr\vdash \patternandenv{p:\tau'}{\envPattern} }\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Tuple}]
+        {\envExpr\vdash \patternandenv{e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}{\bigcup_i \envPattern_i}}
+        {\envExpr\vdash\patternandenv{p_0:\tau_0}{\envPattern_0} &
+        \cdots &
+        \envExpr\vdash\patternandenv{p_n:\tau_n}{\envPattern_n} &
+        \foralldot{i,j}{i\not= j\limpl (\domain\envPattern_i \cap \domain\envPattern_j = \emptyset)}}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-And}]
+        {\envExpr\vdash \patternandenv{p_1 \patternand p_2:\tau}{\envPattern_1\cap\envPattern_2}}
+        {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern_1} &
+        \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern_2} &
+        \domain\envPattern_1 \cap \domain\envPattern_2 = \emptyset
+        }\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{P-Or}]
+        {\envExpr\vdash \patternandenv{p_1 \patternor p_2:\tau}{\envPattern}}
+        {\envExpr\vdash \patternandenv{p_1:\tau}{\envPattern} &
+        \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern}}
+\end{equation}
+\end{subequations}
+式の持つ型は以下の様に定義される．
+但し，断りの無い限り
+%$i,n\in\N$，
+$c\in\mathset{ExprConst}$, 
+$x,v\in\mathset{ExprVar}$，
+$e\in\mathset{Expr}$
+とする．
+\begin{subequations}
+\begin{equation}
+    \infer[\rulename{E-Const}]
+        {\envExpr\vdash c:\tau}
+        {\mathfunc{ConstType}(c) \succ \tau} \\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Var}]
+        {\envExpr\vdash v:\tau}
+        {(v,\tau')\in\envExpr & \tau' \succ \tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Fun}]
+        {\envExpr\vdash \fundot{x}{e}:\tau_1\rightarrow\tau_2}
+        {\envExpr\uplus(x,\tau_1)\vdash e:\tau_2}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Tuple}]
+        {\envExpr\vdash e_0,\cdots,e_n:\tau_0\times\cdots\times\tau_n}
+        {\envExpr\vdash e_0:\tau_0 &
+        \cdots &
+        \envExpr\vdash e_n:\tau_n}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-MakeRef}]
+        {\envExpr\vdash \mathnkop{ref}e:\tau\ \mathsf{ref}}
+        {\envExpr\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Ref}]
+        {\envExpr\vdash e!:\tau}
+        {\envExpr\vdash e:\tau\ \mathsf{ref}}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-SetRef}]
+        {\envExpr\vdash e_1\coloneqq e_2:\typename{unit}}
+        {\envExpr\vdash e_1:\tau\ \mathsf{ref} &
+        \envExpr\vdash e_2:\tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Apply}]
+        {\envExpr\vdash e_1\ e_2:\tau}
+        {\envExpr\vdash e_1:\tau'\rightarrow\tau &
+        \envExpr\vdash e_2:\tau'} \\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Let}]
+        {\envExpr\vdash \mathnkop{let}x=e_1\mathnkop{in}e_2:\tau}
+        {\envExpr\vdash e_1:\tau' &
+        \envExpr\uplus(x,\tau')\vdash e_2:\tau}\\
+\end{equation}
+%\begin{equation}
+%    \infer[\rulename{E-If}]
+%        {\envExpr\vdash \mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3:\tau}
+%        {\envExpr\vdash e_1:\typename{bool} &
+%        \envExpr\vdash e_2:\tau &
+%        \envExpr\vdash e_3:\tau}\\
+%\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Fix}]
+        {\envExpr\vdash \fixdot{f}e:\tau}
+        {\envExpr\uplus(f,\tau)\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{E-Match}]
+        {\envExpr\vdash \mathnkop{match}e\mathnkop{with}\mathit{clss}:\tau}
+        {\envExpr\vdash e:\tau' &
+        \envExpr\vdash \mathit{clss}:\tau'\rightarrow\tau}
+\end{equation}
+\end{subequations}
+節の型は以下の様に定義される．
+\begin{subequations}
+\begin{equation}
+    \infer[\rulename{C-Always}]
+        {\envExpr\vdash p\rightarrow e:\tau'\rightarrow\tau}
+        {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
+        \envExpr\uplus\envPattern\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{C-Guarded}]
+        {\envExpr\vdash p\mathnkop{with}e_g\rightarrow e:\tau'\rightarrow\tau}
+        {\envExpr\vdash \patternandenv{p:\tau'}{\envPattern} &
+        \envExpr\uplus\envPattern\vdash e_g:\typename{bool} &
+        \envExpr\uplus\envPattern\vdash e:\tau}\\
+\end{equation}
+\begin{equation}
+    \infer[\rulename{C-Seq}]
+        {\envExpr\vdash \mathit{cls}_0\clauseor\cdots\clauseor\mathit{cls}_n:\tau}
+        {\envExpr\vdash cls_0:\tau &
+        \cdots &
+        \envExpr\vdash cls_n:\tau}
+\end{equation}
+\end{subequations}
+
+

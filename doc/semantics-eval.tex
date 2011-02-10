@@ -1,0 +1,47 @@
+\subsection{付値}\label{sc:evaluation}
+値$\upsilon$は
+\begin{equation}\label{eq:eval-value} 
+\begin{array}{rcll}
+\upsilon&\Coloneqq& c                          & \text{定数} \\
+ &\mid&  s:\tau                     & \text{外部定数} \\
+ &\mid&  v                          & \text{変数} \\
+ &\mid&  \mypair{g}{\upsilon}       & \text{型構築子} \\
+ &\mid&  \lambdadot{x}{e}           & \text{関数} \\
+ &\mid&  e, \cdots, e               & \text{組} \\
+ &\mid&  \mathnkval{undefined}      & \text{未定義}\\
+\mathset{EvalVar}&\triangleq& \varrange{v} \\
+\mathset{EvalData}&\triangleq& \mathset{Constructor}\times\varrange{\upsilon}
+\end{array}
+\end{equation}
+と定義される．
+
+環境
+\begin{align}\label{eq:eval-func} 
+\nu&\msubset\mathit{ExprVar}\times\mathit{EvalVar} \\
+\rho&\msubset\mathit{EvalVar}\times\upsilon
+\end{align}
+
+以下の定義に登場する$\xi$は以前に使用されていない名前の変数を意味する．
+\begin{subequations}
+\begin{align}
+    \semanticS{c} &= \lambdadot{\nu\rho}{\valueandenv{c}{\rho}}\\
+    \semanticS{v} &= \lambdadot{\nu\rho}{\valueandenv{\nu(v)}{\rho}}\\
+    \semanticS{\mathnkop{if}e_1\mathnkop{then}e_2\mathnkop{else}e_3} &=
+        \lambdadot{\nu\rho}{\lambdaIf (\semanticSVal(\semanticS{e_1}\nu\rho) = \mathnkval{true}) \nonumber\\
+            &\lambdaThen \semanticS{e_2}{\nu(\semanticSVEnv(\semanticS{e_1}\nu\rho))} \nonumber\\
+            &\lambdaElse \semanticS{e_3}{\nu(\semanticSVEnv(\semanticS{e_1}\nu\rho))}} \\
+    \semanticS{g} &= \lambdadot{\nu\rho}{\valueandenv{\mypair{g}{\mathnkval{undefined}}}{\rho}}\nonumber\\
+    \semanticS{e_1\ e_2} &= \lambdadot{\nu\rho}{ \nonumber\\
+        &\lambdaLet \omega_1 = \semanticS{e_1}\nu\rho \lambdaIn \nonumber\\
+        &\lambdaIf \semanticSVal\omega_1 \in \mathset{EvalData} \nonumber\\
+        &\lambdaThen \mypair{\mypair{\pi_0(\semanticSVal\omega_1)}{\semanticSVal(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))}}{\semanticSVEnv(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))} \nonumber\\
+        &\lambdaElse \mypair{(\semanticSVal\omega_1)\ \semanticSVal(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))}{\semanticSVEnv(\semanticS{e_2}\nu(\semanticSVEnv\omega_1))}
+    }\nonumber\\
+    \semanticS{\mathnkop{ref}e} &= \lambdadot{\nu\rho}{\valueandenv{\xi}{\semanticSVEnv(\semanticS{e}\nu\rho)\cup\mypair{\xi}{\semanticSVal(\semanticS{e}\nu\rho)}}}\\
+    \semanticS{e!} &= \lambdadot{\nu\rho}{\valueandenv{\rho(\semanticSVal(\semanticS{e}\nu\rho))}{\semanticSVEnv(\semanticS{e}\nu\rho)}}\\
+    \semanticS{e_1\coloneqq e_2} &= \lambdadot{\nu\rho}{ \nonumber\\
+        &\lambdaLet \omega_1 = \semanticS{e_1}\nu\rho \lambdaIn \nonumber\\
+        &\lambdaLet \omega_2 = \semanticS{e_2}\nu(\semanticSVEnv\omega_1) \lambdaIn \nonumber\\
+        &\mypair{\text{\lstinline|()|}}{\semanticSVEnv(\omega_2)+\mypair{\semanticSVal\omega_1}{\semanticSVal\omega_2}}}\\
+\end{align}
+\end{subequations}

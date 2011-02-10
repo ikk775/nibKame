@@ -1,0 +1,181 @@
+\documentclass[a4paper,titlepage,disablejfam]{jsbook}
+
+\usepackage[dvipdfmx]{graphicx}
+
+\input{preamble}
+
+\begin{document}
+%\title{電子情報工学科実験報告書 \\ 関数型言語の設計と実装}
+%\title{\scshape The Programming Language Nibkame\\ Language Specification}
+\title{nibkame言語仕様}
+\author{
+小堀 育男 \\
+酒本 典明
+}
+%\date{}
+
+\frontmatter
+
+\maketitle
+
+\tableofcontents
+%\listoffigures
+%\listoftables
+%\lstlistoflistings
+
+\newpage
+
+\mainmatter % 序論も本文の内
+
+\chapter{序論}\label{ch:intro}
+\begin{abstract}
+ 本実験課題選定の理由と目的について論じる．また，実装の概要と報告書の構成を述べる．
+\end{abstract}
+
+\section{目的}
+関数型言語の有用性はHughes\cite{hughes1989functional}などにより主張され
+ていた．現在では，関数型言語に由来する機能が，C++やJava, C\# など
+の言語に取り込まれている．またScala\footnote{\url{http://www.scala-lang.org/}}
+やF\#{}\footnote{\url{http://msdn.microsoft.com/ja-jp/fsharp}}
+など既存の手続き型言語との連携を強く意識した言語も登場している．
+
+関数型言語に特徴的な機能として第一級の関数やクロージャなどがある．これら
+は計算機の命令セットの持つ機能からかけ離れている．こういった機能を持った
+言語を設計し，実装することで機能に対する理解を深めることを目標とする．
+
+そのために，我々は静的に強く型付けされる関数型言語nibkameを設計しコンパ
+イラを実装した．これは学生実験における参照実装として開発された
+MinCaml\cite{住井英二郎:2008-04-24}を基にして開発を行なった．
+
+MinCamlおよびMinCamlコンパイラは簡潔な実装(約2000行ほど)で性能の良いコー
+ドを生成することに特徴のある関数型言語である．構文はObjective
+Caml\footnote{\url{http://caml.inria.fr/ocaml/}}のサブセットであり,算術演算や
+タプル構造，破壊的代入の可能な配列，高階関数，再帰と末尾呼び出し，型推論
+などの機能が実現されており，レイトレーシングなどの複雑なプログラムを記述
+することができる．MinCamlはプログラム言語処理系の教材として用いられるこ
+とを主眼としており，その機能選定は実装を簡潔に保つことを重視して行われた．
+
+簡潔さを保つために，多くのアプリケーションプログラムを記述するときに必須
+でない機能は省略された．その中にはMinCamlコンパイラの記述に多く用いられ
+ている代数的データ型やパターンマッチングなどが存在する．
+nibkameではそういった機能と，その他にも生産性に高い影響を与える機能を追
+加することでより実用的な言語を開発することを目指した．
+MinCamlコンパイラはターゲットとする計算機としてSPARCとPowerPCをサポート
+している．しかし実行する計算機の確保の容易さから，nibkameコンパイラはター
+ゲットをIA-32アーキテクチャとした．
+
+詳しくは\refCh{ch:lang_design}で述べるが，これらの目標を達成するために次
+に挙げる機能の追加を行った．
+\begin{itemize}
+ \item トップレベル環境における複数の式
+ \item 多相関数
+ \item 代数的データ型
+ \item パターンマッチング
+ \item IA-32アーキテクチャ向け機械語の生成
+\end{itemize}
+また，これを達成するために，複数の定義をひとまとめに扱うモジュール機構と
+3番地形式の中間言語の2番地形式への変換，メモリ管理機構の強化が必要となっ
+た．
+
+
+\section{構成} % ここは内容にあわせて書き換えてください．あと
+			  % subsectionはオーバースペックな気が．
+\begin{comment}
+\refCh{ch:preparation}ではコンパイラの動作を理解するために必要となる理論
+や規則について概説する．本報告書で用いる論理学や集合の記法についても説明
+する．
+\refCh{ch:lang_design}では，nibkame言語に搭載された機能のうち関数型言語
+に特有なものについて説明し，最終的に実装された言語機能と構文を示す．
+\refCh{ch:impl}ではコンパイラのモジュール構造と各フェーズの対応を示し，
+コンパイラの実装について説明する．
+\refCh{ch:sample-program}では実際のnibkameプログラムの例を示し，コンパイラの動作
+と得られる目的プログラムについて説明する．
+\refCh{ch:conclude}では実装した機能についてまとめ，これからの課題を議論する．
+\end{comment}
+
+%\mainmatter
+%\chapter{原理}\label{ch:原理}
+
+\input{notation.tex}
+
+\chapter{対象言語の設計}\label{ch:lang_design}
+
+\begin{abstract}
+この章では，
+まずnibkame言語のコア部分の仕様を定義し，
+後に，その拡張としてnibkame言語本体とライブラリの仕様について述べる．
+そして，最終的に実装された言語機能と構文を示す．
+\end{abstract}
+
+\input{core-expression}
+\input{type-system}
+
+
+
+\section{意味論}\label{sc:semantics}
+まず，変数や型変数，型構築子の型の環境は次の様に定義される．
+\begin{equation}\label{eq:env} 
+\begin{array}{rcll}
+    \envExpr  &\subset& \mathset{Var}\times\mathset{TypeScheme} & \text{変数の型環境} \\
+    \envType  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
+    \envVariant  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
+\end{array}
+\end{equation}
+%置換の集合は次のように定義される．
+%\begin{equation}\label{eq:subst} 
+%\begin{array}{rcll}
+%    \substExpr  &\subset& \mathset{Var}\times\mathset{Expr} & \text{変数の置換} \\
+%    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の置換} \\
+%\end{array}
+%\end{equation}
+%置換の集合については特別に$\{(v,e),\cdots\}$を$[e/v,\cdots]$とも書く．
+式$e$，型$\tau$の中に現れる自由変数の集合は夫々$\freevars{e}$，$\freetypevars{\tau}$と書く．
+
+%式に対する置換の適用$\applysubst{\Sigma}{x}$は次のように定義される．
+%\begin{equation}
+%\begin{aligned}
+%    \applysubst{\substExpr}{c} &= c \\
+%    \applysubst{\substExpr}{s:\tau} &= s:\tau \\
+%    \applysubst{\substExpr}{x} &=\begin{cases}
+%        e & \text{if $(v,e)\in\substExpr$.} \\
+%        x & \text{otherwise.} \end{cases} \\
+%    \applysubst{\substExpr}{\fundot{x}{e}} &= \applysubst{\substExpr'}{e} &
+%            \text{which $\substExpr' = \domainrestrict{\substExpr}{(\domain\substExpr\setminus\{x\})}$.}\\
+%\end{aligned}
+%\end{equation}
+
+\input{typing}
+
+
+\section{nibkame追加構文}\label{sc;additional-syntax}
+以上で定義したnibkameコア言語に
+if文などの糖衣構文(syntax sugar)を追加し，nibkame言語とする．
+
+構文上の変換規則$\mathcal{A}$は以下のように定義される．
+\begin{equation}
+\begin{aligned}
+    \semanticA{\mathnkop{if}e_c\mathnkop{then}e_\top\mathnkop{else}e_\bot} &=
+        \mathnkop{match}\semanticA{e_c}\mathnkop{with}
+            \mathnkval{true}\rightarrow \semanticA{e_\top}
+            \clauseor \mathnkval{false}\rightarrow \semanticA{e_\bot} \\
+    \semanticA{e} &= e \qquad\text{if $e$ is not matched in the definitions above.}
+\end{aligned}
+\end{equation}
+
+
+\input{standard-library}
+
+%\chapter*{謝辞}
+\addcontentsline{toc}{chapter}{謝辞}
+\section*{謝辞}
+樋口先生にはプロジェクト計画についてご意見をいただきました．大墳先生には発表
+資料の作成や発表についてご指導いただきました．牛田先生には予稿などの書法につ
+いて助言をいただきました．深謝の意を表します．
+
+\bibliographystyle{jplain}
+\bibliography{reference}
+
+\backmatter
+\appendix
+
+\end{document}

@@ -1,0 +1,310 @@
+\chapter{記法}\label{ch:notation}
+\begin{abstract}
+本報告書で用いる理論・記法について概説する． 
+本章で説かれる内容は本報告書で用いられる範囲に限定し，
+かつ，直感的な解りやすさを最優先としたため，
+論理的に不正確な箇所が多々あるがお赦し願いたい．
+\end{abstract}
+
+\section{全体的な記法について}\label{sc:about-notation}
+以下，演算子の結合力を表す際に，
+\begin{equation}\label{eq:bonding-strength}
+\times \gtrdotrel +
+\end{equation}
+と表すこととする．
+これは，$A\times B + C$という式があったときに$(A\times B)+ C$と解釈することを意味する．
+
+等号系の記号の使い分けは\refTbl{tbl:equal-usage}のようにする．
+
+\begin{table}[hbt]
+    \caption{等号系記号の使い分け}\label{tbl:equal-usage}
+    \begin{center}
+    \begin{tabular}{cp{40zw}}
+        \Hline
+        \multicolumn{1}{c}{記号} & \multicolumn{1}{c}{目的} \\
+        \hline
+        $=$ & 通常の等値，即ち数値・真偽値・集合などの等しさを真偽値で表す，または，等しいことを言明する． \\
+        $\equiv$ & $=$よりも広い意味で同じであることを表す． \\
+        $\defeq$ & 通常の式において左辺の記号が右辺で定義されることを示す．\\
+        $\Coloneqq$ & BNFにおいて，左辺の記号が右辺で定義されることを示す．\refSc{sc:about-BNF-form} \\
+        \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
+
+変数$e$の動く領域を$\varrange{e}$と表すこととする\footnote{一般的な方法ではない}．
+
+自然数$\N$は0を含むこととする．
+
+
+\section{集合について}\label{sc:about-set}
+元として含むことを表す記号として$\in$，$\ni$を用いる.  部分集合を表す記号として$\msubset$，$\msupset$を，真部分集合を表す記号として$\mpsubset$，$\mpsupset$を用いる． 空集合の記号としては$\emptyset$を用いる.
+
+集合$x$の羃集合は$\powerset x$若しくは$\powerset(x)$と書く
+\footnote{$2^x$や$\boldsymbol{2}^x$という表記も一般的．}．
+
+順序対若しくは単純に対は，$(x,y)$と表すことにする\footnote{標準的には$\left\langle x,y\right\rangle$である．}．
+順序対は
+\begin{equation}
+(x_0,x_1) = (y_0,y_1) \iff x_0 = y_0 \land x_1 = y_1
+\end{equation}
+という式によって特徴付けられる．
+組は$(x_0,x_1,\cdots,x_n)$と表すことにする\footnote{これも標準的には$\left\langle x_0,x_1,\cdots,x_n\right\rangle$である．}．
+順序対と同様に
+\begin{equation}
+(x_0,x_1,\cdots,x_n) = (y_0,y_1,\cdots,x_n) \iff \foralldot{i\in\{0,1,\cdots,n\}}{x_i = y_i}
+\end{equation}
+となる．
+$(x_0,x_1,\cdots,x_n)$は$(x_i)_{i\in\{0,1,\cdots,n\}}$とも書く．
+
+積集合とはいくつかの集合の要素で組を作ったときの集合のことであり，
+\begin{equation}
+X_0\times X_1\times\cdots\times X_n\triangleq \{(x_0,x_1,\cdots,x_n)|\foralldot{i\in\{0,1,\cdots,n\}}{x_i\in X_i}\}
+\end{equation}
+と定義される．
+$X_0\times X_1\times\cdots\times X_n$は$\prod_{i\in\{0,1,\cdots,n\}} X_i$とも書く．
+
+標準射影$\pi_i:\left(\prod_{j\in\{0,1,\cdots,n\}} X_j\right)\rightarrow X_i$とは，組または対からその構成要素を取り出す演算であり，
+\begin{equation}
+\pi_i(X_0\times X_1\times\cdots\times X_n)\triangleq X_i
+\end{equation}
+である．
+
+順序対の集合$X$\jpdash 例えば，$X=\{(x,y)|x\in\R,y\in\Z\}$など\jpdash は二項関係とも呼ばれ，
+その始域$\domain X$，終域$\codomain X$は夫々，
+\begin{align}
+    \domain X &\triangleq \{\pi_0 x|x\in X\}\\
+    \codomain X &\triangleq \{\pi_1 x|x\in X\}
+\end{align}
+と定義される．
+二項関係$R$に対して，始域を集合$C$に限定した二項関係$\{x|x\in R, \pi_0 x\in C\}$を
+$\domainrestrict{R}{C}$と書く．
+二項関係への追加$R\uplus\mypair{x}{y}$は，
+$R\uplus\mypair{x}{y}\triangleq \domainrestrict{R}{\left(\domain R\setminus \{x\}\right)}$
+と定義される．
+
+$x_0,x_1,\cdots,x_n$ ($n\in\N$)という並びをを$\vec{x}$と略記する．
+
+
+
+\section{論理について}\label{sc:about-logic}
+真・偽を表すの記号として夫々，$\ltrue$，$\lfalse$を用いる.
+論理和・論理積・否定・含意の記号として夫々，$\lor$，$\land$，$\lnot$，$\limpl$を用いる.
+変数$x$がその領域$\varrange{x}$を動くとき，
+述語$P(x)$が全ての$x$で真になることを$\foralldot{x}{P(x)}$，
+述語$P(x)$がある$x$で真になることを$\existsdot{x}{P(x)}$と表す．
+$\foralldot{x}{\foralldot{y}{\cdots}}$は$\foralldot{x,y,\cdots}{}$と略記する．
+$\exists$も同様．
+
+$\forall$，$\exists$，$\lnot$，$\limpl$は右結合性，
+例えば，$\lnot\lnot A\equiv \lnot(\lnot A)$，$A\limpl B\limpl C \equiv A\limpl (B\limpl C)$とする．
+夫々の演算子の優先順位は$\lnot\gtrdotrel\land,\lor\gtrdotrel\limpl$となる．
+
+\begin{equation}\label{eq:def-mp}
+\infer[\rulename{M.P.}]{\beta}{\alpha & \alpha \limpl \beta}
+\end{equation}
+は，$\alpha$と$\alpha \limpl \beta$という仮定から，\rulename{M.P.}という推論規則によって$\beta$が導き出されることを表す記法である.
+\ref{eq:def-mp}によって定義される推論規則は，推論規則内の$\alpha$，$\beta$に式を代入することによって
+\begin{equation}\label{eq:def-mp-instance-1}
+\infer[\rulename{M.P.}]{A\land B}{A & A \limpl A\land B}
+\end{equation}
+や，
+\begin{equation}\label{eq:def-mp-instance-2}
+\infer[\rulename{M.P.}]{\foralldot{x}{Q(a, x) \limpl P(x)}}{\existsdot{x}{P(x)} & \existsdot{x}{P(x)} \limpl \foralldot{x}{Q(a, x) \limpl P(x)}}
+\end{equation}
+も表す．
+この例における$\alpha$，$\beta$のように，超文脈的に扱われる変数のことをメタ変数(meta-variable)と呼ぶ．
+
+
+$\Gamma_1,\Gamma_2,\cdots\vdash A_1, A_2,\cdots$は，
+主に，$\Gamma_1, \Gamma_2, \cdots$から$A_1, A_2, \cdots$が推論できることを表す記法として用いる.
+
+
+\section{バッカス・ナウア記法について}\label{sc:about-BNF-form}
+バッカス・ナウア記法（Backus-Naur Form, BNF）
+は文脈自由文法を定義するのに用いられるメタ言語であって，
+プログラミング言語の構文記述やデータ構造の記述など，広汎に利用される．
+計算機科学でも式として頻繁に用いられるので解説する．
+
+$\Coloneqq$の左辺にある名前は右辺にある式で定義される．
+例えば，
+\begin{equation}\label{eq:bnf-example-1} 
+e\Coloneqq \mathsf{abc}
+\end{equation}
+というBNFに対しては
+\begin{equation}
+\varrange{e} = \{\mathsf{abc}\}
+\end{equation}
+となる．
+
+右辺において$\mid$は「または」の意味を表し，$\mid$で区切られたいずれかの式に当てはまる．例えば，
+\begin{equation}\label{eq:bnf-example-2} 
+e\Coloneqq \mathsf{a} \mid \mathsf{b} \mid \mathsf{c}
+\quad\text{または}\quad
+\begin{array}{rcl}
+    e    &\Coloneqq& \mathsf{a} \\
+            &\mid&   \mathsf{b} \\
+            &\mid&   \mathsf{c} 
+\end{array}
+\end{equation}
+というBNFに対しては
+\begin{equation}
+\varrange{e} = \{\mathrm{a}, \mathrm{b}, \mathrm{c}\}
+\end{equation}
+となる．
+
+右辺において左辺の記号が使われた場合は再帰となる
+\begin{equation}\label{eq:bnf-example-3} 
+\begin{array}{rcl}
+    e    &\Coloneqq& \mathsf{a} \\
+            &\mid&   e\mathsf{'} 
+\end{array}
+\end{equation}
+というBNFに対しては
+\begin{equation}
+\varrange{e} = \{\mathrm{a}, \mathrm{a'}, \mathrm{a''}, \mathrm{a'''}, \cdots \}
+\end{equation}
+となる．
+
+
+\section{ラムダ式について}\label{sc:about-lambda-expression}
+ラムダ式(lambda expression，$\lambda$-expression) とは，一言で言ってしまうと関数そのものを抽象化したものである．
+
+例えば以下の式を考えよう．
+\begin{align}
+f(x) &= (x + 1)^2\\
+f(x + 1) &= {\left((x + 1) + 1\right)}^2 = x^2 + 4x + 4\\
+(x + 1) &= x + 1
+\end{align}
+これは$(x + 1)$に対して関数$f$を適用すると$x^2 + 4x + 4$となるが，
+関数を適用しないとそれは$x + 1$そのものであることを表している．
+
+では逆に，$f$に引数を適用しないとどうなるのであろうか．
+\begin{align}
+f(x) &= x^2 + 2x + 1\\
+f    &= \;?
+\end{align}
+この場合の$f$そのものを表すのにラムダ式を用いることが出来，そうすると
+\begin{align}
+f &= \lambdadot{x}{(x^2 + 2x + 1)}
+\end{align}
+となって関数そのものを陽に扱うことが出来る．
+以下，必要の無い限り括弧は省略し，$\lambdadot{x}{(x^2 + 2x + 1)}$は$\lambdadot{x}{x^2 + 2x + 1}$と書く．
+
+ラムダ式を用いて記述した関数に引数を適用させると，
+\begin{align}
+f(y) &= (\lambdadot{x}{x^2 + 2x + 1})(y) = y^2 + 2y + 2 \\
+f(2) &= (\lambdadot{x}{x^2 + 2x + 1})(2) = 2^2 + 2\cdot 2 + 1 = 9
+\end{align}
+となる．
+
+次に複数引数の関数を考えよう．
+\begin{align}
+g(x, y) &= x + y
+\end{align}
+この関数を表すためには，
+$\lambdadot{x,y}{}$という記法を導入するのが良いと思われる．
+従って，
+\begin{align}
+\label{eq:lambda-multiple}
+g &= \lambdadot{x,y}{x + y}\\
+\label{eq:lambda-multiple-inst}
+g(a, b) &= a + b\\
+g(1, 2) &= (\lambdadot{x,y}{x + y})(1, 2) = 1 + 2 = 3
+\end{align}
+と表せる．
+
+ここで，天下り的ではあるが，$\lambdadot{x}{\lambdadot{y}{x+y}}$を考える．
+すると，
+\begin{gather}
+\begin{aligned}
+\label{eq:lambda-curried}
+h &= \lambdadot{x}{\lambdadot{y}{x+y}} \\
+\end{aligned} \\
+\begin{aligned}
+\label{eq:lambda-curried-partial}
+h(a) &= (\lambdadot{x}{\lambdadot{y}{x+y}})(a)\\
+     &= {\lambdadot{y}{a+y}}
+\end{aligned} \\
+\begin{aligned}
+\label{eq:lambda-curried-inst}
+\left(h(a)\right)(b) &= \left((\lambdadot{x}{\lambdadot{y}{x+y}})(a)\right)(b) \\
+        &= (\lambdadot{y}{a+y})(b)\\
+        &= a + b
+\end{aligned} \\
+\begin{aligned}
+\left(h(1)\right)(2) &= \left((\lambdadot{x}{\lambdadot{y}{x+y}})(1)\right)(2) \\
+        &= (\lambdadot{y}{1+y})(2) \\
+        &= 1 + 2 = 3
+\end{aligned}
+\end{gather}
+このようになる．
+以下，$f(a)(b)(c)\cdots$は
+$\delimitershortfall-1pt\left({\cdots\left({\left({\left({f(a)}\right)(b)}\right)(c)}\right)\cdots}\right)$
+を表すものとし，
+必要の無い限り括弧を省略する．
+
+ここで，
+\refEq{eq:lambda-multiple-inst}と\refEq{eq:lambda-curried-inst}
+を見比べると$g(a, b) = h(a)(b)$であることがわかる．
+つまり，
+\begin{equation}
+(\lambdadot{x,y}{\cdots})(a,b) \equiv (\lambdadot{x}{\lambdadot{y}{\cdots}})(a)(b)
+\end{equation}
+といえる．
+
+これは簡単に拡張が出来て，任意の多変数関数$g$に対してある関数$h$があって
+\begin{equation}
+g(a_1, a_2, \cdots, a_n)= h(a_1)(a_2)\cdots(a_n)
+\end{equation}
+となる．
+この操作$\mathrm{curry}: g\mapsto h$をカリー化(currying)と呼ぶ．
+纏めると，カリー化を行うことにより全ての多変数関数は一変数関数で書くことが出来ることとなる．
+
+このことより，
+$\lambdadot{x}{\lambdadot{y}{\lambdadot{z}{\cdots}}}$の略記として
+$\lambdadot{x,y,z,\cdots}{}$または
+$\lambdadot{xyz\cdots}{}$と書き，
+$f(a)(b)(c)\cdots$を
+$f(a,b,c\cdots)$と書くことがある．
+
+ここで，二変数の関数に一つだけ引数を与えた\refEq{eq:lambda-curried-partial}のような場合を考える．
+\begin{align}
+f (x)(y) &= x + y \quad \left(f = \lambdadot{xy}{x + y}\right) \\
+\mathit{add3}(x)   &= 3 + x \quad \left(\mathit{add3} = \lambdadot{x}{3 + x}\right) 
+\end{align}
+なる$f$，$\mathit{add3}$を考えたときに
+\begin{align}
+\begin{aligned}
+f(3)            &= (\lambdadot{x}{\lambdadot{y}{x+y}})(3) \\
+                &= \lambdadot{y}{3 + y} \\
+                &= \lambdadot{x}{3 + x} \\
+                &= \mathit{add3}
+\end{aligned}
+\end{align}
+となって，二つの引数を持つ関数$f$に引数を一つ適用した関数$f(3)$と
+常識的な方法で定義した引数に3を加える関数$\mathit{add3}$が等しくなる．
+このように$n$の引数を取る関数に対して$m$ ($<n$)の引数を適用することを部分適用(partial application)と呼ぶ．
+
+以下，関数の引数を表す括弧は省略し，
+$f(x)(y)(z)\cdots$は$f\ x\ y\ z\ \cdots$または$f x y z \cdots$と書く．
+
+
+% \section{ラムダ計算}\label{sc:about-lambda-calculus}
+
+% \section{型付ラムダ計算}\label{sc:about-typed-lambda-calculus}
+
+\section{型について}\label{sc:about-type}
+
+ある式$e$が型$t$を持つことを
+\begin{equation}
+e: t
+\end{equation}
+と書く．
+
+例えば，真偽値をとる変数$b$があったとき，
+その型は真偽値型(\textsf{bool})であると定めることが出来る．
+
+関数$f$と型$t$の式$e:t$があって，$e$に$f$を適用した$f\ e$の型が$s$であるとき，
+$f$の型は$t\rightarrow s$であるとする．
+

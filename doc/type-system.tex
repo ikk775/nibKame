@@ -1,0 +1,131 @@
+\section{型}\label{sc:type}
+nibkameでは型システムとして，Hindley-Milner型システムを採用した．
+
+Hindley-Milner型システムとはHaskellやMLのような静的型付け関数プログラミング言語によく用いられる型システムであり，
+「すべての式に一意な最汎(most general)型，即ち主型(principal type)を付けることができる」という重要な性質を持つ．
+
+代表的なアルゴリズムは「\algorithmW」\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}として知られているものである．
+このアルゴリズムはHindley-MilnerアルゴリズムともDamas-Milnerアルゴリズムとも呼ばれる．
+型変数への代入による型の同一化(unification)を基本操作としている．
+
+このアルゴリズムの起源は，Haskell CurryとRobert Feysが1958年に単純型付ラムダ計算の型推論のために考案したものであり，
+1969年にJ. Roger Hindleyがそれを拡張し，また，それが常に最汎な型に推論することを証明した．
+1978年にRobin MilnerはHindleyとは独立に\algorithmW\cite{Milner1978348}を導き出し，
+1982年，Luis Damasが最終的にMilnerのアルゴリズムの完全性を証明した\cite{Damas:1982:PTF:582153.582176}．
+
+今現在，
+Hindley-Milner型システムを採用しているnibkameでは型は以下の様に定義される．
+\begin{equation}\label{eq:type} 
+\begin{array}{rcll}
+    \tau    &\Coloneqq& \iota                       & \text{型定数 (\refSsc{ssc:type-constant})} \\
+            &\mid&  \alpha                          & \text{型変数 (\refSsc{ssc:type-variable})} \\
+            &\mid&  \tau \rightarrow \tau           & \text{関数型 (\refSsc{ssc:type-function})} \\
+            &\mid&  \tau \times \cdots \times \tau  & \text{直積型 (\refSsc{ssc:type-tuple})} \\
+            &\mid&  \tau\ \textsf{ref}              & \text{参照型 (\refSsc{ssc:type-reference})} \\
+            &\mid&  \tau\ \tau                      & \text{型適用 (\refSsc{ssc:type-apply})} \\
+    \mathset{Type}&\triangleq& \varrange{\tau}            & \text{型} \\
+    \sigma  &\Coloneqq &\tau                            & \text{型} \\
+            &\mid&  \foralldot{\vec{\alpha}}{\tau}      & \text{全称量化}\\
+    \mathset{TypeScheme}&\triangleq& \varrange{\sigma}            & \text{型スキーム}\\
+    \mathset{TypeVar}&\triangleq& \varrange{\alpha}            & 
+\end{array}
+\end{equation}
+
+\subsection{型定数}\label{ssc:type-constant}
+nibkameにおいて型定数は次の様に定義される．
+\begin{equation}\label{eq:type-constant} 
+\begin{array}{rcll}
+    \iota   &\Coloneqq& \typename{int}                  & \text{整数型} \\
+            &\mid&  \typename{float}                & \text{実数型} \\
+            &\mid&  \typename{char}                 & \text{char型} \\
+            &\mid&  \typename{list}                 & \text{リスト型} \\
+            &\mid&  \typename{array}                & \text{配列型} \\
+            &\mid&  \mathit{variant}                & \text{ヴァリアント型} \\
+    \mathset{TypeConstant}&\triangleq& \varrange{\iota}            & \text{型定数}\\
+    \mathset{TypeVariant}&\triangleq& \varrange{\mathit{variant}}  & \text{ヴァリアント型}
+\end{array}
+\end{equation}
+
+以上のうち，\typename{int}と\typename{float}は数値を表す型であり，
+内部的には夫々マシンにおけるもっとも自然な整数を表す表現\jpdash 例えばレジスタによる整数表現\jpdash と，
+もっとも自然な浮動小数点数を表す表現\jpdash 例えばIEEEの浮動小数点数\jpdash が用いられる．
+\typename{char}は1バイトによって表現できる符号なし数
+\jpdash 典型的には$0$から$2^8-1$\jpdash 
+を表す型である．
+
+$\typename{list}$と$\typename{array}$，ヴァリアント型が型定数となっているのに違和感を覚える向きもあるだろうが理由は
+\refSsc{ssc:type-apply}で詳説する．
+
+\subsection{型変数}\label{ssc:type-variable}
+型変数とは型を動く変数である．
+
+\subsection{関数型}\label{ssc:type-function}
+関数型とはその名の通り関数が持つ型であり，
+$s$型をとって$t$型を返す関数の型は$s\rightarrow t$となる．
+
+\subsection{直積型}\label{ssc:type-tuple}
+直積型は組の型であり，組の夫々の要素の型の組となっている．
+
+\subsection{参照型}\label{ssc:type-reference}
+参照が持つ型であり，例えば，\lstinline|int|型への参照であれば，その型は
+\lstinline|int ref|となる．
+
+\subsection{型適用}\label{ssc:type-apply}
+ML系言語の型には，
+$\typename{int}\ \typename{list}$や，
+$(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
+等の型が存在する
+\footnote{
+    Haskell，Mirandaではそれぞれ
+    $[\typename{Int}]$，
+    $[(\typename{Int}, \typename{Array}\ \typename{Char})]$
+    となる．
+    }
+．
+これは夫々整数型のリスト，整数と(char型の配列)の組のリストという意味である．
+
+上記の例よりわかるとおり，\typename{list}や\typename{array}などは型を引数として取る型である．
+それを実現するために，それらを型を取って型を返す関数の様に扱う．
+但し，ML系関数の記法と合わせるために，関数と引数の並びが通常と逆になる．
+
+\subsection{ヴァリアント型}\label{ssc:type-variant}
+代数的データ型ともいう．これはユーザが新しく定義できる型である．ヴァリア
+ントは定義のたびにまったく独立した新しい型となる．
+ヴァリアント型の値は型構築子によって生成される．
+
+たとえば，
+\begin{lstlisting}
+type season = Spring | Summer | Fall | Winter
+\end{lstlisting}
+とすれば
+\lstinline|Spring|，\lstinline|Summer|，\lstinline|Fall|，\lstinline|Winter|
+を型構築子とするヴァリアント型\lstinline|season|が定義される．
+
+また各型構築子は値引数を取ることができ，ヴァリアント型は型引数を取ること
+ができる．これを用いて
+\begin{lstlisting}
+type 'a tree = Node of 'a tree * 'a * 'a tree | Leaf of 'a
+\end{lstlisting}
+のように二分木などを定義することができる．
+
+\subsection{実例}\label{ssc:example}
+1と3.14，'c'はそれぞれ定数型
+\typename{int}，\typename{float}，\typename{char}である．
+
+整数を1つ取り，後続の整数を返す関数add1を考える．するとこの型は
+\lstinline|int -> int|となる．
+
+任意の要素が2つの組を引数に取り，1つめの値を返す関数fstを考える．引数に
+は任意の型を取れるから，\lstinline|(int, char) -> int|，
+\lstinline|(float array, int) -> float array|などが考えられる．もっとも
+一般的な型は\lstinline|('a, 'b) -> 'a|である．
+
+
+\subsection{型変数への代入}\label{ssc:type-order}
+$\tau$に含まれるいくつかの型変数に対して置換$\substType$を適用することで，
+$\Sigma\tau=\tau'$となるとき，
+$\tau\succ\tau'$とかく．
+この$\succ$は半順序となる．
+$\tau\succ\tau'$かつ$\tau'\succ\tau$のとき型$\tau$，$\tau'$は$\alpha$等値といい，
+$\tau\mathrel{\overset{\alpha}{=}}\tau'$と表す．
+

@@ -1,0 +1,349 @@
+\section{式の構文}\label{sc:expr-syntax}
+nibkameコア言語における式の定義は以下の様になる．
+\begin{subequations}
+\begin{equation}\label{eq:def-expr} 
+\begin{array}{rcll}
+e&\Coloneqq& c                          & \text{定数 (\refSsc{ssc:expr-constant})} \\
+ &\mid&  s:\tau                     & \text{外部定数 (\refSsc{ssc:expr-external})} \\
+ &\mid&  v                          & \text{変数 (\refSsc{ssc:expr-variable})} \\
+ &\mid&  g                          & \text{型構築子 (\refSsc{ssc:expr-constructor})} \\
+ &\mid&  \fundot{x}{e}           & \text{関数 (\refSsc{ssc:expr-function})} \\
+ &\mid&  e, \cdots, e               & \text{組 (\refSsc{ssc:expr-tuple})} \\
+ &\mid&  \mathnkop{ref}e            & \text{参照の生成 (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e!                         & \text{参照 (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\coloneqq e                & \text{代入 (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\ e                       & \text{適用 (\refSsc{ssc:expr-apply})} \\
+ &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{束縛 (\refSsc{ssc:expr-let})} \\
+ &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{不動点演算子 (\refSsc{ssc:expr-fix})} \\
+% &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{条件 (\refSsc{ssc:expr-if})} \\
+ &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{パターンマッチング (\refSsc{ssc:expr-match})} \\
+ &\mid&  \mathnkop{match}\clauseor e\mathnkop{with}\mathit{clss} & \text{同上．最初の$\clauseor$は無視される．} \\
+\mathset{Expr}&\triangleq& \varrange{e}            & \text{式} \\
+\mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
+\mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
+\end{array}
+\end{equation}
+\begin{equation}\label{eq:def-clause}
+\begin{array}{rcll}
+\mathit{cls} &\Coloneqq& p\rightarrow e & \\
+             &\mid& p \mathnkop{when} e \rightarrow e & \text{ガード付} \\
+\mathit{clss} &\Coloneqq& \mathit{cls} & \\
+              &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
+\mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{節} \\
+\end{array}
+\end{equation}
+\begin{equation}\label{eq:def-pattern}
+\begin{array}{rcll}
+p&\Coloneqq&\patternany             & \text{ワイルドカード} \\
+ &\mid&  c                          & \text{定数} \\
+ &\mid&  x                          & \text{変数} \\
+ &\mid&  g                          & \text{型構築子} \\
+ &\mid&  g\ p                       & \text{型構築子適用} \\
+ &\mid&  p,\cdots,p                 & \text{組} \\
+ &\mid&  p \patternand p            & \text{連言} \\
+ &\mid&  p \patternor p             & \text{選言} \\
+ &\mid&  \lnot p                    & \text{否定} \\
+\mathset{Pattern}&\triangleq& \varrange{p}            & \text{パターン} \\
+\mathset{Constructor}&\triangleq& \varrange{g}            & \text{型構築子} \\
+\mathset{Var}&\triangleq&\mathset{ExprVar}\cup\mathset{Constructor}
+\end{array}
+\end{equation}
+\end{subequations}
+ここで，$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$である．
+
+\subsection{定数}\label{ssc:expr-constant}
+定数とは
+\begin{itemize}
+    \item \lstinline|()|
+    \item \lstinline|Nil|
+    \item \lstinline|true|
+    \item \lstinline|false|
+    \item 整数
+    \item 浮動小数点数
+    \item 文字
+\end{itemize}
+の五つである．
+
+このうち，\lstinline|()|はC言語で言うところのvoidのようなもので，
+関数が引数を取らない若しくは返さないことを明示するのに用いる．
+\lstinline|Nil|はC言語で言うところのNULLのようなもので，
+リストの末尾であることを示す．
+
+数についていくつか例を挙げると\refTbl{tbl:int-float}のようになる．
+
+\begin{table}[h]
+    \caption{整数と浮動小数点数}\label{tbl:int-float}
+    \begin{center}
+    \begin{tabular}{crl}
+    \Hline
+    整数の例&\lstinline|0|,
+             \lstinline|1|,
+             \lstinline|100|,
+             \lstinline|-1| \\
+    \hline
+    浮動小数点数の例 &\lstinline|0.0|,
+             \lstinline|1.0|,
+             \lstinline|-1.0|,
+             \lstinline|1.0e10|,
+             \lstinline|1.0e-10|\\
+    \Hline
+    \end{tabular}
+    \end{center}
+\end{table}
+
+nibkameコア言語において用意されている組み込みの文字型は
+char型であるが，この型は%C言語と同様に
+8ビットの符号無し整数である．
+%char型であり，計算機上での表現は処理系に依存する．
+文字のコード上での表現は\lstinline|'c'|のようになる．
+
+\subsection{外部定数}\label{ssc:expr-external}
+外部定数は，nibkameコア言語ソースコード上で既に定義されているものとして使用することの出来る
+定数であり，具体的には外部のCランタイムの関数や加算・減算などのプリミティブ関数である．
+
+\subsection{組}\label{ssc:expr-tuple}
+組とはいくつかの値の並びのことであり，
+集合における組とほぼ同じものである．
+
+\subsection{変数}\label{ssc:expr-variable}
+変数は一般のプログラミング言語における概念と同じである．
+しかし，nibkameにおける変数は生成時に行われる束縛の後は一切の代入を行うことが出来ない．
+そのため，参照が用いられていない場合には，同じ式を評価すると同じ結果となる．
+
+\subsection{束縛}\label{ssc:expr-let}
+変数束縛を行うのが$\mathnkop{let}$式である．
+nibkameにおける変数のスコープはレキシカルスコープ(lexical scope)である．
+
+例えば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{let} r = \\
+&\quad \mathnkop{let} x = 5 \mathnkop{in} \\
+&\quad \mathnkop{let} a = x \mathnkop{in} \\
+&\quad \mathnkop{let} x = 3 \mathnkop{in} \\
+&\quad \mathnkop{let} b = x \mathnkop{in} \\
+&\quad\quad a, b, x
+\end{aligned}
+\end{equation}
+というコードでは
+$r$は$5, 3, 3$となる．
+
+\subsection{参照}\label{ssc:expr-reference}
+nibkameにおいては一度束縛した変数の中身を変更することが出来ない．
+しかし，実際に副作用の一切無いコードを書くのは手間なので，
+参照という概念を導入し，
+変数に格納されている「データが格納されている場所への参照」は変化しないが，
+「データが格納されている場所への参照」をたどって，格納されているデータを得たり，変更したりすることが出来るようになっている．
+
+例えば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{let} p = \mathnkop{ref} 3 \\
+&\mathnkop{let} q = \\
+&\quad \mathnkop{let} x = p \coloneqq 7 \mathnkop{in} \\
+&\quad\quad p!
+\end{aligned}
+\end{equation}
+というコードは上から順に実行され，
+最終的に\lstinline|q|は\lstinline|7|，\lstinline|p|は\lstinline|7|が格納されている場所への参照が束縛されていることなる．
+
+\subsection{型構築子}\label{ssc:expr-constructor}
+型構築子とはいわゆる代数的データ構造を作るものである．
+集合で言うところの直和と等しい．
+
+\subsection{パターンマッチング}\label{ssc:expr-match}
+パターンマッチングは，条件分岐を行ったり，
+型構築子によって作られた代数的データ型の値から，
+中身を取り出して変数に束縛したりできる．
+
+$\mathnkop{match}e\mathnkop{with}\mathit{clss}$
+という式の場合だと，
+節$p\mathnkop{with}e_g\rightarrow e_c$を先頭から順に
+パターン$p$を$e$の値に当てはめることができるかどうかと，ガード$e_g$の値が$\mathnkval{true}$どうかを調べ，
+両方成立する場合は式$e_c$を評価し，その値がmatch式の値となる．
+ただし，ガードのない節$p\rightarrow e_c$は$p\mathnkop{with}\mathnkval{true}\rightarrow e_c$と等価である．
+
+\paragraph{定数}
+定数パターンは定数にのみマッチする．たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\text{\lstinline|'b'|}\mathnkop{with} \\
+&\quad \clauseor \text{\lstinline|'a'|}\rightarrow 1 \\
+&\quad \clauseor \text{\lstinline|'b'|}\rightarrow 2 \\
+&\quad \clauseor \text{\lstinline|'c'|}\rightarrow 3 \\
+&\quad \clauseor \text{\lstinline|'d'|}\rightarrow 4
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$2$となる．
+
+\paragraph{ワイルドカード}
+ワイルドカードパターンは型構築子を除く全てにマッチする．たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}e\mathnkop{with} \\
+&\quad \clauseor \patternany \rightarrow 1
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は，
+変数$e$の値がなんであろうと常に$1$である．
+
+また，パターンの評価順序より，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\text{\lstinline|'d'|}\mathnkop{with} \\
+&\quad \clauseor \text{\lstinline|'a'|}\rightarrow 1 \\
+&\quad \clauseor \text{\lstinline|'b'|}\rightarrow 2 \\
+&\quad \clauseor \patternany \rightarrow 3 \\
+&\quad \clauseor \text{\lstinline|'d'|}\rightarrow 4
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は，
+ワイルドカードパターンにマッチするため$3$となる．
+
+\paragraph{変数}
+変数パターンはワイルドカードパターンとほぼ同じであり，型構築子を除く全てにマッチする．
+ワイルドカードパターンとの違いは，
+変数パターン$x$に値$e$が当てはまったとき，
+変数$x$に値$e$が束縛された状態で
+節のガード$e_g$と式$e_c$が評価されることである．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\text{\lstinline|'a'|}\mathnkop{with} \\
+&\quad \clauseor x\rightarrow 1,x \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は，
+$1,\text{\lstinline|a|}$となる．
+
+\paragraph{型構築子・型構築子適用}
+型構築子パターンと型構築子適用パターンは代数的データ型に対して適用される．
+型構築子の型によってどちらが使われなくてはいけないかが決まり，
+引数を取らない型構築子に対しては型構築子パターン，
+引数を取る型構築子に対しては型構築子適用パターンが使われる．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+\mathnkvariant{Left} : \typename{int}\rightarrow \typename{intEither}\\
+\mathnkvariant{Right} : \typename{int}\rightarrow \typename{intEither}
+\end{aligned}
+\end{equation}
+という型構築子があった場合，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\mathnkvariant{Left}\ 2\mathnkop{with} \\
+&\quad \clauseor \mathnkvariant{Left}\ x\rightarrow 1,x \\
+&\quad \clauseor \mathnkvariant{Left}\ 2\rightarrow 2,x \\
+&\quad \clauseor \mathnkvariant{Right}\ x\rightarrow 3,x
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$2,2$となる．
+
+また，
+\begin{equation}
+\begin{aligned}
+\mathnkvariant{MyTrue} : \typename{mybool}\\
+\mathnkvariant{MyFalse} : \typename{mybool}
+\end{aligned}
+\end{equation}
+という型構築子があった場合，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}\mathnkvariant{MyTrue}\mathnkop{with} \\
+&\quad \clauseor \mathnkvariant{MyTrue}\rightarrow 1 \\
+&\quad \clauseor \mathnkvariant{MyFalse}\rightarrow 0 \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1$となる．
+
+\paragraph{組}
+組パターンは組に対して適用される．
+組の数は一致している必要がある．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,2,\mathnkval{false}\mathnkop{with} \\
+&\quad \clauseor x,y,\mathnkval{true}\rightarrow x,y \\
+&\quad \clauseor x,y,\mathnkval{false}\rightarrow y,x \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$2,1$となる．
+
+\paragraph{連言}
+連言パターン$p_1\patternand \cdots\patternand p_n$は
+全てのパターン$p_i$がマッチしたときのみマッチする．
+ただし，各パターンに出現する変数パターンの名前は，他のパターンに出現してはいけない．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
+&\quad \clauseor x,((1, z)\patternand(y,(b\patternand\mathnkval{false})))\rightarrow x,b,z \\
+&\quad \clauseor x,((2, c)\patternand(y,\mathnkval{false}))\rightarrow x,y,c \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,2,\mathnkval{false}$となる．
+
+\paragraph{選言}
+選言パターン$p_1\patternor \cdots\patternor p_n$は
+全てのパターン$p_i$がマッチしたときのみマッチする．
+ただし，各パターンに出現する変数パターンの名前と型の集合
+は全て同じでなければいけない．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
+&\quad \clauseor x,((1, z)\patternor(\patternany,(z\patternand\mathnkval{true})))\rightarrow z,x \\
+&\quad \clauseor x,((1, z)\patternor(\patternany,(z\patternand\mathnkval{false})))\rightarrow x,z \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,\mathnkval{false}$となる．
+
+\paragraph{否定}
+否定パターン$\lnot p$はパターン$p$がその位置でマッチしなかった時に，マッチする．
+ただし，パターン$p$の中に変数パターンを含んではならない．
+
+たとえば，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1\mathnkop{with} \\
+&\quad \clauseor \lnot 1\rightarrow \mathnkval{true} \\
+&\quad \clauseor \lnot 2\rightarrow \mathnkval{false} \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,\mathnkval{false}$となる．
+また，否定パターンは連言・選言パターンとともに使用すると便利であり，
+\begin{equation}
+\begin{aligned}
+&\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
+&\quad \clauseor x,((\lnot 1, z)\patternand(y,(b\patternand\mathnkval{false})))\rightarrow x,b,z \\
+&\quad \clauseor x,((2, c)\patternand(y,\mathnkval{false}))\rightarrow x,y,c \\
+\end{aligned}
+\end{equation}
+というコードにおいてmatch式の値は$1,\mathnkval{false},2$となる．
+
+\subsection{関数}\label{ssc:expr-function}
+関数はある値をとってある値を返す値である．
+nibkameにおいて関数は第一級のオブジェクト(first-class object)なので，
+変数に束縛したり，関数の返り値として返したりすることができる．
+
+\subsection{不動点演算子}\label{ssc:expr-fix}
+nibkameコア言語において，
+$\mathnkop{let} x = e_1 \mathnkop{in} e_2$という束縛の式において
+変数$x$の定義$e_1$の中で$x$を使用することができない．
+よって，再帰関数を定義するために不動点演算子(不動点コンビネータとも)を用いる．
+不動点演算子$\mathnkop{fix}$は以下の特徴を持つ．
+\begin{equation}
+\mathnkop{fix}f= f(\mathnkop{fix}f)
+\end{equation}
+
+\subsection{適用}\label{ssc:expr-apply}
+関数に値を与え値を得ることである．
+nibkameにおいて評価戦略(evaluation strategy)は
+値渡し(call-by-value)である．
+そのため，関数に渡される引数は事前に評価されてから渡されることになる．
+

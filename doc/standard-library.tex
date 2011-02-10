@@ -1,0 +1,87 @@
+\section{標準ライブラリ}
+nibkame言語で標準で使用できる関数の仕様について述べる．
+
+ここで述べる関数はソースコードの読み込み以前から定義されており，自ら定義
+した関数と同じように使用することができる．
+
+\subsection{算術演算}
+使用できる算術演算子とその型を次に示す．括弧で囲まれた識別子は中置演算子
+であることを示す．それぞれの優先順位は普段の計算と同じである．
+\begin{lstlisting}
+ (+) : int -> int -> int
+ (-) : int -> int -> int
+ ( * ) : int -> int -> int
+ (/) : int -> int -> int
+ (+.) : float -> float -> float
+ (-.) : float -> float -> float
+ ( *. ) : float -> float -> float
+ (/.) : float -> float -> float
+\end{lstlisting}
+
+\subsection{比較演算子}
+使用できる比較演算子とその型を次に示す．それぞれの演算子は算術演算子より
+優先順位は低い．
+\begin{lstlisting}
+ (=) : 'a -> 'a -> bool
+ (<>) : 'a -> 'a -> bool
+ (<=) : 'a -> 'a -> bool
+ (<) : 'a -> 'a -> bool
+ (>) : 'a -> 'a -> bool
+ (>=) : 'a -> 'a -> bool
+\end{lstlisting}
+順序比較は整数と浮動小数点数，文字型のみに定義され，タプルや配列に対して
+は未定義である．
+
+\subsection{副作用を扱う関数}
+引数を計算に用いないことを明示的に示すため，次の関数が定義されている．
+\begin{lstlisting}
+ ignore : 'a -> unit
+\end{lstlisting}
+
+\subsection{標準出力関数}
+次の関数は，それぞれの引数を構文解析器へ入力可能な形式で印字する関数であ
+る．
+\begin{lstlisting}
+ print_int : int -> unit
+ print_float : float -> unit
+ print_char : char -> unit
+ print_string : char array -> unit
+\end{lstlisting}
+
+\subsection{リスト処理関数}
+リスト型の値を処理する関数を次に示す．
+\begin{lstlisting}
+ hd : 'a list -> 'a
+ tl : 'a list -> 'a list
+ null : 'a list -> bool
+ map : ('a -> 'b) -> 'a list -> 'b list
+ length : 'a list -> int
+\end{lstlisting}
+\lstinline|hd|と\lstinline|tl|は，リストから先頭の要素か後続のリ
+ストを取り出す関数である．空のリストを適用した場合の動作は未定義である．
+\lstinline|null|はリストの末尾であるか判定する関数である．
+\lstinline|map|は，第2引数のリストの各要素に第1引数の関数を適用し，結果
+をリストにして返す関数である．
+\lstinline|length|はリストの長さを求める関数である．
+
+\subsection{配列処理関数}
+配列を操作する関数を次に示す．配列の更新は破壊的であることに注意する必要
+がある．
+\begin{lstlisting}
+ array-create : 'a -> int -> 'a array
+ array-set : 'a array -> 'a -> int -> unit
+ array-ref : 'a array -> int -> 'a
+ array-from-list : 'a list -> 'a array
+ array-from-list-with-length : int -> 'a list -> 'a array
+\end{lstlisting}
+\lstinline|array-create|は第1引数を初期値とした，長さが第2引数だけの配列
+を新たに生成する関数である．
+\lstinline|array-set|は配列の指定した要素を破壊的に更新する関数である．
+\lstinline|array-ref|は配列の指定した要素を取り出す関数である．
+\lstinline|array-from-list|はリストと同じ長さで同じ要素を持つ配列を生成
+する関数である．
+\lstinline|array-from-list-with-length|はリストの内，指定されただけの先
+頭要素を持つ配列を生成する．リストより長い値が指定されたとき，それ以降の% 本当に？
+値は未定義である．
+
+
