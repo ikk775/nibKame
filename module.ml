@@ -304,21 +304,6 @@ let unused_exprvars m =
 let remove_expr m vs =
   {m with defs = List.filter (function Expr (v, c) -> not (List.mem v vs) | _ -> true) m.defs}
 
-let elt_to_sexpr = function
-  | Type (name, (qtvs, ot)) ->
-    Sexpr.Sexpr [
-      Sexpr.Sident "define-type";
-      Sexpr.Sident name;
-      TypingType.typeScheme_to_sexpr (TypingType.QType (qtvs, TypingType.OType ot));
-    ]
-  | Expr (name, (qtvs, ts, e)) ->
-    Sexpr.Sexpr [
-      Sexpr.Sident "define-expr";
-      Sexpr.Sident name;
-      TypingType.typeScheme_to_sexpr ts;
-      Typing.to_sexpr e;
-    ]
-
 let gather_expr = fun m -> 
   let elts = defs_expr_cont m in
   let elts' = elts in
@@ -327,9 +312,9 @@ let gather_expr = fun m ->
 
 let elt_to_sexpr = function
   | Type (name, (qtvs, ot)) ->
-    Sexpr.tagged_sexpr "type" [Sexpr.Sident name; Sexpr.Sexpr [Sexpr.Sexpr (List.map Sexpr.ident qtvs); TypingType.oType_to_sexpr ot]]
+    Sexpr.tagged_sexpr "type" [Sexpr.Sident name; Sexpr.Sexpr (List.map Sexpr.ident qtvs); TypingType.oType_to_sexpr ot]
   | Expr (name, (qtvs, ts, r)) ->
-    Sexpr.tagged_sexpr "expr" [Sexpr.Sident name; Sexpr.Sexpr [Sexpr.Sexpr (List.map Sexpr.ident qtvs); TypingType.typeScheme_to_sexpr ts; Typing.to_sexpr r]]
+    Sexpr.tagged_sexpr "expr" [Sexpr.Sident name; Sexpr.Sexpr (List.map Sexpr.ident qtvs); TypingType.typeScheme_to_sexpr ts; Typing.to_sexpr r]
 
 let to_sexpr m =
   let seim = Sexpr.Sexpr [
