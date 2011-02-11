@@ -1,6 +1,11 @@
 .*.sw?
 _.sw?
 *~
+._d
+.bcdi
+doc/*/figure
+doc/*/html
+doc/*/latex
 *.cmi
 *.cmo
 *.aux
@@ -8,7 +13,13 @@ _.sw?
 *.log
 *.byte
 *.annot
+*.bbl
+*.dot
+*.out
 *.exe
+*.depend
+*.dependlist
+*.auxdigest
 _build/
 .paths
 .settings
@@ -22,6 +33,5 @@ quickCheck.ml
 *.lot
 *.toc
 *.eps
-*.bbl
 *.bblannot
 *.blg
