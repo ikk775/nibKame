@@ -865,8 +865,6 @@ psdoc:	$(DOC_DIR)/$(RESULT)/latex/doc.ps
 # generates PDF-documentation
 pdfdoc:	$(DOC_DIR)/$(RESULT)/latex/doc.pdf
 
-# generates all supported forms of documentation
-doc: htdoc ladoc psdoc pdfdoc
 
 ###########################################################################
 # LOW LEVEL RULES
