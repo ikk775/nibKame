@@ -1,8 +1,12 @@
 \documentclass[a4paper,titlepage,disablejfam]{jsbook}
 
 \usepackage[dvipdfmx]{graphicx}
+\usepackage{ocamldoc}
 
 \input{preamble}
+
+\excludeversion{spec-lang}
+\includeversion{spec-compiler}
 
 \begin{document}
 %\title{電子情報工学科実験報告書 \\ 関数型言語の設計と実装}
@@ -465,7 +469,7 @@ let addn = fun a ->
 
 \section{型推論部}\label{sc:impl-type-inference}
 現在のところ，型推論部は
-\algorithmW\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}の
+\algorithmW\cite{Milner1978348,Damas:1982:PTF:582153.582176}の
 CamlLightにおける実装\cite{Lee:1998:PFL:291891.291892}を参考にしつつ
 それを拡張して利用した．
 型の合一化のアルゴリズムは
@@ -860,7 +864,10 @@ ret
 \bibliographystyle{jplain}
 \bibliography{reference}
 
-\backmatter
 \appendix
+\chapter{ソース}\label{ch:source}
+\input{./nibkamec/latex/doc.tex}
+
+\backmatter
 
 \end{document}

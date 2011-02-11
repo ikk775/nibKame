@@ -1,0 +1,36 @@
+\section{意味論}\label{sc:semantics}
+まず，変数や型変数，型構築子の型の環境は次の様に定義される．
+\begin{equation}\label{eq:env} 
+\begin{array}{rcll}
+    \envExpr  &\subset& \mathset{Var}\times\mathset{TypeScheme} & \text{変数の型環境} \\
+    \envType  &\subset& \mathset{TypeVar}\times\mathset{TypeScheme} & \text{型変数の型環境} \\
+    \envVariant  &\subset& \mathset{TypeVariant}\times\powerset(\mathset{Constructor}\times\mathset{TypeScheme}) & \text{ヴァリアントの型環境} \\
+\end{array}
+\end{equation}
+%置換の集合は次のように定義される．
+%\begin{equation}\label{eq:subst} 
+%\begin{array}{rcll}
+%    \substExpr  &\subset& \mathset{Var}\times\mathset{Expr} & \text{変数の置換} \\
+%    \substType  &\subset& \mathset{TypeVar}\times\mathset{Type} & \text{型変数の置換} \\
+%\end{array}
+%\end{equation}
+%置換の集合については特別に$\{(v,e),\cdots\}$を$[e/v,\cdots]$とも書く．
+式$e$，型$\tau$の中に現れる自由変数の集合は夫々$\freevars{e}$，$\freetypevars{\tau}$と書く．
+
+%式に対する置換の適用$\applysubst{\Sigma}{x}$は次のように定義される．
+%\begin{equation}
+%\begin{aligned}
+%    \applysubst{\substExpr}{c} &= c \\
+%    \applysubst{\substExpr}{s:\tau} &= s:\tau \\
+%    \applysubst{\substExpr}{x} &=\begin{cases}
+%        e & \text{if $(v,e)\in\substExpr$.} \\
+%        x & \text{otherwise.} \end{cases} \\
+%    \applysubst{\substExpr}{\fundot{x}{e}} &= \applysubst{\substExpr'}{e} &
+%            \text{which $\substExpr' = \domainrestrict{\substExpr}{(\domain\substExpr\setminus\{x\})}$.}\\
+%\end{aligned}
+%\end{equation}
+
+\input{typing}
+
+\input{semantics-eval}
+
