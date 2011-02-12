@@ -1,5 +1,5 @@
 
-LATEX=platex -halt-on-error #-shell-escape
+LATEX=platex -halt-on-error -shell-escape
 DVIPDF=dvipdfmx
 DVIPDFOPT=-f ~/documents/map/ptex-ipa-epson.map -f ~/documents/map/utf-ipa-epson.map -f ~/documents/map/otf-ipa-epson.map
 ifdef COMSPEC
@@ -15,7 +15,7 @@ else
 endif
 
 TARGETS=spec-language.ps spec-compiler.pdf
-DEPENDS=$(patsubst %,%.depend,$(basename $(TARGETS)))
+DEPENDS=$(patsubst %,%.dep,$(basename $(TARGETS)))
 TARGETBIB=$(patsubst %,%.bbl,$(basename $(TARGETS)))
 BIBSOURCE=reference.bib
 
@@ -49,17 +49,24 @@ beep:
 	fi ; \
 	mv $*.auxdigest.new $*.auxdigest
 
-%.dependlist: %.tex
-	cat $*.tex | sed -e 's/%/\n%/' | sed -e '/^%/d' | sed -e 's/\\input{[^}]*}/\n&\n/' -e '/\\input/!d' -e 's/\\input{\([^}]*\)}/\1/g' | sed -e 's/\.tex$$//' -e "/^$$/d" > $@
+%.deplist: %.tex
+	cat $*.tex | sed -e 's/%/\n%/' | sed -e '/^%/d' | sed -e 's/\\input{[^}]*}/\n&\n/' -e '/\\input/!d' -e 's/\\input{\([^}]*\)}/\1/g' | sed -e 's/\.tex$$//' -e "/^[[:blank:]]*$$/d" -e 's/.*/&.tex/' > $@
+#	cat $*.tex | sed -e 's/%/\n%/' | sed -e '/^%/d' | sed -e 's/\(\\includegraphics\)\(\[[^]]*\]\)\?\({[^}]*}\)/\n\1\3\n/' -e '/\\includegraphics/!d' -e 's/\\includegraphics{\([^}]*\)}/\1/g' | sed -e '/^[[:blank:]]*$$/d' >> $@
 
-%.depend: %.dependlist
-	( sed -e '1i$*.depend: $*.tex ' -e '/^$$/d' -e 's/^..*$$/&.depend/' $< | paste -s '-d ' ) > $@
-	( sed -e '1i-include' -e '/^$$/d' -e 's/^..*$$/&.depend/' $< | paste -s '-d ' ) >> $@
+# Attention: No files that lack extentions can be acceptable.
 
-#	sed -e 's/^.*$$/&.dependlist/' $< | xargs $(MAKE)
+.PRECIOUS: %.dep
+%.dep: %.deplist
+	sed -e '/^[[:blank:]]*$$/d' -e 's/^\(.*\)\.[^.]*$$/\1.dep/' $< | sed -e '1i$*.dep: $*.tex ' | paste -s '-d ' > $@
+	sed -e '/^[[:blank:]]*$$/d' -e 's/^\(.*\)\.[^.]*$$/\1.dep/' $< | sed -e '1i-include ' | paste -s '-d ' >> $@
+
+%.dep:: %.pdf
+	touch $@
+
+#	sed -e 's/^.*$$/&.deplist/' $< | xargs $(MAKE)
 %.dvi: %.tex
 
-%.dvi: %.tex %.bbl %.aux %.depend
+%.dvi: %.tex %.bbl %.aux %.dep
 	$(LATEX) $* ; \
 	if grep -e 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.' $*.log ; then \
 		$(LATEX) $* ; \
@@ -69,14 +76,14 @@ beep:
 #			$(LATEX) $* ; \
 #			done
 
-.PHONY: clean-depend
-clean-depend:
-	rm -f *.depend *.dependlist
+.PHONY: clean-dep
+clean-dep:
+	rm -f *.dep *.deplist
 
 .PHONY: clean
-clean: clean-depend
+clean: clean-dep
 	for nm in $(basename $(TARGETS)); do \
-		for suf in .aux .auxdigest .dvi .blg .bbl .aux .toc .tof .tol .log .depend .dependlist; do \
+		for suf in .aux .auxdigest .dvi .blg .bbl .aux .toc .tof .tol .log .dep .deplist; do \
 			rm -f $${nm}$${suf} ; \
 		done ; \
 	done
