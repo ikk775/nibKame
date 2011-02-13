@@ -1,0 +1,5 @@
+%@@ext@@.dep: %@@ext@@.deplist
+	sed -e '/^[[:blank:]]*$$/d' -e 's/\.dep$$//' -e 's/^\(.*\)\.[^.]*$$/&\n&.dep/' $< | sed -e '1i$*@@ext@@.dep: ' | paste -s '-d ' > $@
+	sed -e '/^[[:blank:]]*$$/d' -e 's/\.dep$$//' -e 's/^\(.*\)\.[^.]*$$/&.dep/' $< | sed -e '1iDEPFILES+= ' | paste -s '-d ' >> $@
+	sed -e '/^[[:blank:]]*$$/d' -e 's/\.dep$$//' -e 's/^\(.*\)\.[^.]*$$/&.dep/' $< | sed -e '1i-include ' | paste -s '-d ' >> $@
+

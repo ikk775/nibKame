@@ -2,6 +2,11 @@
 LATEX=platex -halt-on-error -shell-escape
 DVIPDF=dvipdfmx
 DVIPDFOPT=-f ~/documents/map/ptex-ipa-epson.map -f ~/documents/map/utf-ipa-epson.map -f ~/documents/map/otf-ipa-epson.map
+PSPDF=ps2pdf
+DOT=dot
+SUFFIXES=.tex .dvi .bib .bbl .aux .toc .lol .lof .lot .log .blg .idx
+SUFFIXES+=.pdf .ps .ps2 .dot
+
 ifdef COMSPEC
 	# for pTeX-Live 2009
 	DVIPS=pdvips
@@ -15,31 +20,76 @@ else
 endif
 
 TARGETS=spec-language.ps spec-compiler.pdf
-DEPENDS=$(patsubst %,%.dep,$(basename $(TARGETS)))
+DEPENDS=$(patsubst %,%.dep, $(TARGETS))
 TARGETBIB=$(patsubst %,%.bbl,$(basename $(TARGETS)))
 BIBSOURCE=reference.bib
 
 .PHONY: all beep depends
 
-all: $(TARGETBIB) $(TARGETS)
+all: Makedep.mk all-depends $(TARGETS)
 
 depends: $(DEPENDS)
 
 beep:
 	echo -e ''
 
+###
+# Graphics
+#
+
+%.eps: %.dot
+	$(DOT) $(DOTOPT) -Teps $< -o $@
+%.eps.deplist: %.dot
+	echo $< > $@
+
+%.ps2: %.dot
+	$(DOT) $(DOTOPT) -Tps2 $< -o $@
+%.ps2.deplist: %.dot
+	echo $< > $@
+
+%.pdf: %.ps2
+	$(PSPDF) $(PSPDFOPT) $< $@
+%.pdf.deplist: %.ps2
+	echo $< > $@
+
+%.dot.deplist:: %.dot
+	touch $@
+
+%.eps.deplist:: %.eps
+	touch $@
+
+%.pdf.deplist:: %.pdf
+	touch $@
+
+%.ps.deplist:: %.ps
+	touch $@
+
+%.ps2.deplist:: %.ps2
+	touch $@
+
+###
+# TeX
+#
+
 %.pdf: %.dvi
 	$(DVIPDF) $(DVIPDFOPT) $*
+%.pdf.deplist: %.dvi
+	echo $< > $@
+
 
 %.ps: %.dvi
 	$(DVIPS) $(DVIPSOPT) $*
+%.ps.deplist: %.dvi
+	echo $< > $@
 
 .PRECIOUS: %.aux
 %.aux:: %.tex
-	$(LATEX) $*
+	touch $@
 
-%.bbl: %.aux $(BIBSOURCE)
-	grep -e '^\\\(citation\|bibstyle\|bibdata\|bibcite\)' $*.aux > $*.auxdigest.new ; \
+.PRECIOUS: %.bbl
+%.bbl: %.aux %.tex.dep
+	grep -e '^\\\(citation\|bibstyle\|bibdata\|bibcite\){' $*.aux > $*.auxdigest.new ; \
+	sed -e '/^\\bibdata{/!d' -e 's/^\\bibdata{\([^}]*\)}/\1/' -e 's/.bib$$//' -e 's/$$/.bib/' $*.aux | xargs ls -goL1 --time-style=full-iso >> $*.auxdigest.new ; \
 	if [ -f $@ -a -f $*.auxdigest ] ; \
 		then if diff -q $*.auxdigest.new $*.auxdigest ; \
 			then echo 'Need not to process bibliography data.' ; \
@@ -48,37 +98,53 @@ beep:
 		else $(BIBTEX) $* ; \
 	fi ; \
 	mv $*.auxdigest.new $*.auxdigest
+%.bbl.deplist: %.tex
+	echo $< > $@
 
-%.deplist: %.tex
-	cat $*.tex | sed -e 's/%/\n%/' | sed -e '/^%/d' | sed -e 's/\\input{[^}]*}/\n&\n/' -e '/\\input/!d' -e 's/\\input{\([^}]*\)}/\1/g' | sed -e 's/\.tex$$//' -e "/^[[:blank:]]*$$/d" -e 's/.*/&.tex/' > $@
-#	cat $*.tex | sed -e 's/%/\n%/' | sed -e '/^%/d' | sed -e 's/\(\\includegraphics\)\(\[[^]]*\]\)\?\({[^}]*}\)/\n\1\3\n/' -e '/\\includegraphics/!d' -e 's/\\includegraphics{\([^}]*\)}/\1/g' | sed -e '/^[[:blank:]]*$$/d' >> $@
 
-# Attention: No files that lack extentions can be acceptable.
-
-.PRECIOUS: %.dep
-%.dep: %.deplist
-	sed -e '/^[[:blank:]]*$$/d' -e 's/^\(.*\)\.[^.]*$$/\1.dep/' $< | sed -e '1i$*.dep: $*.tex ' | paste -s '-d ' > $@
-	sed -e '/^[[:blank:]]*$$/d' -e 's/^\(.*\)\.[^.]*$$/\1.dep/' $< | sed -e '1i-include ' | paste -s '-d ' >> $@
-
-%.dep:: %.pdf
-	touch $@
-
-#	sed -e 's/^.*$$/&.deplist/' $< | xargs $(MAKE)
 %.dvi: %.tex
 
-%.dvi: %.tex %.bbl %.aux %.dep
+%.dvi %.aux: %.tex %.bbl %.tex.dep
 	$(LATEX) $* ; \
-	if grep -e 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.' $*.log ; then \
-		$(LATEX) $* ; \
-	fi
-#	while grep -e 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.' $*.log ; \
-#			do \
-#			$(LATEX) $* ; \
-#			done
+	while grep -e 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.' $*.log ; \
+			do \
+			$(LATEX) $* ; \
+			done
+
+%.dvi.deplist: %.tex
+	echo $< > $@
+
+%.tex.deplist:: %.tex
+	sed -e 's/%.*$$//' $< | sed -e 's/\\input{[^}]*}/\n&\n/' -e '/\\input{/!d' -e 's/\\input{\([^}]*\)}/\1/g' | sed -e 's/\.tex$$//' -e "/^[[:blank:]]*$$/d" -e 's/.*/&.tex/' > $@
+	sed -e 's/%.*$$//' $< | sed -e 's/\(\\includegraphics\)\(\[[^]]*\]\)\?\({[^}]*}\)/\n\1\3\n/' -e '/\\includegraphics{/!d' -e 's/\\includegraphics{\([^}]*\)}/\1/g' | sed -e '/^[[:blank:]]*$$/d' >> $@
+	sed -e 's/%.*$$//' $< | sed -e 's/\\bibliography{[^}]*}/\n&\n/' -e '/\\bibliography{/!d' -e 's/\\bibliography{\([^}]*\)}/\1/g' | sed -e 's/\.bib$$//' -e "/^[[:blank:]]*$$/d" -e 's/.*/&.bib/' >> $@
+
+%.bib.deplist:: %.bib
+	touch $@
+
+###
+# Dependency solution
+#
+# Attention: No files that lack extentions can be acceptable.
+
+include Makedep.mk
+.PRECIOUS: %.dep
+Makedep.mk: Makedep.mk.template Makefile
+	echo > $@ ; \
+	for suffix in $(SUFFIXES) ; \
+	do  \
+		sed -e "s/@@ext@@/$${suffix}/g" $< >> $@ ; \
+	done
+
+#	sed -e 's/^.*$$/&.deplist/' $< | xargs $(MAKE)
+
+###
+# Cleaning
+#
 
 .PHONY: clean-dep
 clean-dep:
-	rm -f *.dep *.deplist
+	rm -f $(DEPFILES)
 
 .PHONY: clean
 clean: clean-dep
@@ -89,5 +155,7 @@ clean: clean-dep
 	done
 	rm -f $(TARGETS)
 
--include $(DEPENDS)
+DEPFILES:=$(DEPENDS)
+-include $(DEPFILES)
+all-depends: $(DEPFILES)
 

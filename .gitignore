@@ -17,8 +17,9 @@ doc/*/latex
 *.dot
 *.out
 *.exe
-*.depend
-*.dependlist
+*.dep
+*.deplist
+*.mk
 *.auxdigest
 _build/
 .paths
