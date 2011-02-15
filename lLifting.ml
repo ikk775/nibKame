@@ -9,7 +9,7 @@ let max_iter = 1000
 type t =
   | Constant of Syntax.lit
   | Variable of Id.t
-(*  | Fun of (Id.t * TypingType.oType) list * t *)
+(*i  | Fun of (Id.t * TypingType.oType) list * t i*)
   | Apply of t * t list
   | Tuple of t list
   | Vector of t list
@@ -343,11 +343,11 @@ let convert known v l =
     | _ -> 
       to_decl v l'''  :: !defs
 
-(*
+(*i
 let from_module m =
   let defs = Module.defs_expr_cont m in
   let vrs = List.map (function v, (qtvs, ts, r) -> v, r) defs in
   let vls = List.map (function v, r -> v, of_typint_result r) vrs in
   let vs = List.map fst vls in
   List.concat (List.map (function v, l -> convert vs v l) vls)
-*)
+i*)

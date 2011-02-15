@@ -50,6 +50,8 @@ else
 endif
 
 
+DOC_FILES=$(SOURCES)
+
 DOC_DIR=doc
 
 $(DOC_DIR)/$(RESULT)/figure:
@@ -69,8 +71,13 @@ $(DOC_DIR)/$(RESULT)/figure/dependence.dot: $(DOC_DIR)/$(RESULT)/figure $(DOC_FI
 
 dotdoc:	$(DOC_DIR)/$(RESULT)/figure/dependence.dot
 
+$(DOC_DIR)/$(RESULT)/latex/web.tex: $(DOC_DIR)/$(RESULT)/latex $(FILTERED_MLI) $(FILTERED_MLL) $(FILTERED_ML) 
+	ocamlweb $(FILTERED_MLI) $(FILTERED_MLL) $(FILTERED_ML) -o $@
+
+webdoc: $(DOC_DIR)/$(RESULT)/latex/web.tex
+
 .PHONY: miscdoc
-miscdoc: ladoc
+miscdoc: ladoc dotdoc
 	cd doc ; \
 	$(MAKE)
 

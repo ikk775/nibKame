@@ -276,9 +276,11 @@ let var_to_exp { Closure.var_name = (Id.L label, typ); Closure.expr = expr } env
 let var_labels = ref Id.Set.empty
 
 (*
+[
   f : Closure.topDecl list ->
         -> fundef list * (float * Id.l) list
-  戻り値は後ろから順に処理されていって欲しい. 具体的に言うとList.rev_iterとかで
+]
+ 戻り値は後ろから順に処理されていって欲しい. 具体的に言うと[List.rev_iter]とかで
 *)
 let f declears =
   let iter declear env =

@@ -78,8 +78,8 @@ let rec fv = function
   | Ref(x) -> Id.Set.singleton x
 
 let rec g env known k =
-(*  Debug.dbgprintsexpr (KNormal.to_sexpr k); *)
-  match k with (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
+(*i  Debug.dbgprintsexpr (KNormal.to_sexpr k); i*)
+  match k with 
   | KNormal.Unit -> Unit
   | KNormal.Nil(tlc) -> Nil(tlc)
   | KNormal.Int(i) -> Int(i)
@@ -103,7 +103,7 @@ let rec g env known k =
   | KNormal.If (K.GtEq, x, y, e1, e2) -> If(LsEq, x, y, g env known e1, g env known e2)
   | KNormal.Let((x, t), e1, e2) -> Let((x, t), g env known e1, g (Id.Map.add x t env) known e2)
   | KNormal.Var(x) -> Var(x)
-(*  | KNormal.LetFun({ KNormal.name = (x, t); KNormal.args = yts; KNormal.body = e1 }, e2) -> (* 関数定義の場合 (caml2html: closure_letrec) *)
+(*i  | KNormal.LetFun({ KNormal.name = (x, t); KNormal.args = yts; KNormal.body = e1 }, e2) -> (* 関数定義の場合 (caml2html: closure_letrec) *)
       (* 関数定義let rec x y1 ... yn = e1 in e2の場合は、
      xに自由変数がない(closureを介さずdirectに呼び出せる)
      と仮定し、knownに追加してe1をクロージャ変換してみる *)
@@ -133,8 +133,8 @@ let rec g env known k =
       else
     (Format.eprintf "eliminating closure(s) %s@." x;
      e2') (* 出現しなければMakeClsを削除 *)
-    *)
-  | KNormal.Apply((x, t), ys) when Id.Set.mem x known -> (* 関数適用の場合 (caml2html: closure_app) *)
+    i*)
+  | KNormal.Apply((x, t), ys) when Id.Set.mem x known -> (*i 関数適用の場合 (caml2html: closure_app) i*)
       Format.eprintf "directly applying %s@." x;
       ApplyDir((Id.L(x), t), ys)
   | KNormal.Apply((f, t), xs) -> ApplyCls((f, t), xs)

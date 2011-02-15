@@ -98,7 +98,7 @@ let rec unify_and ss p1 p2 =
       R.RP_Vector(ps', t1), ss
     | R.RP_Not _, p
     | p, R.RP_Not _ -> failwith "negative pattern is not supported yet."
-(*
+(*i
     | R.RP_Tuple (ps, t) -> List.map (function ps -> R.RP_Tuple (ps, t)) (MyUtil.List.select (List.map f ps))
     | R.RP_Vector (ps, t) -> List.map (function ps -> R.RP_Vector (ps, t)) (MyUtil.List.select (List.map f ps))
 let unfold_and venv clause =
@@ -113,8 +113,8 @@ let unfold_and venv clause =
     | R.RP_Or ((p1, p2), t) -> 
   in
   (undefined ())
-*)
-(*
+i*)
+(*i
 let unfold_pat_subst_constructor venv cls =
   let pat, guard, expr = cls in
   let rec f = function
@@ -132,9 +132,9 @@ let unfold_pat_subst_constructor venv cls =
           let tct = T.dest_type tc in
           let b = R.gen_var tcf in
           let bn = R.varname b in
-(*          R.RP_Variable (bn, tcf), [bn, ]*)
+(*i          R.RP_Variable (bn, tcf), [bn, ]i*)
           (undefined ())
-(*
+(*i
     | RP_And of (pattern * pattern) * TypingType.oType
     | RP_Or of (pattern * pattern) * TypingType.oType (* Both patterns must have a same set of variables. And each variable has same type across the patterns. *)
     | RP_Not of pattern * TypingType.oType
@@ -142,7 +142,7 @@ let unfold_pat_subst_constructor venv cls =
     | RP_Vector of pattern list * TypingType.oType
   in
   f pat
-*) *)
+i*) i*)
 
 let is_variable = function TP_Value (TP_Variable _, _) -> true | _ -> false
 
@@ -150,7 +150,8 @@ let varname = function
   | TP_Value (TP_Variable (v, t), _) -> v
   | _ -> failwith "something went wrong."
 
-(*let rec add_branch_rev rbr = function (* reverse-ordered and priority-ordered branch -> normal order branch -> reverse-ordered and priority-ordered branch*)
+(*i
+let rec add_branch_rev rbr = function (* reverse-ordered and priority-ordered branch -> normal order branch -> reverse-ordered and priority-ordered branch*)
   | [] -> rbr
   | TP_Leaf (None, expr) as tr :: trs -> tr :: rbr
   | TP_Leaf (Some guard, expr) as tr :: trs -> normalize_branch trs @ tr :: rbr
@@ -174,8 +175,8 @@ let varname = function
         add_branch_rev (TP_Value (TP_Variable (v, t), add_branch_rev trcs (List.map (subst_expr_name [v', v]) trcs')) :: rbr') trs
       | rbr -> add_branch_rev (trv :: rbr) trs
     end
-    *)
-    (*
+    i*)
+    (*i
 let rec add_branch_rev rbr br' = match rbr with (* reverse-ordered and priority-ordered branch -> normal order branch -> reverse-ordered and priority-ordered branch*)
   | [] -> List.rev rbr
   | TP_Value (TP_Variable (v, t), trcs) :: rbr' -> 
@@ -216,8 +217,8 @@ let rec add_branch_rev rbr br' = match rbr with (* reverse-ordered and priority-
         add_branch_rev (TP_Value (TP_Variable (v, t), add_branch_rev trcs (List.map (subst_expr_name [v', v]) trcs')) :: rbr') trs
       | rbr -> add_branch_rev (trv :: rbr) trs
     end
-    *)
-    (*
+    i*)
+    (*i
 and normalize_branch = function
   | [] -> []
   | [tr] -> [tr]
@@ -226,14 +227,14 @@ and normalize_branch = function
   | TP_Value (TP_Variable _, trcs) as v :: trs ->
     let vs, trs' = List.partition is_variable trs in
     normalize_branch (trs' @ add_branch_rev [v] vs)
-   *) 
-(*  | TP_Apply trcs :: trs, TP_Apply trcs' :: trs'-> add_tree (TP_Apply (add_tree trcs trcs') :: trs) trs'
+   i*) 
+(*i  | TP_Apply trcs :: trs, TP_Apply trcs' :: trs'-> add_tree (TP_Apply (add_tree trcs trcs') :: trs) trs'
   | TP_Nand trcs :: trs, TP_Nand trcs' :: trs'-> add_tree (TP_Nand (add_tree trcs trcs') :: trs) trs'
   | TP_Tuple trcs :: trs, TP_Tuple trcs' :: trs'-> add_tree (TP_Tuple (add_tree trcs trcs') :: trs) trs'
   | TP_Vector trcs :: trs, TP_Vector trcs' :: trs'-> add_tree (TP_Vector (add_tree trcs trcs') :: trs) trs'
- *) 
+ i*) 
 
-(*
+(*i
 let rec add_branch_rev rbr rbr' = match rbr with (* reverse-ordered and priority-ordered branch -> normal order branch -> reverse-ordered and priority-ordered branch*)
   | TP_Value (TP_Variable (v, t), trcs) :: rbr' -> 
     begin match rbr with
@@ -249,7 +250,7 @@ let rec add_branch_rev rbr rbr' = match rbr with (* reverse-ordered and priority
           | rbr -> add_branch_rev (trv :: rbr) trs
         end
     end
-*)
+i*)
 let rec branch_type = function
   | TP_Value (TP_Constant (_, t), _)
   | TP_Value (TP_Variable (_, t), _)
@@ -359,11 +360,11 @@ let rec add_exception brs tr' =
       | [TP_Value (v, tr'')] -> 
         brs' @ [TP_Value (v, merge_tree tr'' tr')]
       | v1 :: vs' -> 
-        (*
+        (*i
         match List.fold_left merge_branch v1 vs' with
           | TP_Value (v, tr'') -> brs' @ [TP_Value (v, merge_tree tr'' tr')]
           | _ -> failwith "something went wrong"
-        *)
+        i*)
         undefined ()
     end
 and add_branch brs br' =

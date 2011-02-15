@@ -6,7 +6,7 @@ let rec uniq = function
   | x :: xs -> if List.mem x xs then uniq xs else x :: (uniq xs)
 
 module S = Id.Set
-  (*
+  (*i
   struct
     type key = Id.t
     type t = key list
@@ -20,7 +20,7 @@ module S = Id.Set
     let elements : t -> key list = fun set ->
       set
   end
-  *)
+  i*)
 
 let empty = M.empty
 

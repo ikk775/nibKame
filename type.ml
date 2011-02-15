@@ -39,7 +39,7 @@ type refCategory =
   | R_Tuple
   | R_Ref
   | R_Variant
-(*
+(*i
 type pointer =
   | P_List of mType
   | P_Array of mType
@@ -57,7 +57,7 @@ type mType =
   | C_CArray
   | C_FArray
   | C_Ref
-*)
+i*)
 
 type accCategory =
   | A_Unit

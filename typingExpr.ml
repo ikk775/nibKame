@@ -256,7 +256,7 @@ let rec compose_expr_subst xs ys =
       then compose_expr_subst xs (subst_v x ys)
       else compose_expr_subst xs (x :: subst_v x ys)
 
-(*
+(*i
 type pat =
   | P_Ident of Id.t
   | P_Literal of lit
@@ -265,7 +265,7 @@ type pat =
   | P_Array of pat list
   | P_Variant of Id.t * pat list
   | Any
-*)
+i*)
 
 let rec from_syntax = function
   | Syntax.Literal l -> E_Constant l

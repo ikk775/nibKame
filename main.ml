@@ -31,9 +31,9 @@ let knormalize_module ch m =
   let r = Module.gather_expr m in
   Debug.dbgprint "convert expr to K-normal.";
   fst (KNormal.from_typing_result r)
-(*  let k = fst (KNormal.from_typing_result r) in
+(*i  let k = fst (KNormal.from_typing_result r) in
   Debug.dbgprint "Alpha transform.";
-  Alpha.f k *)
+  Alpha.f k i*)
 
 let optimize_knormal k = k
 

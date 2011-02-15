@@ -328,7 +328,7 @@ let rec from_typing_result r =
   let add_decl decl = ext_decls := decl :: !ext_decls in
   let applied_type n t = times n TT.dest_type t in
   let rec f env r =
-(*    Debug.dbgprintsexpr (Typing.to_sexpr r); *)
+(*i    Debug.dbgprintsexpr (Typing.to_sexpr r); i*)
     match r with
     | R.R_Constant (Syntax.Unit, _) -> Unit, Type.Unit
     | R.R_Constant (Syntax.Nil, (TypingType.O_Variant (TypingType.O_Constant Type.Float, TypingType.O_Constant (Type.Variant "list"))as t)) ->
@@ -395,7 +395,7 @@ let rec from_typing_result r =
     | R.R_Fix _ -> Sexpr.failwith_sexpr "R_Fix must be eliminated in the lamda lifting phase. but got:" (R.to_sexpr r)
     | R.R_Fun _ -> Sexpr.failwith_sexpr "R_Fun must be eliminated in the lamda lifting phase. but got:" (R.to_sexpr r)
     | R.R_Match _ -> Sexpr.failwith_sexpr "Match is not supported yet. but got:" (R.to_sexpr r)
-(*    | R.R_Match (R.R_Variable (v, _), [R.R_P_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
+(*i    | R.R_Match (R.R_Variable (v, _), [R.R_P_Tuple (pts, _) as ps, None, expr]) when Pattern.is_tuple_normal ps ->
       let g = function
         | Some v, t -> v, TT.oType_to_type t
         | None, t -> R.R_gen_varname (), TT.oType_to_type t in
@@ -408,7 +408,7 @@ let rec from_typing_result r =
       let b = R.R_gen_var te in
       let bn = R.R_varname b in
       f env (R.R_Let ((bn, te), e, R.R_Match (b, cls)))
-      *)
+      i*)
   in
   let k, t = f Id.Map.empty r in
   k, List.unique ~eq:is_same_name_decl (VarDecl {var_name = ("%true", Type.Int); expr= Int 1} :: !ext_decls)
@@ -438,6 +438,6 @@ let from_module_expr_decls decls =
 let from_module m =
 	from_module_expr_decls (Module.defs_expr m)
 	
-(*
+(*i
 let from_ll_decls decls = List.unique ~eq:is_same_name_decl (List.concat (List.map from_ll_decl decls))
-*)
+i*)
