@@ -106,10 +106,12 @@ beep:
 
 %.dvi %.aux: %.tex %.bbl %.tex.dep
 	$(LATEX) $* ; \
-	while grep -e 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.' $*.log ; \
+	while grep -e 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.' $(*F).log ; \
 			do \
 			$(LATEX) $* ; \
-			done
+			done ; \
+	if [ ! '$(*F)' = '$*' ] ; then \
+	mv $(*F).dvi $*.dvi ; fi
 
 %.dvi.deplist: %.tex
 	echo $< > $@
