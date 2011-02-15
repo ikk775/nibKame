@@ -2,7 +2,7 @@
 LATEX=platex -halt-on-error -shell-escape
 DVIPDF=dvipdfmx
 DVIPDFOPT=-f ~/documents/map/ptex-ipa-epson.map -f ~/documents/map/utf-ipa-epson.map -f ~/documents/map/otf-ipa-epson.map
-PSPDF=ps2pdf
+PSPDF=ps2pdf12
 DOT=dot
 SUFFIXES=.tex .dvi .bib .bbl .aux .toc .lol .lof .lot .log .blg .idx
 SUFFIXES+=.pdf .ps .ps2 .dot
@@ -12,6 +12,7 @@ ifdef COMSPEC
 	DVIPS=pdvips
 	BIBTEX=pbibtex
 	MAKEINDEX=mendex
+	ASY = asy -dir /usr/local/share/asymptote -config "" -render=0 -texcommand=$(LATEX) -dvips=$(DVIPS) -gs="/usr/bin/gs" -psviewer="echo"
 else
 	# for unix
 	DVIPS=pvipsk
@@ -37,6 +38,16 @@ beep:
 # Graphics
 #
 
+%.eps:	%.asy
+	$(ASY) -f eps $< -o $@
+%.eps.deplist: %.asy
+	echo $< > $@ 
+
+%.pdf:	%.asy
+	$(ASY) -f pdf -noprc $< -o $@
+%.pdf.deplist: %.asy
+	echo $< > $@
+
 %.eps: %.dot
 	$(DOT) $(DOTOPT) -Teps $< -o $@
 %.eps.deplist: %.dot
@@ -52,20 +63,17 @@ beep:
 %.pdf.deplist: %.ps2
 	echo $< > $@
 
-%.dot.deplist:: %.dot
-	touch $@
-
-%.eps.deplist:: %.eps
-	touch $@
-
-%.pdf.deplist:: %.pdf
-	touch $@
-
-%.ps.deplist:: %.ps
-	touch $@
-
-%.ps2.deplist:: %.ps2
-	touch $@
+#%.dot.deplist:: %.dot
+#	touch $@
+#
+#%.eps.deplist:: %.eps
+#	touch $@
+#
+#%.ps.deplist:: %.ps
+#	touch $@
+#
+#%.ps2.deplist:: %.ps2
+#	touch $@
 
 ###
 # TeX
