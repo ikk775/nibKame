@@ -1,0 +1,146 @@
+
+SRCDIR=$(dir .)
+
+.PHONY: all install clean doc
+
+all: nibkamec
+.DEFAULT: all
+
+.SUBDIRS: doc
+
+########################################################################
+# C configuration.
+#
+
+CFLAGS +=
+ASFLAGS +=
+LDFLAGS +=
+INCLUDES +=
+
+# LIBFILES[] =
+#    file1
+#    file2
+#
+# LIB = libxxx
+#
+# .DEFAULT: $(StaticCLibrary $(LIB), $(LIBFILES))
+
+########################################################################
+# OCaml configuration.
+
+USE_OCAMLFIND = true
+#
+# OCAMLPACKS[] =
+#    pack1
+#    pack2
+#
+if $(not $(OCAMLFIND_EXISTS))
+   eprintln(This project requires ocamlfind, but is was not found.)
+   eprintln(You need to install ocamlfind and run "omake --configure".)
+   exit 1
+
+#
+# Include path
+#
+# OCAMLINCLUDES +=
+
+NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
+BYTE_ENABLED = $(OCAMLOPT_EXISTS)
+
+#
+# Various options
+#
+OCAMLFLAGS    +=
+OCAMLCFLAGS   +=
+OCAMLOPTFLAGS +=
+OCAML_LINK_FLAGS +=
+OCAML_BYTE_LINK_FLAGS +=
+OCAML_NATIVE_LINK_FLAGS +=
+
+################################################
+# Generated files
+#
+# Workaround for the fact that ocamldep does not pay attention to .mll
+# and .mly files.
+#
+# OCamlGeneratedFiles(parser.ml lexer.ml)
+
+################################################
+# Build an OCaml library
+#
+
+NIBKAMEFILES[] =
+    myUtilx 
+    myUtil
+    sexpr 
+    idx 
+    id
+    debug 
+    mangle 
+    type 
+    typingType 
+    syntax 
+    variant 
+    sread 
+    typingExpr 
+    typing 
+    lLifting
+    module
+    pattern 
+    kNormal 
+    closure 
+    virtualAsm 
+    basicblock 
+    asmx86
+    instantiate 
+    translationUnit 
+    predefined
+
+LIB = nibkame
+
+.DEFAULT: $(OCamlLibrary $(LIB), $(NIBKAMEFILES))
+
+################################################
+# Build an OCaml program
+#
+
+NIBKAMECFILES[] =
+    main
+
+PROGRAM = nibkamec
+NIBKAMEC = $(file nibkamec)
+OCAML_LIBS +=nibkame
+OCAML_CLIBS +=
+OCAML_OTHER_LIBS +=
+OCAML_LIB_FLAGS +=
+
+OcamlSourceFiles(name) =
+    MLFILE = $(addsuffix .ml, $(name))
+    MLIFILE = $(addsuffix .mli, $(name))
+    MLLFILE = $(addsuffix .mll, $(name))
+    MLYFILE = $(addsuffix .mly, $(name))
+
+    FILES = $(MLFILE) $(MLIFILE) $(MLLFILE) $(MLYFILE)
+    return $(set-diff $(filter-exists $(FILES)), $(filter-proper-targets $(FILES)))
+
+OcamlCompiledFiles(name) =
+    CMIFILE = $(addsuffix .cmi, $(name))
+
+    FILES = $(CMIFILE)
+    return $(filter-proper-targets $(FILES))
+
+OcamldocLaTeX(name,files) =
+    SOURCES=$(OcamlSourceFiles $(files))
+    CMIFILES=$(OcamlCompiledFiles $(files))
+    doc/ocamldoc-$(name).tex: $(SOURCES) $(CMIFILES)
+        ocamldoc -d doc -latex -noheader -notrailer -notoc -o $@ $(SOURCES)
+    return doc/ocamldoc-$(name).tex
+
+OCamlProgram($(PROGRAM), $(NIBKAMECFILES))
+
+OcamldocLaTeX(nibkamec, $(NIBKAMEFILES) $(NIBKAMECFILES))
+
+.PHONY: distclean
+
+distclean:
+    rm $(filter-proper-targets $(ls R, .))

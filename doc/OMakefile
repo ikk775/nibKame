@@ -1,0 +1,52 @@
+LATEX=platex -shell-escape
+DVIPS=dvips
+DVIPDFM=dvipdfmx
+BIBTEX=pbibtex
+MAKEINDEX=mendex
+#ASY = asy -dir /usr/local/share/asymptote -config "" -render=0 -texcommand=$(LATEX) -dvips=$(DVIPS) -gs="/usr/bin/gs" -psviewer="echo"
+ASYSETTING=$(file setting.asy)
+ASY = asy -config $(ASYSETTING)
+
+%.pdf.ps: %.pdf
+	$(PDFPS) $< $@
+###
+# Graphics
+#
+
+%.eps:	%.asy
+	$(ASY) -f eps $< -o $@
+%.eps.deplist: %.asy
+	echo $< > $@ 
+
+%.pdf:	%.asy
+	$(ASY) -f pdf -noprc $< -o $@
+%.pdf.deplist: %.asy
+	echo $< > $@
+
+%.eps: %.dot
+	$(DOT) $(DOTOPT) -Teps $< -o $@
+%.eps.deplist: %.dot
+	echo $< > $@
+
+texdepends[]=
+    ocamldoc-nibkamec.tex
+
+ASYFILES[]=
+    tuple
+    array
+
+foreach(file => ..., $(ASYFILES))
+    texdepends+=$(file).pdf
+    export texdepends
+
+TEXTARGETS[]=
+    spec-language
+    spec-compiler
+
+LocalTeXGeneratedFiles($(texdepends))
+doc: $(texdepends)
+
+LaTeXDocument(spec-language, spec-language)
+doc: spec-language.pdf
+LaTeXDocument(spec-compiler, spec-compiler)
+doc: spec-compiler.pdf

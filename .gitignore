@@ -1,20 +1,43 @@
+# vim swapfile
 .*.sw?
 _.sw?
+# vim backupfile
 *~
+# emacs swapfile
 *#
+
 ._d
 .bcdi
-doc/*/figure
-doc/*/html
-doc/*/latex
+
+# omake tempolary file
+.omakedb
+.omakedb.lock
+*.omc
+
+# generated files by ocamldoc
+doc/ocamldoc-*
+
+# built files
+*.opt
+*.run
+*.o
+*.a
 *.cmi
 *.cmo
+*.cmx
+*.cma
+*.cmxa
+
+# tex tempolary files
 *.aux
 *.dvi
 *.log
 *.byte
 *.annot
 *.bbl
+*.fls
+
+# etc
 *.dot
 *.out
 *.exe
@@ -37,3 +60,6 @@ quickCheck.ml
 *.eps
 *.bblannot
 *.blg
+
+# target file
+nibkamec
