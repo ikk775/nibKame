@@ -1,131 +1,131 @@
-\section{Œ^}\label{sc:type}
-nibkame‚Å‚ÍŒ^ƒVƒXƒeƒ€‚Æ‚µ‚ÄCHindley-MilnerŒ^ƒVƒXƒeƒ€‚ğÌ—p‚µ‚½D
+\section{å‹}\label{sc:type}
+nibkameã§ã¯å‹ã‚·ã‚¹ãƒ†ãƒ ã¨ã—ã¦ï¼ŒHindley-Milnerå‹ã‚·ã‚¹ãƒ†ãƒ ã‚’æ¡ç”¨ã—ãŸï¼
 
-Hindley-MilnerŒ^ƒVƒXƒeƒ€‚Æ‚ÍHaskell‚âML‚Ì‚æ‚¤‚ÈÃ“IŒ^•t‚¯ŠÖ”ƒvƒƒOƒ‰ƒ~ƒ“ƒOŒ¾Œê‚É‚æ‚­—p‚¢‚ç‚ê‚éŒ^ƒVƒXƒeƒ€‚Å‚ ‚èC
-u‚·‚×‚Ä‚Ì®‚ÉˆêˆÓ‚ÈÅ”Ä(most general)Œ^C‘¦‚¿åŒ^(principal type)‚ğ•t‚¯‚é‚±‚Æ‚ª‚Å‚«‚év‚Æ‚¢‚¤d—v‚È«¿‚ğ‚ÂD
+Hindley-Milnerå‹ã‚·ã‚¹ãƒ†ãƒ ã¨ã¯Haskellã‚„MLã®ã‚ˆã†ãªé™çš„å‹ä»˜ã‘é–¢æ•°ãƒ—ãƒ­ã‚°ãƒ©ãƒŸãƒ³ã‚°è¨€èªã«ã‚ˆãç”¨ã„ã‚‰ã‚Œã‚‹å‹ã‚·ã‚¹ãƒ†ãƒ ã§ã‚ã‚Šï¼Œ
+ã€Œã™ã¹ã¦ã®å¼ã«ä¸€æ„ãªæœ€æ±(most general)å‹ï¼Œå³ã¡ä¸»å‹(principal type)ã‚’ä»˜ã‘ã‚‹ã“ã¨ãŒã§ãã‚‹ã€ã¨ã„ã†é‡è¦ãªæ€§è³ªã‚’æŒã¤ï¼
 
-‘ã•\“I‚ÈƒAƒ‹ƒSƒŠƒYƒ€‚Íu\algorithmWv\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}‚Æ‚µ‚Ä’m‚ç‚ê‚Ä‚¢‚é‚à‚Ì‚Å‚ ‚éD
-‚±‚ÌƒAƒ‹ƒSƒŠƒYƒ€‚ÍHindley-MilnerƒAƒ‹ƒSƒŠƒYƒ€‚Æ‚àDamas-MilnerƒAƒ‹ƒSƒŠƒYƒ€‚Æ‚àŒÄ‚Î‚ê‚éD
-Œ^•Ï”‚Ö‚Ì‘ã“ü‚É‚æ‚éŒ^‚Ì“¯ˆê‰»(unification)‚ğŠî–{‘€ì‚Æ‚µ‚Ä‚¢‚éD
+ä»£è¡¨çš„ãªã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¯ã€Œ\algorithmWã€\cite{Milner1978348}\cite{Damas:1982:PTF:582153.582176}ã¨ã—ã¦çŸ¥ã‚‰ã‚Œã¦ã„ã‚‹ã‚‚ã®ã§ã‚ã‚‹ï¼
+ã“ã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¯Hindley-Milnerã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¨ã‚‚Damas-Milnerã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¨ã‚‚å‘¼ã°ã‚Œã‚‹ï¼
+å‹å¤‰æ•°ã¸ã®ä»£å…¥ã«ã‚ˆã‚‹å‹ã®åŒä¸€åŒ–(unification)ã‚’åŸºæœ¬æ“ä½œã¨ã—ã¦ã„ã‚‹ï¼
 
-‚±‚ÌƒAƒ‹ƒSƒŠƒYƒ€‚Ì‹NŒ¹‚ÍCHaskell Curry‚ÆRobert Feys‚ª1958”N‚É’PƒŒ^•tƒ‰ƒ€ƒ_ŒvZ‚ÌŒ^„˜_‚Ì‚½‚ß‚ÉlˆÄ‚µ‚½‚à‚Ì‚Å‚ ‚èC
-1969”N‚ÉJ. Roger Hindley‚ª‚»‚ê‚ğŠg’£‚µC‚Ü‚½C‚»‚ê‚ªí‚ÉÅ”Ä‚ÈŒ^‚É„˜_‚·‚é‚±‚Æ‚ğØ–¾‚µ‚½D
-1978”N‚ÉRobin Milner‚ÍHindley‚Æ‚Í“Æ—§‚É\algorithmW\cite{Milner1978348}‚ğ“±‚«o‚µC
-1982”NCLuis Damas‚ªÅI“I‚ÉMilner‚ÌƒAƒ‹ƒSƒŠƒYƒ€‚ÌŠ®‘S«‚ğØ–¾‚µ‚½\cite{Damas:1982:PTF:582153.582176}D
+ã“ã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã®èµ·æºã¯ï¼ŒHaskell Curryã¨Robert FeysãŒ1958å¹´ã«å˜ç´”å‹ä»˜ãƒ©ãƒ ãƒ€è¨ˆç®—ã®å‹æ¨è«–ã®ãŸã‚ã«è€ƒæ¡ˆã—ãŸã‚‚ã®ã§ã‚ã‚Šï¼Œ
+1969å¹´ã«J. Roger HindleyãŒãã‚Œã‚’æ‹¡å¼µã—ï¼Œã¾ãŸï¼Œãã‚ŒãŒå¸¸ã«æœ€æ±ãªå‹ã«æ¨è«–ã™ã‚‹ã“ã¨ã‚’è¨¼æ˜ã—ãŸï¼
+1978å¹´ã«Robin Milnerã¯Hindleyã¨ã¯ç‹¬ç«‹ã«\algorithmW\cite{Milner1978348}ã‚’å°ãå‡ºã—ï¼Œ
+1982å¹´ï¼ŒLuis DamasãŒæœ€çµ‚çš„ã«Milnerã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã®å®Œå…¨æ€§ã‚’è¨¼æ˜ã—ãŸ\cite{Damas:1982:PTF:582153.582176}ï¼
 
-¡Œ»İC
-Hindley-MilnerŒ^ƒVƒXƒeƒ€‚ğÌ—p‚µ‚Ä‚¢‚énibkame‚Å‚ÍŒ^‚ÍˆÈ‰º‚Ì—l‚É’è‹`‚³‚ê‚éD
+ä»Šç¾åœ¨ï¼Œ
+Hindley-Milnerå‹ã‚·ã‚¹ãƒ†ãƒ ã‚’æ¡ç”¨ã—ã¦ã„ã‚‹nibkameã§ã¯å‹ã¯ä»¥ä¸‹ã®æ§˜ã«å®šç¾©ã•ã‚Œã‚‹ï¼
 \begin{equation}\label{eq:type} 
 \begin{array}{rcll}
-    \tau    &\Coloneqq& \iota                       & \text{Œ^’è” (\refSsc{ssc:type-constant})} \\
-            &\mid&  \alpha                          & \text{Œ^•Ï” (\refSsc{ssc:type-variable})} \\
-            &\mid&  \tau \rightarrow \tau           & \text{ŠÖ”Œ^ (\refSsc{ssc:type-function})} \\
-            &\mid&  \tau \times \cdots \times \tau  & \text{’¼ÏŒ^ (\refSsc{ssc:type-tuple})} \\
-            &\mid&  \tau\ \textsf{ref}              & \text{QÆŒ^ (\refSsc{ssc:type-reference})} \\
-            &\mid&  \tau\ \tau                      & \text{Œ^“K—p (\refSsc{ssc:type-apply})} \\
-    \mathset{Type}&\triangleq& \varrange{\tau}            & \text{Œ^} \\
-    \sigma  &\Coloneqq &\tau                            & \text{Œ^} \\
-            &\mid&  \foralldot{\vec{\alpha}}{\tau}      & \text{‘SÌ—Ê‰»}\\
-    \mathset{TypeScheme}&\triangleq& \varrange{\sigma}            & \text{Œ^ƒXƒL[ƒ€}\\
+    \tau    &\Coloneqq& \iota                       & \text{å‹å®šæ•° (\refSsc{ssc:type-constant})} \\
+            &\mid&  \alpha                          & \text{å‹å¤‰æ•° (\refSsc{ssc:type-variable})} \\
+            &\mid&  \tau \rightarrow \tau           & \text{é–¢æ•°å‹ (\refSsc{ssc:type-function})} \\
+            &\mid&  \tau \times \cdots \times \tau  & \text{ç›´ç©å‹ (\refSsc{ssc:type-tuple})} \\
+            &\mid&  \tau\ \textsf{ref}              & \text{å‚ç…§å‹ (\refSsc{ssc:type-reference})} \\
+            &\mid&  \tau\ \tau                      & \text{å‹é©ç”¨ (\refSsc{ssc:type-apply})} \\
+    \mathset{Type}&\triangleq& \varrange{\tau}            & \text{å‹} \\
+    \sigma  &\Coloneqq &\tau                            & \text{å‹} \\
+            &\mid&  \foralldot{\vec{\alpha}}{\tau}      & \text{å…¨ç§°é‡åŒ–}\\
+    \mathset{TypeScheme}&\triangleq& \varrange{\sigma}            & \text{å‹ã‚¹ã‚­ãƒ¼ãƒ }\\
     \mathset{TypeVar}&\triangleq& \varrange{\alpha}            & 
 \end{array}
 \end{equation}
 
-\subsection{Œ^’è”}\label{ssc:type-constant}
-nibkame‚É‚¨‚¢‚ÄŒ^’è”‚ÍŸ‚Ì—l‚É’è‹`‚³‚ê‚éD
+\subsection{å‹å®šæ•°}\label{ssc:type-constant}
+nibkameã«ãŠã„ã¦å‹å®šæ•°ã¯æ¬¡ã®æ§˜ã«å®šç¾©ã•ã‚Œã‚‹ï¼
 \begin{equation}\label{eq:type-constant} 
 \begin{array}{rcll}
-    \iota   &\Coloneqq& \typename{int}                  & \text{®”Œ^} \\
-            &\mid&  \typename{float}                & \text{À”Œ^} \\
-            &\mid&  \typename{char}                 & \text{charŒ^} \\
-            &\mid&  \typename{list}                 & \text{ƒŠƒXƒgŒ^} \\
-            &\mid&  \typename{array}                & \text{”z—ñŒ^} \\
-            &\mid&  \mathit{variant}                & \text{ƒ”ƒ@ƒŠƒAƒ“ƒgŒ^} \\
-    \mathset{TypeConstant}&\triangleq& \varrange{\iota}            & \text{Œ^’è”}\\
-    \mathset{TypeVariant}&\triangleq& \varrange{\mathit{variant}}  & \text{ƒ”ƒ@ƒŠƒAƒ“ƒgŒ^}
+    \iota   &\Coloneqq& \typename{int}                  & \text{æ•´æ•°å‹} \\
+            &\mid&  \typename{float}                & \text{å®Ÿæ•°å‹} \\
+            &\mid&  \typename{char}                 & \text{charå‹} \\
+            &\mid&  \typename{list}                 & \text{ãƒªã‚¹ãƒˆå‹} \\
+            &\mid&  \typename{array}                & \text{é…åˆ—å‹} \\
+            &\mid&  \mathit{variant}                & \text{ãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹} \\
+    \mathset{TypeConstant}&\triangleq& \varrange{\iota}            & \text{å‹å®šæ•°}\\
+    \mathset{TypeVariant}&\triangleq& \varrange{\mathit{variant}}  & \text{ãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹}
 \end{array}
 \end{equation}
 
-ˆÈã‚Ì‚¤‚¿C\typename{int}‚Æ\typename{float}‚Í”’l‚ğ•\‚·Œ^‚Å‚ ‚èC
-“à•”“I‚É‚Í•vXƒ}ƒVƒ“‚É‚¨‚¯‚é‚à‚Á‚Æ‚à©‘R‚È®”‚ğ•\‚·•\Œ»\jpdash —á‚¦‚ÎƒŒƒWƒXƒ^‚É‚æ‚é®”•\Œ»\jpdash ‚ÆC
-‚à‚Á‚Æ‚à©‘R‚È•‚“®¬”“_”‚ğ•\‚·•\Œ»\jpdash —á‚¦‚ÎIEEE‚Ì•‚“®¬”“_”\jpdash ‚ª—p‚¢‚ç‚ê‚éD
-\typename{char}‚Í1ƒoƒCƒg‚É‚æ‚Á‚Ä•\Œ»‚Å‚«‚é•„†‚È‚µ”
-\jpdash “TŒ^“I‚É‚Í$0$‚©‚ç$2^8-1$\jpdash 
-‚ğ•\‚·Œ^‚Å‚ ‚éD
+ä»¥ä¸Šã®ã†ã¡ï¼Œ\typename{int}ã¨\typename{float}ã¯æ•°å€¤ã‚’è¡¨ã™å‹ã§ã‚ã‚Šï¼Œ
+å†…éƒ¨çš„ã«ã¯å¤«ã€…ãƒã‚·ãƒ³ã«ãŠã‘ã‚‹ã‚‚ã£ã¨ã‚‚è‡ªç„¶ãªæ•´æ•°ã‚’è¡¨ã™è¡¨ç¾\jpdash ä¾‹ãˆã°ãƒ¬ã‚¸ã‚¹ã‚¿ã«ã‚ˆã‚‹æ•´æ•°è¡¨ç¾\jpdash ã¨ï¼Œ
+ã‚‚ã£ã¨ã‚‚è‡ªç„¶ãªæµ®å‹•å°æ•°ç‚¹æ•°ã‚’è¡¨ã™è¡¨ç¾\jpdash ä¾‹ãˆã°IEEEã®æµ®å‹•å°æ•°ç‚¹æ•°\jpdash ãŒç”¨ã„ã‚‰ã‚Œã‚‹ï¼
+\typename{char}ã¯1ãƒã‚¤ãƒˆã«ã‚ˆã£ã¦è¡¨ç¾ã§ãã‚‹ç¬¦å·ãªã—æ•°
+\jpdash å…¸å‹çš„ã«ã¯$0$ã‹ã‚‰$2^8-1$\jpdash 
+ã‚’è¡¨ã™å‹ã§ã‚ã‚‹ï¼
 
-$\typename{list}$‚Æ$\typename{array}$Cƒ”ƒ@ƒŠƒAƒ“ƒgŒ^‚ªŒ^’è”‚Æ‚È‚Á‚Ä‚¢‚é‚Ì‚Éˆá˜aŠ´‚ğŠo‚¦‚éŒü‚«‚à‚ ‚é‚¾‚ë‚¤‚ª——R‚Í
-\refSsc{ssc:type-apply}‚ÅÚà‚·‚éD
+$\typename{list}$ã¨$\typename{array}$ï¼Œãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹ãŒå‹å®šæ•°ã¨ãªã£ã¦ã„ã‚‹ã®ã«é•å’Œæ„Ÿã‚’è¦šãˆã‚‹å‘ãã‚‚ã‚ã‚‹ã ã‚ã†ãŒç†ç”±ã¯
+\refSsc{ssc:type-apply}ã§è©³èª¬ã™ã‚‹ï¼
 
-\subsection{Œ^•Ï”}\label{ssc:type-variable}
-Œ^•Ï”‚Æ‚ÍŒ^‚ğ“®‚­•Ï”‚Å‚ ‚éD
+\subsection{å‹å¤‰æ•°}\label{ssc:type-variable}
+å‹å¤‰æ•°ã¨ã¯å‹ã‚’å‹•ãå¤‰æ•°ã§ã‚ã‚‹ï¼
 
-\subsection{ŠÖ”Œ^}\label{ssc:type-function}
-ŠÖ”Œ^‚Æ‚Í‚»‚Ì–¼‚Ì’Ê‚èŠÖ”‚ª‚ÂŒ^‚Å‚ ‚èC
-$s$Œ^‚ğ‚Æ‚Á‚Ä$t$Œ^‚ğ•Ô‚·ŠÖ”‚ÌŒ^‚Í$s\rightarrow t$‚Æ‚È‚éD
+\subsection{é–¢æ•°å‹}\label{ssc:type-function}
+é–¢æ•°å‹ã¨ã¯ãã®åã®é€šã‚Šé–¢æ•°ãŒæŒã¤å‹ã§ã‚ã‚Šï¼Œ
+$s$å‹ã‚’ã¨ã£ã¦$t$å‹ã‚’è¿”ã™é–¢æ•°ã®å‹ã¯$s\rightarrow t$ã¨ãªã‚‹ï¼
 
-\subsection{’¼ÏŒ^}\label{ssc:type-tuple}
-’¼ÏŒ^‚Í‘g‚ÌŒ^‚Å‚ ‚èC‘g‚Ì•vX‚Ì—v‘f‚ÌŒ^‚Ì‘g‚Æ‚È‚Á‚Ä‚¢‚éD
+\subsection{ç›´ç©å‹}\label{ssc:type-tuple}
+ç›´ç©å‹ã¯çµ„ã®å‹ã§ã‚ã‚Šï¼Œçµ„ã®å¤«ã€…ã®è¦ç´ ã®å‹ã®çµ„ã¨ãªã£ã¦ã„ã‚‹ï¼
 
-\subsection{QÆŒ^}\label{ssc:type-reference}
-QÆ‚ª‚ÂŒ^‚Å‚ ‚èC—á‚¦‚ÎC\lstinline|int|Œ^‚Ö‚ÌQÆ‚Å‚ ‚ê‚ÎC‚»‚ÌŒ^‚Í
-\lstinline|int ref|‚Æ‚È‚éD
+\subsection{å‚ç…§å‹}\label{ssc:type-reference}
+å‚ç…§ãŒæŒã¤å‹ã§ã‚ã‚Šï¼Œä¾‹ãˆã°ï¼Œ\lstinline|int|å‹ã¸ã®å‚ç…§ã§ã‚ã‚Œã°ï¼Œãã®å‹ã¯
+\lstinline|int ref|ã¨ãªã‚‹ï¼
 
-\subsection{Œ^“K—p}\label{ssc:type-apply}
-MLŒnŒ¾Œê‚ÌŒ^‚É‚ÍC
-$\typename{int}\ \typename{list}$‚âC
+\subsection{å‹é©ç”¨}\label{ssc:type-apply}
+MLç³»è¨€èªã®å‹ã«ã¯ï¼Œ
+$\typename{int}\ \typename{list}$ã‚„ï¼Œ
 $(\typename{int}\times\typename{char}\ \typename{array})\ \typename{list}$
-“™‚ÌŒ^‚ª‘¶İ‚·‚é
+ç­‰ã®å‹ãŒå­˜åœ¨ã™ã‚‹
 \footnote{
-    HaskellCMiranda‚Å‚Í‚»‚ê‚¼‚ê
-    $[\typename{Int}]$C
+    Haskellï¼ŒMirandaã§ã¯ãã‚Œãã‚Œ
+    $[\typename{Int}]$ï¼Œ
     $[(\typename{Int}, \typename{Array}\ \typename{Char})]$
-    ‚Æ‚È‚éD
+    ã¨ãªã‚‹ï¼
     }
-D
-‚±‚ê‚Í•vX®”Œ^‚ÌƒŠƒXƒgC®”‚Æ(charŒ^‚Ì”z—ñ)‚Ì‘g‚ÌƒŠƒXƒg‚Æ‚¢‚¤ˆÓ–¡‚Å‚ ‚éD
+ï¼
+ã“ã‚Œã¯å¤«ã€…æ•´æ•°å‹ã®ãƒªã‚¹ãƒˆï¼Œæ•´æ•°ã¨(charå‹ã®é…åˆ—)ã®çµ„ã®ãƒªã‚¹ãƒˆã¨ã„ã†æ„å‘³ã§ã‚ã‚‹ï¼
 
-ã‹L‚Ì—á‚æ‚è‚í‚©‚é‚Æ‚¨‚èC\typename{list}‚â\typename{array}‚È‚Ç‚ÍŒ^‚ğˆø”‚Æ‚µ‚Äæ‚éŒ^‚Å‚ ‚éD
-‚»‚ê‚ğÀŒ»‚·‚é‚½‚ß‚ÉC‚»‚ê‚ç‚ğŒ^‚ğæ‚Á‚ÄŒ^‚ğ•Ô‚·ŠÖ”‚Ì—l‚Éˆµ‚¤D
-’A‚µCMLŒnŠÖ”‚Ì‹L–@‚Æ‡‚í‚¹‚é‚½‚ß‚ÉCŠÖ”‚Æˆø”‚Ì•À‚Ñ‚ª’Êí‚Æ‹t‚É‚È‚éD
+ä¸Šè¨˜ã®ä¾‹ã‚ˆã‚Šã‚ã‹ã‚‹ã¨ãŠã‚Šï¼Œ\typename{list}ã‚„\typename{array}ãªã©ã¯å‹ã‚’å¼•æ•°ã¨ã—ã¦å–ã‚‹å‹ã§ã‚ã‚‹ï¼
+ãã‚Œã‚’å®Ÿç¾ã™ã‚‹ãŸã‚ã«ï¼Œãã‚Œã‚‰ã‚’å‹ã‚’å–ã£ã¦å‹ã‚’è¿”ã™é–¢æ•°ã®æ§˜ã«æ‰±ã†ï¼
+ä½†ã—ï¼ŒMLç³»é–¢æ•°ã®è¨˜æ³•ã¨åˆã‚ã›ã‚‹ãŸã‚ã«ï¼Œé–¢æ•°ã¨å¼•æ•°ã®ä¸¦ã³ãŒé€šå¸¸ã¨é€†ã«ãªã‚‹ï¼
 
-\subsection{ƒ”ƒ@ƒŠƒAƒ“ƒgŒ^}\label{ssc:type-variant}
-‘ã”“Iƒf[ƒ^Œ^‚Æ‚à‚¢‚¤D‚±‚ê‚Íƒ†[ƒU‚ªV‚µ‚­’è‹`‚Å‚«‚éŒ^‚Å‚ ‚éDƒ”ƒ@ƒŠƒA
-ƒ“ƒg‚Í’è‹`‚Ì‚½‚Ñ‚É‚Ü‚Á‚½‚­“Æ—§‚µ‚½V‚µ‚¢Œ^‚Æ‚È‚éD
-ƒ”ƒ@ƒŠƒAƒ“ƒgŒ^‚Ì’l‚ÍŒ^\’zq‚É‚æ‚Á‚Ä¶¬‚³‚ê‚éD
+\subsection{ãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹}\label{ssc:type-variant}
+ä»£æ•°çš„ãƒ‡ãƒ¼ã‚¿å‹ã¨ã‚‚ã„ã†ï¼ã“ã‚Œã¯ãƒ¦ãƒ¼ã‚¶ãŒæ–°ã—ãå®šç¾©ã§ãã‚‹å‹ã§ã‚ã‚‹ï¼ãƒ´ã‚¡ãƒªã‚¢
+ãƒ³ãƒˆã¯å®šç¾©ã®ãŸã³ã«ã¾ã£ãŸãç‹¬ç«‹ã—ãŸæ–°ã—ã„å‹ã¨ãªã‚‹ï¼
+ãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹ã®å€¤ã¯å‹æ§‹ç¯‰å­ã«ã‚ˆã£ã¦ç”Ÿæˆã•ã‚Œã‚‹ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{lstlisting}
 type season = Spring | Summer | Fall | Winter
 \end{lstlisting}
-‚Æ‚·‚ê‚Î
-\lstinline|Spring|C\lstinline|Summer|C\lstinline|Fall|C\lstinline|Winter|
-‚ğŒ^\’zq‚Æ‚·‚éƒ”ƒ@ƒŠƒAƒ“ƒgŒ^\lstinline|season|‚ª’è‹`‚³‚ê‚éD
+ã¨ã™ã‚Œã°
+\lstinline|Spring|ï¼Œ\lstinline|Summer|ï¼Œ\lstinline|Fall|ï¼Œ\lstinline|Winter|
+ã‚’å‹æ§‹ç¯‰å­ã¨ã™ã‚‹ãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹\lstinline|season|ãŒå®šç¾©ã•ã‚Œã‚‹ï¼
 
-‚Ü‚½ŠeŒ^\’zq‚Í’lˆø”‚ğæ‚é‚±‚Æ‚ª‚Å‚«Cƒ”ƒ@ƒŠƒAƒ“ƒgŒ^‚ÍŒ^ˆø”‚ğæ‚é‚±‚Æ
-‚ª‚Å‚«‚éD‚±‚ê‚ğ—p‚¢‚Ä
+ã¾ãŸå„å‹æ§‹ç¯‰å­ã¯å€¤å¼•æ•°ã‚’å–ã‚‹ã“ã¨ãŒã§ãï¼Œãƒ´ã‚¡ãƒªã‚¢ãƒ³ãƒˆå‹ã¯å‹å¼•æ•°ã‚’å–ã‚‹ã“ã¨
+ãŒã§ãã‚‹ï¼ã“ã‚Œã‚’ç”¨ã„ã¦
 \begin{lstlisting}
 type 'a tree = Node of 'a tree * 'a * 'a tree | Leaf of 'a
 \end{lstlisting}
-‚Ì‚æ‚¤‚É“ñ•ª–Ø‚È‚Ç‚ğ’è‹`‚·‚é‚±‚Æ‚ª‚Å‚«‚éD
+ã®ã‚ˆã†ã«äºŒåˆ†æœ¨ãªã©ã‚’å®šç¾©ã™ã‚‹ã“ã¨ãŒã§ãã‚‹ï¼
 
-\subsection{À—á}\label{ssc:example}
-1‚Æ3.14C'c'‚Í‚»‚ê‚¼‚ê’è”Œ^
-\typename{int}C\typename{float}C\typename{char}‚Å‚ ‚éD
+\subsection{å®Ÿä¾‹}\label{ssc:example}
+1ã¨3.14ï¼Œ'c'ã¯ãã‚Œãã‚Œå®šæ•°å‹
+\typename{int}ï¼Œ\typename{float}ï¼Œ\typename{char}ã§ã‚ã‚‹ï¼
 
-®”‚ğ1‚Âæ‚èCŒã‘±‚Ì®”‚ğ•Ô‚·ŠÖ”add1‚ğl‚¦‚éD‚·‚é‚Æ‚±‚ÌŒ^‚Í
-\lstinline|int -> int|‚Æ‚È‚éD
+æ•´æ•°ã‚’1ã¤å–ã‚Šï¼Œå¾Œç¶šã®æ•´æ•°ã‚’è¿”ã™é–¢æ•°add1ã‚’è€ƒãˆã‚‹ï¼ã™ã‚‹ã¨ã“ã®å‹ã¯
+\lstinline|int -> int|ã¨ãªã‚‹ï¼
 
-”CˆÓ‚Ì—v‘f‚ª2‚Â‚Ì‘g‚ğˆø”‚Éæ‚èC1‚Â‚ß‚Ì’l‚ğ•Ô‚·ŠÖ”fst‚ğl‚¦‚éDˆø”‚É
-‚Í”CˆÓ‚ÌŒ^‚ğæ‚ê‚é‚©‚çC\lstinline|(int, char) -> int|C
-\lstinline|(float array, int) -> float array|‚È‚Ç‚ªl‚¦‚ç‚ê‚éD‚à‚Á‚Æ‚à
-ˆê”Ê“I‚ÈŒ^‚Í\lstinline|('a, 'b) -> 'a|‚Å‚ ‚éD
+ä»»æ„ã®è¦ç´ ãŒ2ã¤ã®çµ„ã‚’å¼•æ•°ã«å–ã‚Šï¼Œ1ã¤ã‚ã®å€¤ã‚’è¿”ã™é–¢æ•°fstã‚’è€ƒãˆã‚‹ï¼å¼•æ•°ã«
+ã¯ä»»æ„ã®å‹ã‚’å–ã‚Œã‚‹ã‹ã‚‰ï¼Œ\lstinline|(int, char) -> int|ï¼Œ
+\lstinline|(float array, int) -> float array|ãªã©ãŒè€ƒãˆã‚‰ã‚Œã‚‹ï¼ã‚‚ã£ã¨ã‚‚
+ä¸€èˆ¬çš„ãªå‹ã¯\lstinline|('a, 'b) -> 'a|ã§ã‚ã‚‹ï¼
 
 
-\subsection{Œ^•Ï”‚Ö‚Ì‘ã“ü}\label{ssc:type-order}
-$\tau$‚ÉŠÜ‚Ü‚ê‚é‚¢‚­‚Â‚©‚ÌŒ^•Ï”‚É‘Î‚µ‚Ä’uŠ·$\substType$‚ğ“K—p‚·‚é‚±‚Æ‚ÅC
-$\Sigma\tau=\tau'$‚Æ‚È‚é‚Æ‚«C
-$\tau\succ\tau'$‚Æ‚©‚­D
-‚±‚Ì$\succ$‚Í”¼‡˜‚Æ‚È‚éD
-$\tau\succ\tau'$‚©‚Â$\tau'\succ\tau$‚Ì‚Æ‚«Œ^$\tau$C$\tau'$‚Í$\alpha$“™’l‚Æ‚¢‚¢C
-$\tau\mathrel{\overset{\alpha}{=}}\tau'$‚Æ•\‚·D
+\subsection{å‹å¤‰æ•°ã¸ã®ä»£å…¥}\label{ssc:type-order}
+$\tau$ã«å«ã¾ã‚Œã‚‹ã„ãã¤ã‹ã®å‹å¤‰æ•°ã«å¯¾ã—ã¦ç½®æ›$\substType$ã‚’é©ç”¨ã™ã‚‹ã“ã¨ã§ï¼Œ
+$\Sigma\tau=\tau'$ã¨ãªã‚‹ã¨ãï¼Œ
+$\tau\succ\tau'$ã¨ã‹ãï¼
+ã“ã®$\succ$ã¯åŠé †åºã¨ãªã‚‹ï¼
+$\tau\succ\tau'$ã‹ã¤$\tau'\succ\tau$ã®ã¨ãå‹$\tau$ï¼Œ$\tau'$ã¯$\alpha$ç­‰å€¤ã¨ã„ã„ï¼Œ
+$\tau\mathrel{\overset{\alpha}{=}}\tau'$ã¨è¡¨ã™ï¼
 

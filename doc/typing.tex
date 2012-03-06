@@ -1,5 +1,5 @@
-\subsection{Œ^•t‚¯}\label{sc:typing}
-’è”‚ÌŒ^‚ğ•Ô‚·ŠÖ”$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$‚ÍŸ‚Ì—l‚É’è‹`‚³‚ê‚éD
+\subsection{å‹ä»˜ã‘}\label{sc:typing}
+å®šæ•°ã®å‹ã‚’è¿”ã™é–¢æ•°$\mathfunc{ConstType}:\mathset{ExprConst}\rightarrow\mathset{TypeConst}$ã¯æ¬¡ã®æ§˜ã«å®šç¾©ã•ã‚Œã‚‹ï¼
 \begin{equation}\label{eq:func-const-type} 
     \mathfunc{ConstType}(c) = \begin{cases}
         \typename{unit} & \text{if $c$ is $\mathnkop{()}$.} \\
@@ -11,7 +11,7 @@
         \end{cases}
 \end{equation}
 
-ƒpƒ^[ƒ“‚É‚æ‚é‘©”›‚ÌŒ^ŠÂ‹«$\patternandenv{p:\tau}{\envPattern}$‚ÍˆÈ‰º‚Ì—l‚É’è‹`‚³‚ê‚éD
+ãƒ‘ã‚¿ãƒ¼ãƒ³ã«ã‚ˆã‚‹æŸç¸›ã®å‹ç’°å¢ƒ$\patternandenv{p:\tau}{\envPattern}$ã¯ä»¥ä¸‹ã®æ§˜ã«å®šç¾©ã•ã‚Œã‚‹ï¼
 \begin{subequations}
 \begin{equation}
     \infer[\rulename{P-All}]
@@ -66,13 +66,13 @@
         \envExpr\vdash \patternandenv{p_2:\tau}{\envPattern}}
 \end{equation}
 \end{subequations}
-®‚Ì‚ÂŒ^‚ÍˆÈ‰º‚Ì—l‚É’è‹`‚³‚ê‚éD
-’A‚µC’f‚è‚Ì–³‚¢ŒÀ‚è
-%$i,n\in\N$C
+å¼ã®æŒã¤å‹ã¯ä»¥ä¸‹ã®æ§˜ã«å®šç¾©ã•ã‚Œã‚‹ï¼
+ä½†ã—ï¼Œæ–­ã‚Šã®ç„¡ã„é™ã‚Š
+%$i,n\in\N$ï¼Œ
 $c\in\mathset{ExprConst}$, 
-$x,v\in\mathset{ExprVar}$C
+$x,v\in\mathset{ExprVar}$ï¼Œ
 $e\in\mathset{Expr}$
-‚Æ‚·‚éD
+ã¨ã™ã‚‹ï¼
 \begin{subequations}
 \begin{equation}
     \infer[\rulename{E-Const}]
@@ -143,7 +143,7 @@ $e\in\mathset{Expr}$
         \envExpr\vdash \mathit{clss}:\tau'\rightarrow\tau}
 \end{equation}
 \end{subequations}
-ß‚ÌŒ^‚ÍˆÈ‰º‚Ì—l‚É’è‹`‚³‚ê‚éD
+ç¯€ã®å‹ã¯ä»¥ä¸‹ã®æ§˜ã«å®šç¾©ã•ã‚Œã‚‹ï¼
 \begin{subequations}
 \begin{equation}
     \infer[\rulename{C-Always}]
