@@ -1,24 +1,24 @@
-\section{®‚Ì\•¶}\label{sc:expr-syntax}
-nibkameƒRƒAŒ¾Œê‚É‚¨‚¯‚é®‚Ì’è‹`‚ÍˆÈ‰º‚Ì—l‚É‚È‚éD
+\section{å¼ã®æ§‹æ–‡}\label{sc:expr-syntax}
+nibkameã‚³ã‚¢è¨€èªã«ãŠã‘ã‚‹å¼ã®å®šç¾©ã¯ä»¥ä¸‹ã®æ§˜ã«ãªã‚‹ï¼
 \begin{subequations}
 \begin{equation}\label{eq:def-expr} 
 \begin{array}{rcll}
-e&\Coloneqq& c                          & \text{’è” (\refSsc{ssc:expr-constant})} \\
- &\mid&  s:\tau                     & \text{ŠO•”’è” (\refSsc{ssc:expr-external})} \\
- &\mid&  v                          & \text{•Ï” (\refSsc{ssc:expr-variable})} \\
- &\mid&  g                          & \text{Œ^\’zq (\refSsc{ssc:expr-constructor})} \\
- &\mid&  \fundot{x}{e}           & \text{ŠÖ” (\refSsc{ssc:expr-function})} \\
- &\mid&  e, \cdots, e               & \text{‘g (\refSsc{ssc:expr-tuple})} \\
- &\mid&  \mathnkop{ref}e            & \text{QÆ‚Ì¶¬ (\refSsc{ssc:expr-reference})} \\
- &\mid&  e!                         & \text{QÆ (\refSsc{ssc:expr-reference})} \\
- &\mid&  e\coloneqq e                & \text{‘ã“ü (\refSsc{ssc:expr-reference})} \\
- &\mid&  e\ e                       & \text{“K—p (\refSsc{ssc:expr-apply})} \\
- &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{‘©”› (\refSsc{ssc:expr-let})} \\
- &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{•s“®“_‰‰Zq (\refSsc{ssc:expr-fix})} \\
-% &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{ğŒ (\refSsc{ssc:expr-if})} \\
- &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{ƒpƒ^[ƒ“ƒ}ƒbƒ`ƒ“ƒO (\refSsc{ssc:expr-match})} \\
- &\mid&  \mathnkop{match}\clauseor e\mathnkop{with}\mathit{clss} & \text{“¯ãDÅ‰‚Ì$\clauseor$‚Í–³‹‚³‚ê‚éD} \\
-\mathset{Expr}&\triangleq& \varrange{e}            & \text{®} \\
+e&\Coloneqq& c                          & \text{å®šæ•° (\refSsc{ssc:expr-constant})} \\
+ &\mid&  s:\tau                     & \text{å¤–éƒ¨å®šæ•° (\refSsc{ssc:expr-external})} \\
+ &\mid&  v                          & \text{å¤‰æ•° (\refSsc{ssc:expr-variable})} \\
+ &\mid&  g                          & \text{å‹æ§‹ç¯‰å­ (\refSsc{ssc:expr-constructor})} \\
+ &\mid&  \fundot{x}{e}           & \text{é–¢æ•° (\refSsc{ssc:expr-function})} \\
+ &\mid&  e, \cdots, e               & \text{çµ„ (\refSsc{ssc:expr-tuple})} \\
+ &\mid&  \mathnkop{ref}e            & \text{å‚ç…§ã®ç”Ÿæˆ (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e!                         & \text{å‚ç…§ (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\coloneqq e                & \text{ä»£å…¥ (\refSsc{ssc:expr-reference})} \\
+ &\mid&  e\ e                       & \text{é©ç”¨ (\refSsc{ssc:expr-apply})} \\
+ &\mid&  \mathnkop{let}x=e\mathnkop{in}e & \text{æŸç¸› (\refSsc{ssc:expr-let})} \\
+ &\mid&  \fixdot{f}{\fundot{x}{e}} & \text{ä¸å‹•ç‚¹æ¼”ç®—å­ (\refSsc{ssc:expr-fix})} \\
+% &\mid&  \mathnkop{if}e\mathnkop{then}e\mathnkop{else}e & \text{æ¡ä»¶ (\refSsc{ssc:expr-if})} \\
+ &\mid&  \mathnkop{match}e\mathnkop{with}\mathit{clss} & \text{ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒãƒ³ã‚° (\refSsc{ssc:expr-match})} \\
+ &\mid&  \mathnkop{match}\clauseor e\mathnkop{with}\mathit{clss} & \text{åŒä¸Šï¼æœ€åˆã®$\clauseor$ã¯ç„¡è¦–ã•ã‚Œã‚‹ï¼} \\
+\mathset{Expr}&\triangleq& \varrange{e}            & \text{å¼} \\
 \mathset{ExprVar}&\triangleq& \varrange{x}            &  \\
 \mathset{ExprConst}&\triangleq& \varrange{c}            &  \\
 \end{array}
@@ -26,62 +26,62 @@ e&\Coloneqq& c                          & \text{’è” (\refSsc{ssc:expr-constant}
 \begin{equation}\label{eq:def-clause}
 \begin{array}{rcll}
 \mathit{cls} &\Coloneqq& p\rightarrow e & \\
-             &\mid& p \mathnkop{when} e \rightarrow e & \text{ƒK[ƒh•t} \\
+             &\mid& p \mathnkop{when} e \rightarrow e & \text{ã‚¬ãƒ¼ãƒ‰ä»˜} \\
 \mathit{clss} &\Coloneqq& \mathit{cls} & \\
               &\mid& \mathit{clss}\clauseor\mathit{cls} & \\
-\mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{ß} \\
+\mathset{Clause}&\triangleq& \varrange{\mathit{cls}}            & \text{ç¯€} \\
 \end{array}
 \end{equation}
 \begin{equation}\label{eq:def-pattern}
 \begin{array}{rcll}
-p&\Coloneqq&\patternany             & \text{ƒƒCƒ‹ƒhƒJ[ƒh} \\
- &\mid&  c                          & \text{’è”} \\
- &\mid&  x                          & \text{•Ï”} \\
- &\mid&  g                          & \text{Œ^\’zq} \\
- &\mid&  g\ p                       & \text{Œ^\’zq“K—p} \\
- &\mid&  p,\cdots,p                 & \text{‘g} \\
- &\mid&  p \patternand p            & \text{˜AŒ¾} \\
- &\mid&  p \patternor p             & \text{‘IŒ¾} \\
- &\mid&  \lnot p                    & \text{”Û’è} \\
-\mathset{Pattern}&\triangleq& \varrange{p}            & \text{ƒpƒ^[ƒ“} \\
-\mathset{Constructor}&\triangleq& \varrange{g}            & \text{Œ^\’zq} \\
+p&\Coloneqq&\patternany             & \text{ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰} \\
+ &\mid&  c                          & \text{å®šæ•°} \\
+ &\mid&  x                          & \text{å¤‰æ•°} \\
+ &\mid&  g                          & \text{å‹æ§‹ç¯‰å­} \\
+ &\mid&  g\ p                       & \text{å‹æ§‹ç¯‰å­é©ç”¨} \\
+ &\mid&  p,\cdots,p                 & \text{çµ„} \\
+ &\mid&  p \patternand p            & \text{é€£è¨€} \\
+ &\mid&  p \patternor p             & \text{é¸è¨€} \\
+ &\mid&  \lnot p                    & \text{å¦å®š} \\
+\mathset{Pattern}&\triangleq& \varrange{p}            & \text{ãƒ‘ã‚¿ãƒ¼ãƒ³} \\
+\mathset{Constructor}&\triangleq& \varrange{g}            & \text{å‹æ§‹ç¯‰å­} \\
 \mathset{Var}&\triangleq&\mathset{ExprVar}\cup\mathset{Constructor}
 \end{array}
 \end{equation}
 \end{subequations}
-‚±‚±‚ÅC$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$‚Å‚ ‚éD
+ã“ã“ã§ï¼Œ$\mathset{ExprVar}\cap\mathset{Constructor}=\emptyset$ã§ã‚ã‚‹ï¼
 
-\subsection{’è”}\label{ssc:expr-constant}
-’è”‚Æ‚Í
+\subsection{å®šæ•°}\label{ssc:expr-constant}
+å®šæ•°ã¨ã¯
 \begin{itemize}
     \item \lstinline|()|
     \item \lstinline|Nil|
     \item \lstinline|true|
     \item \lstinline|false|
-    \item ®”
-    \item •‚“®¬”“_”
-    \item •¶š
+    \item æ•´æ•°
+    \item æµ®å‹•å°æ•°ç‚¹æ•°
+    \item æ–‡å­—
 \end{itemize}
-‚ÌŒÜ‚Â‚Å‚ ‚éD
+ã®äº”ã¤ã§ã‚ã‚‹ï¼
 
-‚±‚Ì‚¤‚¿C\lstinline|()|‚ÍCŒ¾Œê‚ÅŒ¾‚¤‚Æ‚±‚ë‚Ìvoid‚Ì‚æ‚¤‚È‚à‚Ì‚ÅC
-ŠÖ”‚ªˆø”‚ğæ‚ç‚È‚¢á‚µ‚­‚Í•Ô‚³‚È‚¢‚±‚Æ‚ğ–¾¦‚·‚é‚Ì‚É—p‚¢‚éD
-\lstinline|Nil|‚ÍCŒ¾Œê‚ÅŒ¾‚¤‚Æ‚±‚ë‚ÌNULL‚Ì‚æ‚¤‚È‚à‚Ì‚ÅC
-ƒŠƒXƒg‚Ì––”ö‚Å‚ ‚é‚±‚Æ‚ğ¦‚·D
+ã“ã®ã†ã¡ï¼Œ\lstinline|()|ã¯Cè¨€èªã§è¨€ã†ã¨ã“ã‚ã®voidã®ã‚ˆã†ãªã‚‚ã®ã§ï¼Œ
+é–¢æ•°ãŒå¼•æ•°ã‚’å–ã‚‰ãªã„è‹¥ã—ãã¯è¿”ã•ãªã„ã“ã¨ã‚’æ˜ç¤ºã™ã‚‹ã®ã«ç”¨ã„ã‚‹ï¼
+\lstinline|Nil|ã¯Cè¨€èªã§è¨€ã†ã¨ã“ã‚ã®NULLã®ã‚ˆã†ãªã‚‚ã®ã§ï¼Œ
+ãƒªã‚¹ãƒˆã®æœ«å°¾ã§ã‚ã‚‹ã“ã¨ã‚’ç¤ºã™ï¼
 
-”‚É‚Â‚¢‚Ä‚¢‚­‚Â‚©—á‚ğ‹“‚°‚é‚Æ\refTbl{tbl:int-float}‚Ì‚æ‚¤‚É‚È‚éD
+æ•°ã«ã¤ã„ã¦ã„ãã¤ã‹ä¾‹ã‚’æŒ™ã’ã‚‹ã¨\refTbl{tbl:int-float}ã®ã‚ˆã†ã«ãªã‚‹ï¼
 
 \begin{table}[h]
-    \caption{®”‚Æ•‚“®¬”“_”}\label{tbl:int-float}
+    \caption{æ•´æ•°ã¨æµ®å‹•å°æ•°ç‚¹æ•°}\label{tbl:int-float}
     \begin{center}
     \begin{tabular}{crl}
     \Hline
-    ®”‚Ì—á&\lstinline|0|,
+    æ•´æ•°ã®ä¾‹&\lstinline|0|,
              \lstinline|1|,
              \lstinline|100|,
              \lstinline|-1| \\
     \hline
-    •‚“®¬”“_”‚Ì—á &\lstinline|0.0|,
+    æµ®å‹•å°æ•°ç‚¹æ•°ã®ä¾‹ &\lstinline|0.0|,
              \lstinline|1.0|,
              \lstinline|-1.0|,
              \lstinline|1.0e10|,
@@ -91,30 +91,30 @@ p&\Coloneqq&\patternany             & \text{ƒƒCƒ‹ƒhƒJ[ƒh} \\
     \end{center}
 \end{table}
 
-nibkameƒRƒAŒ¾Œê‚É‚¨‚¢‚Ä—pˆÓ‚³‚ê‚Ä‚¢‚é‘g‚İ‚İ‚Ì•¶šŒ^‚Í
-charŒ^‚Å‚ ‚é‚ªC‚±‚ÌŒ^‚Í%CŒ¾Œê‚Æ“¯—l‚É
-8ƒrƒbƒg‚Ì•„†–³‚µ®”‚Å‚ ‚éD
-%charŒ^‚Å‚ ‚èCŒvZ‹@ã‚Å‚Ì•\Œ»‚Íˆ—Œn‚ÉˆË‘¶‚·‚éD
-•¶š‚ÌƒR[ƒhã‚Å‚Ì•\Œ»‚Í\lstinline|'c'|‚Ì‚æ‚¤‚É‚È‚éD
+nibkameã‚³ã‚¢è¨€èªã«ãŠã„ã¦ç”¨æ„ã•ã‚Œã¦ã„ã‚‹çµ„ã¿è¾¼ã¿ã®æ–‡å­—å‹ã¯
+charå‹ã§ã‚ã‚‹ãŒï¼Œã“ã®å‹ã¯%Cè¨€èªã¨åŒæ§˜ã«
+8ãƒ“ãƒƒãƒˆã®ç¬¦å·ç„¡ã—æ•´æ•°ã§ã‚ã‚‹ï¼
+%charå‹ã§ã‚ã‚Šï¼Œè¨ˆç®—æ©Ÿä¸Šã§ã®è¡¨ç¾ã¯å‡¦ç†ç³»ã«ä¾å­˜ã™ã‚‹ï¼
+æ–‡å­—ã®ã‚³ãƒ¼ãƒ‰ä¸Šã§ã®è¡¨ç¾ã¯\lstinline|'c'|ã®ã‚ˆã†ã«ãªã‚‹ï¼
 
-\subsection{ŠO•”’è”}\label{ssc:expr-external}
-ŠO•”’è”‚ÍCnibkameƒRƒAŒ¾Œêƒ\[ƒXƒR[ƒhã‚ÅŠù‚É’è‹`‚³‚ê‚Ä‚¢‚é‚à‚Ì‚Æ‚µ‚Äg—p‚·‚é‚±‚Æ‚Ìo—ˆ‚é
-’è”‚Å‚ ‚èC‹ï‘Ì“I‚É‚ÍŠO•”‚ÌCƒ‰ƒ“ƒ^ƒCƒ€‚ÌŠÖ”‚â‰ÁZEŒ¸Z‚È‚Ç‚ÌƒvƒŠƒ~ƒeƒBƒuŠÖ”‚Å‚ ‚éD
+\subsection{å¤–éƒ¨å®šæ•°}\label{ssc:expr-external}
+å¤–éƒ¨å®šæ•°ã¯ï¼Œnibkameã‚³ã‚¢è¨€èªã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ä¸Šã§æ—¢ã«å®šç¾©ã•ã‚Œã¦ã„ã‚‹ã‚‚ã®ã¨ã—ã¦ä½¿ç”¨ã™ã‚‹ã“ã¨ã®å‡ºæ¥ã‚‹
+å®šæ•°ã§ã‚ã‚Šï¼Œå…·ä½“çš„ã«ã¯å¤–éƒ¨ã®Cãƒ©ãƒ³ã‚¿ã‚¤ãƒ ã®é–¢æ•°ã‚„åŠ ç®—ãƒ»æ¸›ç®—ãªã©ã®ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–é–¢æ•°ã§ã‚ã‚‹ï¼
 
-\subsection{‘g}\label{ssc:expr-tuple}
-‘g‚Æ‚Í‚¢‚­‚Â‚©‚Ì’l‚Ì•À‚Ñ‚Ì‚±‚Æ‚Å‚ ‚èC
-W‡‚É‚¨‚¯‚é‘g‚Æ‚Ù‚Ú“¯‚¶‚à‚Ì‚Å‚ ‚éD
+\subsection{çµ„}\label{ssc:expr-tuple}
+çµ„ã¨ã¯ã„ãã¤ã‹ã®å€¤ã®ä¸¦ã³ã®ã“ã¨ã§ã‚ã‚Šï¼Œ
+é›†åˆã«ãŠã‘ã‚‹çµ„ã¨ã»ã¼åŒã˜ã‚‚ã®ã§ã‚ã‚‹ï¼
 
-\subsection{•Ï”}\label{ssc:expr-variable}
-•Ï”‚Íˆê”Ê‚ÌƒvƒƒOƒ‰ƒ~ƒ“ƒOŒ¾Œê‚É‚¨‚¯‚éŠT”O‚Æ“¯‚¶‚Å‚ ‚éD
-‚µ‚©‚µCnibkame‚É‚¨‚¯‚é•Ï”‚Í¶¬‚És‚í‚ê‚é‘©”›‚ÌŒã‚ÍˆêØ‚Ì‘ã“ü‚ğs‚¤‚±‚Æ‚ªo—ˆ‚È‚¢D
-‚»‚Ì‚½‚ßCQÆ‚ª—p‚¢‚ç‚ê‚Ä‚¢‚È‚¢ê‡‚É‚ÍC“¯‚¶®‚ğ•]‰¿‚·‚é‚Æ“¯‚¶Œ‹‰Ê‚Æ‚È‚éD
+\subsection{å¤‰æ•°}\label{ssc:expr-variable}
+å¤‰æ•°ã¯ä¸€èˆ¬ã®ãƒ—ãƒ­ã‚°ãƒ©ãƒŸãƒ³ã‚°è¨€èªã«ãŠã‘ã‚‹æ¦‚å¿µã¨åŒã˜ã§ã‚ã‚‹ï¼
+ã—ã‹ã—ï¼Œnibkameã«ãŠã‘ã‚‹å¤‰æ•°ã¯ç”Ÿæˆæ™‚ã«è¡Œã‚ã‚Œã‚‹æŸç¸›ã®å¾Œã¯ä¸€åˆ‡ã®ä»£å…¥ã‚’è¡Œã†ã“ã¨ãŒå‡ºæ¥ãªã„ï¼
+ãã®ãŸã‚ï¼Œå‚ç…§ãŒç”¨ã„ã‚‰ã‚Œã¦ã„ãªã„å ´åˆã«ã¯ï¼ŒåŒã˜å¼ã‚’è©•ä¾¡ã™ã‚‹ã¨åŒã˜çµæœã¨ãªã‚‹ï¼
 
-\subsection{‘©”›}\label{ssc:expr-let}
-•Ï”‘©”›‚ğs‚¤‚Ì‚ª$\mathnkop{let}$®‚Å‚ ‚éD
-nibkame‚É‚¨‚¯‚é•Ï”‚ÌƒXƒR[ƒv‚ÍƒŒƒLƒVƒJƒ‹ƒXƒR[ƒv(lexical scope)‚Å‚ ‚éD
+\subsection{æŸç¸›}\label{ssc:expr-let}
+å¤‰æ•°æŸç¸›ã‚’è¡Œã†ã®ãŒ$\mathnkop{let}$å¼ã§ã‚ã‚‹ï¼
+nibkameã«ãŠã‘ã‚‹å¤‰æ•°ã®ã‚¹ã‚³ãƒ¼ãƒ—ã¯ãƒ¬ã‚­ã‚·ã‚«ãƒ«ã‚¹ã‚³ãƒ¼ãƒ—(lexical scope)ã§ã‚ã‚‹ï¼
 
-—á‚¦‚ÎC
+ä¾‹ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{let} r = \\
@@ -125,17 +125,17 @@ nibkame‚É‚¨‚¯‚é•Ï”‚ÌƒXƒR[ƒv‚ÍƒŒƒLƒVƒJƒ‹ƒXƒR[ƒv(lexical scope)‚Å‚ ‚éD
 &\quad\quad a, b, x
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚Å‚Í
-$r$‚Í$5, 3, 3$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã§ã¯
+$r$ã¯$5, 3, 3$ã¨ãªã‚‹ï¼
 
-\subsection{QÆ}\label{ssc:expr-reference}
-nibkame‚É‚¨‚¢‚Ä‚Íˆê“x‘©”›‚µ‚½•Ï”‚Ì’†g‚ğ•ÏX‚·‚é‚±‚Æ‚ªo—ˆ‚È‚¢D
-‚µ‚©‚µCÀÛ‚É•›ì—p‚ÌˆêØ–³‚¢ƒR[ƒh‚ğ‘‚­‚Ì‚ÍèŠÔ‚È‚Ì‚ÅC
-QÆ‚Æ‚¢‚¤ŠT”O‚ğ“±“ü‚µC
-•Ï”‚ÉŠi”[‚³‚ê‚Ä‚¢‚éuƒf[ƒ^‚ªŠi”[‚³‚ê‚Ä‚¢‚éêŠ‚Ö‚ÌQÆv‚Í•Ï‰»‚µ‚È‚¢‚ªC
-uƒf[ƒ^‚ªŠi”[‚³‚ê‚Ä‚¢‚éêŠ‚Ö‚ÌQÆv‚ğ‚½‚Ç‚Á‚ÄCŠi”[‚³‚ê‚Ä‚¢‚éƒf[ƒ^‚ğ“¾‚½‚èC•ÏX‚µ‚½‚è‚·‚é‚±‚Æ‚ªo—ˆ‚é‚æ‚¤‚É‚È‚Á‚Ä‚¢‚éD
+\subsection{å‚ç…§}\label{ssc:expr-reference}
+nibkameã«ãŠã„ã¦ã¯ä¸€åº¦æŸç¸›ã—ãŸå¤‰æ•°ã®ä¸­èº«ã‚’å¤‰æ›´ã™ã‚‹ã“ã¨ãŒå‡ºæ¥ãªã„ï¼
+ã—ã‹ã—ï¼Œå®Ÿéš›ã«å‰¯ä½œç”¨ã®ä¸€åˆ‡ç„¡ã„ã‚³ãƒ¼ãƒ‰ã‚’æ›¸ãã®ã¯æ‰‹é–“ãªã®ã§ï¼Œ
+å‚ç…§ã¨ã„ã†æ¦‚å¿µã‚’å°å…¥ã—ï¼Œ
+å¤‰æ•°ã«æ ¼ç´ã•ã‚Œã¦ã„ã‚‹ã€Œãƒ‡ãƒ¼ã‚¿ãŒæ ¼ç´ã•ã‚Œã¦ã„ã‚‹å ´æ‰€ã¸ã®å‚ç…§ã€ã¯å¤‰åŒ–ã—ãªã„ãŒï¼Œ
+ã€Œãƒ‡ãƒ¼ã‚¿ãŒæ ¼ç´ã•ã‚Œã¦ã„ã‚‹å ´æ‰€ã¸ã®å‚ç…§ã€ã‚’ãŸã©ã£ã¦ï¼Œæ ¼ç´ã•ã‚Œã¦ã„ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’å¾—ãŸã‚Šï¼Œå¤‰æ›´ã—ãŸã‚Šã™ã‚‹ã“ã¨ãŒå‡ºæ¥ã‚‹ã‚ˆã†ã«ãªã£ã¦ã„ã‚‹ï¼
 
-—á‚¦‚ÎC
+ä¾‹ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{let} p = \mathnkop{ref} 3 \\
@@ -144,27 +144,27 @@ nibkame‚É‚¨‚¢‚Ä‚Íˆê“x‘©”›‚µ‚½•Ï”‚Ì’†g‚ğ•ÏX‚·‚é‚±‚Æ‚ªo—ˆ‚È‚¢D
 &\quad\quad p!
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚Íã‚©‚ç‡‚ÉÀs‚³‚êC
-ÅI“I‚É\lstinline|q|‚Í\lstinline|7|C\lstinline|p|‚Í\lstinline|7|‚ªŠi”[‚³‚ê‚Ä‚¢‚éêŠ‚Ö‚ÌQÆ‚ª‘©”›‚³‚ê‚Ä‚¢‚é‚±‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã¯ä¸Šã‹ã‚‰é †ã«å®Ÿè¡Œã•ã‚Œï¼Œ
+æœ€çµ‚çš„ã«\lstinline|q|ã¯\lstinline|7|ï¼Œ\lstinline|p|ã¯\lstinline|7|ãŒæ ¼ç´ã•ã‚Œã¦ã„ã‚‹å ´æ‰€ã¸ã®å‚ç…§ãŒæŸç¸›ã•ã‚Œã¦ã„ã‚‹ã“ã¨ãªã‚‹ï¼
 
-\subsection{Œ^\’zq}\label{ssc:expr-constructor}
-Œ^\’zq‚Æ‚Í‚¢‚í‚ä‚é‘ã”“Iƒf[ƒ^\‘¢‚ğì‚é‚à‚Ì‚Å‚ ‚éD
-W‡‚ÅŒ¾‚¤‚Æ‚±‚ë‚Ì’¼˜a‚Æ“™‚µ‚¢D
+\subsection{å‹æ§‹ç¯‰å­}\label{ssc:expr-constructor}
+å‹æ§‹ç¯‰å­ã¨ã¯ã„ã‚ã‚†ã‚‹ä»£æ•°çš„ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’ä½œã‚‹ã‚‚ã®ã§ã‚ã‚‹ï¼
+é›†åˆã§è¨€ã†ã¨ã“ã‚ã®ç›´å’Œã¨ç­‰ã—ã„ï¼
 
-\subsection{ƒpƒ^[ƒ“ƒ}ƒbƒ`ƒ“ƒO}\label{ssc:expr-match}
-ƒpƒ^[ƒ“ƒ}ƒbƒ`ƒ“ƒO‚ÍCğŒ•ªŠò‚ğs‚Á‚½‚èC
-Œ^\’zq‚É‚æ‚Á‚Äì‚ç‚ê‚½‘ã”“Iƒf[ƒ^Œ^‚Ì’l‚©‚çC
-’†g‚ğæ‚èo‚µ‚Ä•Ï”‚É‘©”›‚µ‚½‚è‚Å‚«‚éD
+\subsection{ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒãƒ³ã‚°}\label{ssc:expr-match}
+ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒãƒ³ã‚°ã¯ï¼Œæ¡ä»¶åˆ†å²ã‚’è¡Œã£ãŸã‚Šï¼Œ
+å‹æ§‹ç¯‰å­ã«ã‚ˆã£ã¦ä½œã‚‰ã‚ŒãŸä»£æ•°çš„ãƒ‡ãƒ¼ã‚¿å‹ã®å€¤ã‹ã‚‰ï¼Œ
+ä¸­èº«ã‚’å–ã‚Šå‡ºã—ã¦å¤‰æ•°ã«æŸç¸›ã—ãŸã‚Šã§ãã‚‹ï¼
 
 $\mathnkop{match}e\mathnkop{with}\mathit{clss}$
-‚Æ‚¢‚¤®‚Ìê‡‚¾‚ÆC
-ß$p\mathnkop{with}e_g\rightarrow e_c$‚ğæ“ª‚©‚ç‡‚É
-ƒpƒ^[ƒ“$p$‚ğ$e$‚Ì’l‚É“–‚Ä‚Í‚ß‚é‚±‚Æ‚ª‚Å‚«‚é‚©‚Ç‚¤‚©‚ÆCƒK[ƒh$e_g$‚Ì’l‚ª$\mathnkval{true}$‚Ç‚¤‚©‚ğ’²‚×C
-—¼•û¬—§‚·‚éê‡‚Í®$e_c$‚ğ•]‰¿‚µC‚»‚Ì’l‚ªmatch®‚Ì’l‚Æ‚È‚éD
-‚½‚¾‚µCƒK[ƒh‚Ì‚È‚¢ß$p\rightarrow e_c$‚Í$p\mathnkop{with}\mathnkval{true}\rightarrow e_c$‚Æ“™‰¿‚Å‚ ‚éD
+ã¨ã„ã†å¼ã®å ´åˆã ã¨ï¼Œ
+ç¯€$p\mathnkop{with}e_g\rightarrow e_c$ã‚’å…ˆé ­ã‹ã‚‰é †ã«
+ãƒ‘ã‚¿ãƒ¼ãƒ³$p$ã‚’$e$ã®å€¤ã«å½“ã¦ã¯ã‚ã‚‹ã“ã¨ãŒã§ãã‚‹ã‹ã©ã†ã‹ã¨ï¼Œã‚¬ãƒ¼ãƒ‰$e_g$ã®å€¤ãŒ$\mathnkval{true}$ã©ã†ã‹ã‚’èª¿ã¹ï¼Œ
+ä¸¡æ–¹æˆç«‹ã™ã‚‹å ´åˆã¯å¼$e_c$ã‚’è©•ä¾¡ã—ï¼Œãã®å€¤ãŒmatchå¼ã®å€¤ã¨ãªã‚‹ï¼
+ãŸã ã—ï¼Œã‚¬ãƒ¼ãƒ‰ã®ãªã„ç¯€$p\rightarrow e_c$ã¯$p\mathnkop{with}\mathnkval{true}\rightarrow e_c$ã¨ç­‰ä¾¡ã§ã‚ã‚‹ï¼
 
-\paragraph{’è”}
-’è”ƒpƒ^[ƒ“‚Í’è”‚É‚Ì‚İƒ}ƒbƒ`‚·‚éD‚½‚Æ‚¦‚ÎC
+\paragraph{å®šæ•°}
+å®šæ•°ãƒ‘ã‚¿ãƒ¼ãƒ³ã¯å®šæ•°ã«ã®ã¿ãƒãƒƒãƒã™ã‚‹ï¼ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}\text{\lstinline|'b'|}\mathnkop{with} \\
@@ -174,20 +174,20 @@ $\mathnkop{match}e\mathnkop{with}\mathit{clss}$
 &\quad \clauseor \text{\lstinline|'d'|}\rightarrow 4
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$2$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$2$ã¨ãªã‚‹ï¼
 
-\paragraph{ƒƒCƒ‹ƒhƒJ[ƒh}
-ƒƒCƒ‹ƒhƒJ[ƒhƒpƒ^[ƒ“‚ÍŒ^\’zq‚ğœ‚­‘S‚Ä‚Éƒ}ƒbƒ`‚·‚éD‚½‚Æ‚¦‚ÎC
+\paragraph{ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰}
+ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰ãƒ‘ã‚¿ãƒ¼ãƒ³ã¯å‹æ§‹ç¯‰å­ã‚’é™¤ãå…¨ã¦ã«ãƒãƒƒãƒã™ã‚‹ï¼ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}e\mathnkop{with} \\
 &\quad \clauseor \patternany \rightarrow 1
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚ÍC
-•Ï”$e$‚Ì’l‚ª‚È‚ñ‚Å‚ ‚ë‚¤‚Æí‚É$1$‚Å‚ ‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯ï¼Œ
+å¤‰æ•°$e$ã®å€¤ãŒãªã‚“ã§ã‚ã‚ã†ã¨å¸¸ã«$1$ã§ã‚ã‚‹ï¼
 
-‚Ü‚½Cƒpƒ^[ƒ“‚Ì•]‰¿‡˜‚æ‚èC
+ã¾ãŸï¼Œãƒ‘ã‚¿ãƒ¼ãƒ³ã®è©•ä¾¡é †åºã‚ˆã‚Šï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}\text{\lstinline|'d'|}\mathnkop{with} \\
@@ -197,40 +197,40 @@ $\mathnkop{match}e\mathnkop{with}\mathit{clss}$
 &\quad \clauseor \text{\lstinline|'d'|}\rightarrow 4
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚ÍC
-ƒƒCƒ‹ƒhƒJ[ƒhƒpƒ^[ƒ“‚Éƒ}ƒbƒ`‚·‚é‚½‚ß$3$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯ï¼Œ
+ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰ãƒ‘ã‚¿ãƒ¼ãƒ³ã«ãƒãƒƒãƒã™ã‚‹ãŸã‚$3$ã¨ãªã‚‹ï¼
 
-\paragraph{•Ï”}
-•Ï”ƒpƒ^[ƒ“‚ÍƒƒCƒ‹ƒhƒJ[ƒhƒpƒ^[ƒ“‚Æ‚Ù‚Ú“¯‚¶‚Å‚ ‚èCŒ^\’zq‚ğœ‚­‘S‚Ä‚Éƒ}ƒbƒ`‚·‚éD
-ƒƒCƒ‹ƒhƒJ[ƒhƒpƒ^[ƒ“‚Æ‚Ìˆá‚¢‚ÍC
-•Ï”ƒpƒ^[ƒ“$x$‚É’l$e$‚ª“–‚Ä‚Í‚Ü‚Á‚½‚Æ‚«C
-•Ï”$x$‚É’l$e$‚ª‘©”›‚³‚ê‚½ó‘Ô‚Å
-ß‚ÌƒK[ƒh$e_g$‚Æ®$e_c$‚ª•]‰¿‚³‚ê‚é‚±‚Æ‚Å‚ ‚éD
+\paragraph{å¤‰æ•°}
+å¤‰æ•°ãƒ‘ã‚¿ãƒ¼ãƒ³ã¯ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰ãƒ‘ã‚¿ãƒ¼ãƒ³ã¨ã»ã¼åŒã˜ã§ã‚ã‚Šï¼Œå‹æ§‹ç¯‰å­ã‚’é™¤ãå…¨ã¦ã«ãƒãƒƒãƒã™ã‚‹ï¼
+ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰ãƒ‘ã‚¿ãƒ¼ãƒ³ã¨ã®é•ã„ã¯ï¼Œ
+å¤‰æ•°ãƒ‘ã‚¿ãƒ¼ãƒ³$x$ã«å€¤$e$ãŒå½“ã¦ã¯ã¾ã£ãŸã¨ãï¼Œ
+å¤‰æ•°$x$ã«å€¤$e$ãŒæŸç¸›ã•ã‚ŒãŸçŠ¶æ…‹ã§
+ç¯€ã®ã‚¬ãƒ¼ãƒ‰$e_g$ã¨å¼$e_c$ãŒè©•ä¾¡ã•ã‚Œã‚‹ã“ã¨ã§ã‚ã‚‹ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}\text{\lstinline|'a'|}\mathnkop{with} \\
 &\quad \clauseor x\rightarrow 1,x \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚ÍC
-$1,\text{\lstinline|a|}$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯ï¼Œ
+$1,\text{\lstinline|a|}$ã¨ãªã‚‹ï¼
 
-\paragraph{Œ^\’zqEŒ^\’zq“K—p}
-Œ^\’zqƒpƒ^[ƒ“‚ÆŒ^\’zq“K—pƒpƒ^[ƒ“‚Í‘ã”“Iƒf[ƒ^Œ^‚É‘Î‚µ‚Ä“K—p‚³‚ê‚éD
-Œ^\’zq‚ÌŒ^‚É‚æ‚Á‚Ä‚Ç‚¿‚ç‚ªg‚í‚ê‚È‚­‚Ä‚Í‚¢‚¯‚È‚¢‚©‚ªŒˆ‚Ü‚èC
-ˆø”‚ğæ‚ç‚È‚¢Œ^\’zq‚É‘Î‚µ‚Ä‚ÍŒ^\’zqƒpƒ^[ƒ“C
-ˆø”‚ğæ‚éŒ^\’zq‚É‘Î‚µ‚Ä‚ÍŒ^\’zq“K—pƒpƒ^[ƒ“‚ªg‚í‚ê‚éD
+\paragraph{å‹æ§‹ç¯‰å­ãƒ»å‹æ§‹ç¯‰å­é©ç”¨}
+å‹æ§‹ç¯‰å­ãƒ‘ã‚¿ãƒ¼ãƒ³ã¨å‹æ§‹ç¯‰å­é©ç”¨ãƒ‘ã‚¿ãƒ¼ãƒ³ã¯ä»£æ•°çš„ãƒ‡ãƒ¼ã‚¿å‹ã«å¯¾ã—ã¦é©ç”¨ã•ã‚Œã‚‹ï¼
+å‹æ§‹ç¯‰å­ã®å‹ã«ã‚ˆã£ã¦ã©ã¡ã‚‰ãŒä½¿ã‚ã‚Œãªãã¦ã¯ã„ã‘ãªã„ã‹ãŒæ±ºã¾ã‚Šï¼Œ
+å¼•æ•°ã‚’å–ã‚‰ãªã„å‹æ§‹ç¯‰å­ã«å¯¾ã—ã¦ã¯å‹æ§‹ç¯‰å­ãƒ‘ã‚¿ãƒ¼ãƒ³ï¼Œ
+å¼•æ•°ã‚’å–ã‚‹å‹æ§‹ç¯‰å­ã«å¯¾ã—ã¦ã¯å‹æ§‹ç¯‰å­é©ç”¨ãƒ‘ã‚¿ãƒ¼ãƒ³ãŒä½¿ã‚ã‚Œã‚‹ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 \mathnkvariant{Left} : \typename{int}\rightarrow \typename{intEither}\\
 \mathnkvariant{Right} : \typename{int}\rightarrow \typename{intEither}
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤Œ^\’zq‚ª‚ ‚Á‚½ê‡C
+ã¨ã„ã†å‹æ§‹ç¯‰å­ãŒã‚ã£ãŸå ´åˆï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}\mathnkvariant{Left}\ 2\mathnkop{with} \\
@@ -239,16 +239,16 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor \mathnkvariant{Right}\ x\rightarrow 3,x
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$2,2$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$2,2$ã¨ãªã‚‹ï¼
 
-‚Ü‚½C
+ã¾ãŸï¼Œ
 \begin{equation}
 \begin{aligned}
 \mathnkvariant{MyTrue} : \typename{mybool}\\
 \mathnkvariant{MyFalse} : \typename{mybool}
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤Œ^\’zq‚ª‚ ‚Á‚½ê‡C
+ã¨ã„ã†å‹æ§‹ç¯‰å­ãŒã‚ã£ãŸå ´åˆï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}\mathnkvariant{MyTrue}\mathnkop{with} \\
@@ -256,13 +256,13 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor \mathnkvariant{MyFalse}\rightarrow 0 \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$1$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$1$ã¨ãªã‚‹ï¼
 
-\paragraph{‘g}
-‘gƒpƒ^[ƒ“‚Í‘g‚É‘Î‚µ‚Ä“K—p‚³‚ê‚éD
-‘g‚Ì”‚Íˆê’v‚µ‚Ä‚¢‚é•K—v‚ª‚ ‚éD
+\paragraph{çµ„}
+çµ„ãƒ‘ã‚¿ãƒ¼ãƒ³ã¯çµ„ã«å¯¾ã—ã¦é©ç”¨ã•ã‚Œã‚‹ï¼
+çµ„ã®æ•°ã¯ä¸€è‡´ã—ã¦ã„ã‚‹å¿…è¦ãŒã‚ã‚‹ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}1,2,\mathnkval{false}\mathnkop{with} \\
@@ -270,14 +270,14 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor x,y,\mathnkval{false}\rightarrow y,x \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$2,1$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$2,1$ã¨ãªã‚‹ï¼
 
-\paragraph{˜AŒ¾}
-˜AŒ¾ƒpƒ^[ƒ“$p_1\patternand \cdots\patternand p_n$‚Í
-‘S‚Ä‚Ìƒpƒ^[ƒ“$p_i$‚ªƒ}ƒbƒ`‚µ‚½‚Æ‚«‚Ì‚İƒ}ƒbƒ`‚·‚éD
-‚½‚¾‚µCŠeƒpƒ^[ƒ“‚ÉoŒ»‚·‚é•Ï”ƒpƒ^[ƒ“‚Ì–¼‘O‚ÍC‘¼‚Ìƒpƒ^[ƒ“‚ÉoŒ»‚µ‚Ä‚Í‚¢‚¯‚È‚¢D
+\paragraph{é€£è¨€}
+é€£è¨€ãƒ‘ã‚¿ãƒ¼ãƒ³$p_1\patternand \cdots\patternand p_n$ã¯
+å…¨ã¦ã®ãƒ‘ã‚¿ãƒ¼ãƒ³$p_i$ãŒãƒãƒƒãƒã—ãŸã¨ãã®ã¿ãƒãƒƒãƒã™ã‚‹ï¼
+ãŸã ã—ï¼Œå„ãƒ‘ã‚¿ãƒ¼ãƒ³ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ãƒ‘ã‚¿ãƒ¼ãƒ³ã®åå‰ã¯ï¼Œä»–ã®ãƒ‘ã‚¿ãƒ¼ãƒ³ã«å‡ºç¾ã—ã¦ã¯ã„ã‘ãªã„ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
@@ -285,15 +285,15 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor x,((2, c)\patternand(y,\mathnkval{false}))\rightarrow x,y,c \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$1,2,\mathnkval{false}$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$1,2,\mathnkval{false}$ã¨ãªã‚‹ï¼
 
-\paragraph{‘IŒ¾}
-‘IŒ¾ƒpƒ^[ƒ“$p_1\patternor \cdots\patternor p_n$‚Í
-‘S‚Ä‚Ìƒpƒ^[ƒ“$p_i$‚ªƒ}ƒbƒ`‚µ‚½‚Æ‚«‚Ì‚İƒ}ƒbƒ`‚·‚éD
-‚½‚¾‚µCŠeƒpƒ^[ƒ“‚ÉoŒ»‚·‚é•Ï”ƒpƒ^[ƒ“‚Ì–¼‘O‚ÆŒ^‚ÌW‡
-‚Í‘S‚Ä“¯‚¶‚Å‚È‚¯‚ê‚Î‚¢‚¯‚È‚¢D
+\paragraph{é¸è¨€}
+é¸è¨€ãƒ‘ã‚¿ãƒ¼ãƒ³$p_1\patternor \cdots\patternor p_n$ã¯
+å…¨ã¦ã®ãƒ‘ã‚¿ãƒ¼ãƒ³$p_i$ãŒãƒãƒƒãƒã—ãŸã¨ãã®ã¿ãƒãƒƒãƒã™ã‚‹ï¼
+ãŸã ã—ï¼Œå„ãƒ‘ã‚¿ãƒ¼ãƒ³ã«å‡ºç¾ã™ã‚‹å¤‰æ•°ãƒ‘ã‚¿ãƒ¼ãƒ³ã®åå‰ã¨å‹ã®é›†åˆ
+ã¯å…¨ã¦åŒã˜ã§ãªã‘ã‚Œã°ã„ã‘ãªã„ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
@@ -301,13 +301,13 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor x,((1, z)\patternor(\patternany,(z\patternand\mathnkval{false})))\rightarrow x,z \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$1,\mathnkval{false}$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$1,\mathnkval{false}$ã¨ãªã‚‹ï¼
 
-\paragraph{”Û’è}
-”Û’èƒpƒ^[ƒ“$\lnot p$‚Íƒpƒ^[ƒ“$p$‚ª‚»‚ÌˆÊ’u‚Åƒ}ƒbƒ`‚µ‚È‚©‚Á‚½‚ÉCƒ}ƒbƒ`‚·‚éD
-‚½‚¾‚µCƒpƒ^[ƒ“$p$‚Ì’†‚É•Ï”ƒpƒ^[ƒ“‚ğŠÜ‚ñ‚Å‚Í‚È‚ç‚È‚¢D
+\paragraph{å¦å®š}
+å¦å®šãƒ‘ã‚¿ãƒ¼ãƒ³$\lnot p$ã¯ãƒ‘ã‚¿ãƒ¼ãƒ³$p$ãŒãã®ä½ç½®ã§ãƒãƒƒãƒã—ãªã‹ã£ãŸæ™‚ã«ï¼Œãƒãƒƒãƒã™ã‚‹ï¼
+ãŸã ã—ï¼Œãƒ‘ã‚¿ãƒ¼ãƒ³$p$ã®ä¸­ã«å¤‰æ•°ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’å«ã‚“ã§ã¯ãªã‚‰ãªã„ï¼
 
-‚½‚Æ‚¦‚ÎC
+ãŸã¨ãˆã°ï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}1\mathnkop{with} \\
@@ -315,8 +315,8 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor \lnot 2\rightarrow \mathnkval{false} \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$1,\mathnkval{false}$‚Æ‚È‚éD
-‚Ü‚½C”Û’èƒpƒ^[ƒ“‚Í˜AŒ¾E‘IŒ¾ƒpƒ^[ƒ“‚Æ‚Æ‚à‚Ég—p‚·‚é‚Æ•Ö—˜‚Å‚ ‚èC
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$1,\mathnkval{false}$ã¨ãªã‚‹ï¼
+ã¾ãŸï¼Œå¦å®šãƒ‘ã‚¿ãƒ¼ãƒ³ã¯é€£è¨€ãƒ»é¸è¨€ãƒ‘ã‚¿ãƒ¼ãƒ³ã¨ã¨ã‚‚ã«ä½¿ç”¨ã™ã‚‹ã¨ä¾¿åˆ©ã§ã‚ã‚Šï¼Œ
 \begin{equation}
 \begin{aligned}
 &\mathnkop{match}1,(2,\mathnkval{false})\mathnkop{with} \\
@@ -324,26 +324,26 @@ $1,\text{\lstinline|a|}$‚Æ‚È‚éD
 &\quad \clauseor x,((2, c)\patternand(y,\mathnkval{false}))\rightarrow x,y,c \\
 \end{aligned}
 \end{equation}
-‚Æ‚¢‚¤ƒR[ƒh‚É‚¨‚¢‚Ämatch®‚Ì’l‚Í$1,\mathnkval{false},2$‚Æ‚È‚éD
+ã¨ã„ã†ã‚³ãƒ¼ãƒ‰ã«ãŠã„ã¦matchå¼ã®å€¤ã¯$1,\mathnkval{false},2$ã¨ãªã‚‹ï¼
 
-\subsection{ŠÖ”}\label{ssc:expr-function}
-ŠÖ”‚Í‚ ‚é’l‚ğ‚Æ‚Á‚Ä‚ ‚é’l‚ğ•Ô‚·’l‚Å‚ ‚éD
-nibkame‚É‚¨‚¢‚ÄŠÖ”‚Í‘æˆê‹‰‚ÌƒIƒuƒWƒFƒNƒg(first-class object)‚È‚Ì‚ÅC
-•Ï”‚É‘©”›‚µ‚½‚èCŠÖ”‚Ì•Ô‚è’l‚Æ‚µ‚Ä•Ô‚µ‚½‚è‚·‚é‚±‚Æ‚ª‚Å‚«‚éD
+\subsection{é–¢æ•°}\label{ssc:expr-function}
+é–¢æ•°ã¯ã‚ã‚‹å€¤ã‚’ã¨ã£ã¦ã‚ã‚‹å€¤ã‚’è¿”ã™å€¤ã§ã‚ã‚‹ï¼
+nibkameã«ãŠã„ã¦é–¢æ•°ã¯ç¬¬ä¸€ç´šã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ(first-class object)ãªã®ã§ï¼Œ
+å¤‰æ•°ã«æŸç¸›ã—ãŸã‚Šï¼Œé–¢æ•°ã®è¿”ã‚Šå€¤ã¨ã—ã¦è¿”ã—ãŸã‚Šã™ã‚‹ã“ã¨ãŒã§ãã‚‹ï¼
 
-\subsection{•s“®“_‰‰Zq}\label{ssc:expr-fix}
-nibkameƒRƒAŒ¾Œê‚É‚¨‚¢‚ÄC
-$\mathnkop{let} x = e_1 \mathnkop{in} e_2$‚Æ‚¢‚¤‘©”›‚Ì®‚É‚¨‚¢‚Ä
-•Ï”$x$‚Ì’è‹`$e_1$‚Ì’†‚Å$x$‚ğg—p‚·‚é‚±‚Æ‚ª‚Å‚«‚È‚¢D
-‚æ‚Á‚ÄCÄ‹AŠÖ”‚ğ’è‹`‚·‚é‚½‚ß‚É•s“®“_‰‰Zq(•s“®“_ƒRƒ“ƒrƒl[ƒ^‚Æ‚à)‚ğ—p‚¢‚éD
-•s“®“_‰‰Zq$\mathnkop{fix}$‚ÍˆÈ‰º‚Ì“Á’¥‚ğ‚ÂD
+\subsection{ä¸å‹•ç‚¹æ¼”ç®—å­}\label{ssc:expr-fix}
+nibkameã‚³ã‚¢è¨€èªã«ãŠã„ã¦ï¼Œ
+$\mathnkop{let} x = e_1 \mathnkop{in} e_2$ã¨ã„ã†æŸç¸›ã®å¼ã«ãŠã„ã¦
+å¤‰æ•°$x$ã®å®šç¾©$e_1$ã®ä¸­ã§$x$ã‚’ä½¿ç”¨ã™ã‚‹ã“ã¨ãŒã§ããªã„ï¼
+ã‚ˆã£ã¦ï¼Œå†å¸°é–¢æ•°ã‚’å®šç¾©ã™ã‚‹ãŸã‚ã«ä¸å‹•ç‚¹æ¼”ç®—å­(ä¸å‹•ç‚¹ã‚³ãƒ³ãƒ“ãƒãƒ¼ã‚¿ã¨ã‚‚)ã‚’ç”¨ã„ã‚‹ï¼
+ä¸å‹•ç‚¹æ¼”ç®—å­$\mathnkop{fix}$ã¯ä»¥ä¸‹ã®ç‰¹å¾´ã‚’æŒã¤ï¼
 \begin{equation}
 \mathnkop{fix}f= f(\mathnkop{fix}f)
 \end{equation}
 
-\subsection{“K—p}\label{ssc:expr-apply}
-ŠÖ”‚É’l‚ğ—^‚¦’l‚ğ“¾‚é‚±‚Æ‚Å‚ ‚éD
-nibkame‚É‚¨‚¢‚Ä•]‰¿í—ª(evaluation strategy)‚Í
-’l“n‚µ(call-by-value)‚Å‚ ‚éD
-‚»‚Ì‚½‚ßCŠÖ”‚É“n‚³‚ê‚éˆø”‚Í–‘O‚É•]‰¿‚³‚ê‚Ä‚©‚ç“n‚³‚ê‚é‚±‚Æ‚É‚È‚éD
+\subsection{é©ç”¨}\label{ssc:expr-apply}
+é–¢æ•°ã«å€¤ã‚’ä¸ãˆå€¤ã‚’å¾—ã‚‹ã“ã¨ã§ã‚ã‚‹ï¼
+nibkameã«ãŠã„ã¦è©•ä¾¡æˆ¦ç•¥(evaluation strategy)ã¯
+å€¤æ¸¡ã—(call-by-value)ã§ã‚ã‚‹ï¼
+ãã®ãŸã‚ï¼Œé–¢æ•°ã«æ¸¡ã•ã‚Œã‚‹å¼•æ•°ã¯äº‹å‰ã«è©•ä¾¡ã•ã‚Œã¦ã‹ã‚‰æ¸¡ã•ã‚Œã‚‹ã“ã¨ã«ãªã‚‹ï¼
 
