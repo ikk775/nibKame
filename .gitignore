@@ -1,6 +1,7 @@
 .*.sw?
 _.sw?
 *~
+*#
 ._d
 .bcdi
 doc/*/figure
