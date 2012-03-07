@@ -160,6 +160,8 @@ let f e =
   List.rev !topDecls, e'
 
 let from_knormal k = fst (f k)
+  
+let from_knormal_topdecls k = failwith "Closure.from_knormal_topdecls is not yet implemented!!"
 
 let l_to_string = function
   | Id.L str ->  str

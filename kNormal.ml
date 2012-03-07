@@ -130,6 +130,15 @@ let rec to_sexpr = function
   | ExtFunApply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
 and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt_to_sexpr x.name; Sexpr.Sexpr (List.map vt_to_sexpr x.args); to_sexpr x.body]
 
+let topDecl_to_sexpr = function
+  | FunDecl fd ->
+    Sexpr.Sexpr [Sexpr.Sident "k:fun-decl"; fundef_to_sexpr fd]
+  | VarDecl {var_name=name; expr=expr} ->
+    Sexpr.Sexpr [Sexpr.Sident "k:var-decl"; to_sexpr expr]
+
+let topDecls_to_sexpr decls =
+  Sexpr.tagged_sexpr "k:decls" (List.map topDecl_to_sexpr decls)
+
 let rec of_sexpr = function
   | Sexpr.Sident "k:unit" -> Unit
   | Sexpr.Sexpr [Sexpr.Sident "k:nil"; tlc] -> Nil (Type.listCategory_of_sexpr tlc)
@@ -414,10 +423,13 @@ let rec from_typing_result r =
   k, List.unique ~eq:is_same_name_decl (VarDecl {var_name = ("%true", Type.Int); expr= Int 1} :: !ext_decls)
 
 let typing_result_split r =
+	let rec g = function
+	  | R.R_Fix(v, r, _) -> r
+	  | _ -> r in
 	let rec f args = function
 		| R.R_Fun (v, r) -> f (v :: args) r
 		| r' -> args, r' in
-  let args, r' = f [] r in
+  let args, r' = f [] (g r) in
 	List.rev args, r'
 	
 let from_module_expr_decl = function
