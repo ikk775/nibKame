@@ -6,7 +6,7 @@ module TE = TypingExpr
 module TT = TypingType
 module L = LLifting
 
-let knormal_var_cls = "KN"
+let knormal_var_cls = "_NK"
 
 type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
@@ -60,22 +60,20 @@ type substitution =
 
 let gen_var_num = ref 0
 
-let gen_varname () =
+let gen_varname stem =
   gen_var_num := !gen_var_num + 1;
-  (Format.sprintf "$k:%d" !gen_var_num)
+  (Format.sprintf "%s_IK%d" (Mangle.escapex "_NK__" stem) !gen_var_num)
 
-let rec gen_varnames n =
-  if n > 0
-  then gen_varname () :: gen_varnames (n - 1)
-  else []
+let rec gen_varnames = function
+  | [] -> []
+  | s::xs -> gen_varname s :: gen_varnames xs
 
-let gen_var () =
-  Var (gen_varname ())
+let gen_var stem =
+  Var (gen_varname stem)
 
-let rec gen_vars n =
-  if n > 0
-  then gen_var () :: gen_vars (n - 1)
-  else []
+let rec gen_vars = function
+  | [] -> []
+  | s::xs -> gen_var s :: gen_vars xs
 
 let is_same_name_decl x y = match x, y with
   | VarDecl {var_name = n1}, VarDecl {var_name = n2} -> n1 = n2
@@ -253,13 +251,13 @@ let internal_operator name t =
       let name' = Type.typed_id_to_string knormal_var_cls name t in
       VarDecl { var_name = name', t; expr =  f [] }, name'
     | [tf] -> 
-      let v = gen_varname () in
+      let v = gen_varname (name) in
       let t' = Type.Fun ([tf], t) in
       let name' = Type.typed_id_to_string knormal_var_cls name t' in
       FunDecl { name = name', t'; args = [v, tf]; body =  f [v] }, name'
     | _ -> 
-      let vs = gen_varnames (List.length ts) in
-      let v = gen_varname () in
+      let vs = gen_varnames (List.map Type.to_string ts) in
+      let v = gen_varname (name) in
       let t' = Type.Fun ([Type.Tuple ts], t) in
       let name' = Type.typed_id_to_string knormal_var_cls name t' in
       FunDecl { name = name', t'; args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, name'
@@ -374,19 +372,19 @@ let rec from_typing_result r =
       f env (R.R_Apply (R.R_Variable (name, t), R.R_Variable (v', t')))
     | R.R_Apply (R.R_External (v, t), R.R_Variable (v', t')) ->
       ExtFunApply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
-    | R.R_Apply (R.R_Variable _ as vf, arg)
-    | R.R_Apply (R.R_External _ as vf, arg) ->
-      let bn = R.gen_varname () in
+    | R.R_Apply (R.R_Variable (v,t) as vf, arg)
+    | R.R_Apply (R.R_External (v,t) as vf, arg) ->
+      let bn = R.gen_varname (v ^ "_AK__Apply_ulVE") in
       let t = R.result_type arg in
       f env (R.R_Let ((bn, t), arg, (R.R_Apply (vf, R.R_Variable (bn, t)))))
     | R.R_Apply (lf, args) ->
-      let bn = R.gen_varname () in
+      let bn = R.gen_varname ("_AK__Apply") in
       let t = R.result_type lf in
       f env (R.R_Let ((bn, t), lf, R.R_Apply (R.R_Variable (bn, t), args)))
     | R.R_Tuple (es, t) when List.for_all (function R.R_Variable _ -> true | _ -> false) es ->
       Tuple (List.map R.varname es), TT.oType_to_type t
     | R.R_Tuple (es, t) ->
-      let bns = R.gen_varnames (List.length es) in
+      let bns = R.gen_varnames (List.iter_list (List.length es) (fun () -> "_AK__Tuple")) in
       let bs = List.map2 (fun x e -> R.R_Variable (x, R.result_type e)) bns es in
       let e' = List.fold_left2 (fun e' e b ->
         R.R_Let ((b, R.result_type e), e, e'))
@@ -396,7 +394,7 @@ let rec from_typing_result r =
     | R.R_Vector (es, t) when List.for_all (function R.R_Variable _ -> true | _ -> false) es ->
       undefined ()
     | R.R_Vector (es, t) ->
-      let bns = R.gen_varnames (List.length es) in
+      let bns = R.gen_varnames (List.iter_list (List.length es) (fun () -> "_AK__Vector")) in
       let bs = List.map2 (fun x e -> R.R_Variable (x, R.result_type e)) bns es in
       let e' = List.fold_left2 (fun e' e b ->
         R.R_Let ((b, R.result_type e), e, e'))
@@ -410,7 +408,7 @@ let rec from_typing_result r =
       add_decl decl; 
       If (NotEq, v, name, e2', e3'), t2'
     | R.R_If (e1, e2, e3) ->
-      let bn = R.gen_varname () in
+      let bn = R.gen_varname ("_AK__If") in
       let t1 = R.result_type e1 in
       let e' = R.R_Let((bn, t1), e1, R.R_If (R.R_Variable (bn, t1), e2, e3)) in
       f env e'

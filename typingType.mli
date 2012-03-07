@@ -45,9 +45,10 @@ type substitution = Substitution of typeVar * oType
 val arg_type : oType -> oType
 val dest_type : oType -> oType
 val gen_typevar_num : int ref
-val gen_typevar : unit -> oType
-val gen_typevars : int -> oType list
+val gen_typevar : string -> oType
+val gen_typevars : string list -> oType list
 val get_oType_variable_name : oType -> typeVar
+val get_variable_name : t -> typeVar
 val fun_args : oType -> oType list
 val remove_quantifier : typeScheme -> oType
 val boundVars : typeScheme -> typeVar list

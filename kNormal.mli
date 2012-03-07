@@ -45,10 +45,10 @@ type topDecl =
 
 type substitution = Substitution of Id.t * Id.t
 
-val gen_varname : unit -> string
-val gen_varnames : int -> string list
-val gen_var : unit -> t
-val gen_vars : int -> t list
+val gen_varname : string -> string
+val gen_varnames : string list -> string list
+val gen_var : string -> t
+val gen_vars : string list -> t list
 val vt_to_sexpr : string * Type.t -> Sexpr.t
 val vt_of_sexpr : Sexpr.t -> string * Type.t
 val to_sexpr : t -> Sexpr.t

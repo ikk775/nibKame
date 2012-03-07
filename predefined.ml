@@ -18,7 +18,7 @@ let intop name tfs tt =
     | [], [v] -> TE.E_Apply (TE.E_External(name, intop_type tfs tt), v)
     | [], vs -> TE.E_Apply (TE.E_External(name, intop_type tfs tt), TE.E_Tuple vs)
     | t :: ts, vs ->
-      let b = TE.gen_exprvar () in
+      let b = TE.gen_exprvar name in
       let bn = TE.get_exprvar_name b in
       TE.E_Fun (bn, f (ts, (b :: vs)))
   in

@@ -129,13 +129,13 @@ let rec change = function
 	| Sident "let" :: pat :: a :: [] ->
 	    Syntax.TopLet (pattern_of_list pat, change a)
 	| Sident "letrec" :: Sident name :: a :: b :: [] ->
-	    Syntax.LetRec ((name, Type.gentype()), change a, change b)
+	    Syntax.LetRec ((name, Type.gentype "_ASR__LetRec3"), change a, change b)
 	| Sident "letrec" :: Sident name :: a :: [] ->
-	    Syntax.TopLetRec ((name, Type.gentype()), change a)
+	    Syntax.TopLetRec ((name, Type.gentype "_ASR__LetRec2"), change a)
 	| Sident "fun" :: Sexpr l :: a :: [] ->
 	    Syntax.Fun (List.map 
 			  (function
-          | Sident a -> a, Type.gentype()
+          | Sident a -> a, Type.gentype "_ASR__Fun"
           | _ -> invalid_arg "unexpected token")
 			  l,
 			change a)

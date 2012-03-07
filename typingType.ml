@@ -35,14 +35,13 @@ let dest_type = function
 
 let gen_typevar_num = ref 0
 
-let gen_typevar () =
+let gen_typevar stem =
   gen_typevar_num := !gen_typevar_num + 1;
-  O_Variable (Format.sprintf "$ot:%d" !gen_typevar_num)
+  O_Variable (Format.sprintf "%s_IO%d" (Mangle.escapex "_NO__" stem) !gen_typevar_num)
 
-let rec gen_typevars n =
-  if n > 0
-  then gen_typevar () :: gen_typevars (n - 1)
-  else []
+let rec gen_typevars = function
+  | [] -> []
+  | p::xs -> gen_typevar p :: gen_typevars xs
 
 let get_oType_variable_name = function
   | O_Variable v -> v
@@ -51,6 +50,9 @@ let get_oType_variable_name = function
 let rec remove_quantifier = function
   | OType ot -> ot
   | QType(_, ts) -> remove_quantifier ts
+
+let get_variable_name t = 
+  get_oType_variable_name (remove_quantifier t)
 
 let rec bindedVars = function
   | OType t -> []
@@ -138,7 +140,7 @@ let rec substitute_ts ss ts =
   match ss, ts with
     | ss, OType ot -> OType (substitute ss ot)
     | ss, QType (vs, ts) -> 
-      let tvs = gen_typevars(List.length vs) in
+      let tvs = gen_typevars (vs) in
       let tv_to_c = function O_Variable tv -> tv | _ -> invalid_arg "expected O_Variable" in
       let tvs_to_cs tvs = List.map tv_to_c tvs in
       let tvsc = tvs_to_cs tvs in

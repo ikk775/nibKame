@@ -28,9 +28,9 @@ val freevars : result -> (resultVar * TypingType.oType) list
 val pattern_freevars : pattern -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
 val typevars : result -> Id.t list
-val gen_varname : unit -> string
-val gen_var : TypingType.oType -> result
-val gen_varnames : int -> string list
+val gen_varname : string -> string
+val gen_var : string -> TypingType.oType -> result
+val gen_varnames : string list -> string list
 val varname : result -> resultVar
 val result_freetypevars : (Id.t * TypingType.oType) list -> Id.t list
 val value_restrict : result -> TypingType.oType -> TypingType.typeScheme

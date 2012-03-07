@@ -165,16 +165,16 @@ let is_variable = function
 
 let gen_var_num = ref 0
 
-let gen_varname () =
+let gen_varname stem =
   gen_var_num := !gen_var_num + 1;
-  Format.sprintf "$r:%d" !gen_var_num
+  Format.sprintf "%s_IR%d" (Mangle.escapex "_NR__" stem) !gen_var_num
 
-let gen_var t =
-  let b = gen_varname () in
+let gen_var stem t =
+  let b = gen_varname stem in
   R_Variable (b, t)
 
-let rec gen_varnames n =
-  List.iter_list n gen_varname
+let rec gen_varnames stems =
+  List.map gen_varname stems
 
 let varname = function
   | R_Variable (v, t) -> v
@@ -265,18 +265,18 @@ let rec w env expr =
     | E_Variable v ->
       let ts = E.get_variable_type env (E_Variable v) in
       let boundTypeVarsTs = TypingType.boundVars ts in
-      let newTypeVars = T.gen_typevars (List.length boundTypeVarsTs) in
+      let newTypeVars = T.gen_typevars boundTypeVarsTs in
       let subst = List.map (function x, y -> Substitution(x,y)) (List.combine boundTypeVarsTs newTypeVars) in
       let t = substitute subst (T.remove_quantifier ts) in
       subst, t, R_Variable(v, t)
     | E_Fun(v, expr) -> 
-      let b = T.gen_typevar () in
+      let b = T.gen_typevar v in
       let s1, t1, expr' = w (TypingExpr.add_env env v (OType b)) expr in
       let bt = substitute s1 b in
       let t2 = O_Fun(bt, t1) in
       s1, t2, R_Fun((v, bt), expr')
     | E_Apply(e1, e2) -> 
-      let b = T.gen_typevar () in
+      let b = T.gen_typevar "_AR__Apply" in
       let s1, t1, e1' = w env e1 in
       let s2, t2, e2' = w (TypingExpr.substitute_env s1 env) e2 in
       let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
@@ -313,7 +313,7 @@ let rec w env expr =
           let ss' = unify t1 t2' in
           u_sub (TypingExpr.substitute_env ss' env) (compose ss' ss) (substitute ss' t2') ts)
       in
-      let b = T.gen_typevar () in
+      let b = T.gen_typevar "_AR__Vector" in
       let env', ss', t' = u_sub env ss b ts in
       let t'' = O_Vector t' in
       ss', t'', R_Vector(e'', t'')
@@ -333,7 +333,7 @@ let rec w env expr =
       let s2, t2, e2' = w (TypingExpr.add_env s1env v (TypingExpr.clos s1env (OType t1))) e2 in
       compose s2 s1, t2, R_Let((v, t1), e1', e2')
     | E_Fix(f, E_Fun(x, e)) -> 
-      let b = T.gen_typevar () in
+      let b = T.gen_typevar (f) in
       let s1, t1, e' = w (TypingExpr.add_env env f (OType b)) (E_Fun(x, e)) in
       let s2 = unify (substitute s1 b) t1 in
       let t2 = substitute s2 t1 in
@@ -397,8 +397,8 @@ let rec w env expr =
       in
       let ses, te, e' = w env e in
       let env' = E.substitute_env ses env in
-      let b1 = T.gen_typevar () in
-      let b2 = T.gen_typevar () in
+      let b1 = T.gen_typevar "_AR__Match" in
+      let b2 = T.gen_typevar "_AR__Match" in
       let rstcls = List.fold_left f ((ses, env', b1, b2), []) cls in
       let ss, env, tclp, tcle = fst rstcls in
       let rcls = snd rstcls in
@@ -411,20 +411,20 @@ and w_pattern env = function
     let t = E.get_constant_type (E_Constant c) in
     [], t, RP_Constant(c, t)
   | EP_Variable None ->
-    let t = T.gen_typevar () in
+    let t = T.gen_typevar "_ARP__None" in
     [], t, RP_Variable (None, t)
   | EP_Variable (Some v) ->
-    let t = T.gen_typevar () in
+    let t = T.gen_typevar (v ^ "_ARP__Some") in
     [], t, RP_Variable (Some v, t)
   | EP_Constructor v -> 
     let ts = E.get_variable_type env (E_Variable v) in
     let boundTypeVarsTs = TypingType.boundVars ts in
-    let newTypeVars = T.gen_typevars (List.length boundTypeVarsTs) in
+    let newTypeVars = T.gen_typevars boundTypeVarsTs in
     let subst = List.map (function x, y -> Substitution(x,y)) (List.combine boundTypeVarsTs newTypeVars) in
     let t = substitute subst (T.remove_quantifier ts) in
     subst, t, RP_Constructor (v, t)
   | EP_Apply(p1, p2) -> 
-    let b = T.gen_typevar () in
+    let b = T.gen_typevar ("_ARP__Apply") in
     let s1, t1, p1' = w_pattern env p1 in
     let s2, t2, p2' = w_pattern (TypingExpr.substitute_env s1 env) p2 in
     let s3 = unify (substitute s2 t1) (O_Fun(t2, b)) in
@@ -461,7 +461,7 @@ and w_pattern env = function
         let ss' = unify t1 t2' in
         u_sub (TypingExpr.substitute_env ss' env) (compose ss' ss) (substitute ss' t2') ts)
     in
-    let b = T.gen_typevar () in
+    let b = T.gen_typevar ("_ARP__Vector") in
     let env', ss', t' = u_sub env ss b ts in
     let t'' = O_Vector t' in
     ss', t'', RP_Vector(p'', t'')
