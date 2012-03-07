@@ -1,5 +1,63 @@
 open MyUtil
 
+let escape str =
+  let f = function
+    | '_' -> "_ul"
+    | '%' -> "_pc"
+    | '$' -> "_dr"
+    | '.' -> "_dt"
+    | ',' -> "_cm"
+    | ':' -> "_cl"
+    | ';' -> "_sc"
+    | ' ' -> "_sp"
+    | '!' -> "_ex"
+    | '?' -> "_qu"
+    | '#' -> "_hs"
+    | '\'' -> "_qt"
+    | '`' -> "_qq"
+    | '"' -> "_qw"
+    | '|' -> "_or"
+    | '&' -> "_et"
+    | '@' -> "_at"
+    | '^' -> "_ac"
+    | '+' -> "_pl"
+    | '-' -> "_mn"
+    | '*' -> "_as"
+    | x -> String.implode [x] in
+  List.fold_left (^) "" (List.map f (String.explode str))
+
+let unescape stm =
+  let rec f cs =
+    match Stream.next stm with
+      | '_' -> begin
+	match String.implode (Stream.npeek 2 stm) with
+	  | "ul" -> f ('_' :: cs)
+	  | "pc" -> f ('%' :: cs)
+	  | "dr" -> f ('$' :: cs)
+	  | "dt" -> f ('.' :: cs)
+	  | "cm" -> f (',' :: cs)
+	  | "cl" -> f (':' :: cs)
+	  | "sc" -> f (';' :: cs)
+	  | "sp" -> f (' ' :: cs)
+	  | "ex" -> f ('!' :: cs)
+	  | "qu" -> f ('?' :: cs)
+	  | "hs" -> f ('#' :: cs)
+	  | "qt" -> f ('\'' :: cs)
+	  | "qq" -> f ('`' :: cs)
+	  | "qw" -> f ('"' :: cs)
+	  | "or" -> f ('|' :: cs)
+	  | "et" -> f ('&' :: cs)
+	  | "at" -> f ('@' :: cs)
+	  | "ac" -> f ('^' :: cs)
+	  | "pl" -> f ('+' :: cs)
+	  | "mn" -> f ('-' :: cs)
+	  | "as" -> f ('*' :: cs)
+	  | _ -> failwith "undefined underline escape"
+      end
+
+      | c -> f (c :: cs)
+  in
+  String.implode (List.rev (f []))
 let write_number n =
   Format.sprintf "%ds" n
 
@@ -14,8 +72,9 @@ let read_number stm =
 
 let write_id x =
   assert (Id.is_valid x);
-  let len = String.length x in
-  Format.sprintf "%ds%s" len x
+  let x' = escape x in
+  let len = String.length x' in
+  Format.sprintf "%ds%s" len x'
 
 let read_id stm =
   let cn = read_number stm in
@@ -24,7 +83,7 @@ let read_id stm =
     then cs
     else f (n - 1) (Stream.next stm :: cs)
   in
-  String.implode (List.rev (f cn []))
+  unescape (Stream.of_string (String.implode (List.rev (f cn []))))
 
 let write_seq f xs =
   let len = List.length xs in
