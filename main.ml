@@ -41,6 +41,7 @@ let knormalize_module ch m =
   Debug.dbgprint "convert expr to K-normal.";
   (* let s,t = KNormal.from_typing_result r in*)
   let s = KNormal.from_module m in
+  Debug.dbgprintsexpr ~level:5 (KNormal.topDecls_to_sexpr s);
   s 
 (*i  let k = fst (KNormal.from_typing_result r) in
   Debug.dbgprint "Alpha transform.";
