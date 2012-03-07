@@ -46,14 +46,13 @@ let add_extexprenv tp =
  
 let gen_exprvar_num = ref 0
 
-let gen_exprvar () =
+let gen_exprvar stem =
   gen_exprvar_num := !gen_exprvar_num + 1;
-  E_Variable (Format.sprintf "$e:%d" !gen_exprvar_num)
+  E_Variable (Format.sprintf "%s_IE%d" (Mangle.escapex "_NE__" stem) !gen_exprvar_num)
 
-let rec gen_exprvars n =
-  if n > 0
-  then gen_exprvar () :: gen_exprvars (n - 1)
-  else []
+let rec gen_exprvars = function
+  | [] -> []
+  | s::xs -> gen_exprvar s :: gen_exprvars xs
 
 let substitute_env ss env =
   match env with
@@ -119,7 +118,7 @@ let get_constant_type = function
   | E_Constant c ->
     (match c with
       | Syntax.Unit -> TypingType.O_Constant Type.Unit
-      | Syntax.Nil -> TypingType.O_Variant (TypingType.gen_typevar (), TypingType.O_Constant (Type.Variant "list"))
+      | Syntax.Nil -> TypingType.O_Variant (TypingType.gen_typevar "_AE__Nil", TypingType.O_Constant (Type.Variant "list"))
       | Syntax.Bool _ -> TypingType.O_Constant Type.Bool
       | Syntax.Int _ -> TypingType.O_Constant Type.Int
       | Syntax.Float _ -> TypingType.O_Constant Type.Float
@@ -205,7 +204,7 @@ let rec substitute_expr ss expr =
       E_Match (subst e, List.map g cls)
     | E_Type(e, t) -> E_Type(subst e, t)
     | E_Declare(v, t, e) ->
-      let v' = gen_exprvar () in
+      let v' = gen_exprvar (v) in
       let v'c = get_exprvar_name v' in
       if List.mem_assoc v ss 
       then E_Let(v'c, List.assoc v ss, E_Declare(v'c, t, subst e))
@@ -299,7 +298,7 @@ let rec from_syntax = function
   | Syntax.Let (pat, e1, e2) -> E_Match (from_syntax e1, [pattern_from_syntax_pattern pat, None, from_syntax e2])
   | Syntax.Variant v -> E_Variable v
   | Syntax.LetRec ((v, t), e1, e2) ->
-    let b = gen_exprvar () in
+    let b = gen_exprvar (v) in
     let bn = get_exprvar_name b in
     let ss = [v, b] in
     E_Let(v, E_Fix (bn, substitute_expr ss (from_syntax e1)), from_syntax e2)

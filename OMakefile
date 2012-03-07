@@ -3,7 +3,7 @@ SRCDIR=$(dir .)
 
 .PHONY: all install clean doc
 
-all: nibkamec
+all: nibkamec nibkametoplevel
 .DEFAULT: all
 
 .SUBDIRS: doc
@@ -45,13 +45,13 @@ if $(not $(OCAMLFIND_EXISTS))
 # OCAMLINCLUDES +=
 
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
-BYTE_ENABLED = $(OCAMLOPT_EXISTS)
+BYTE_ENABLED = true
 
 #
 # Various options
 #
-OCAMLFLAGS    +=
-OCAMLCFLAGS   +=
+OCAMLFLAGS    += -g -annot
+OCAMLCFLAGS   += -g
 OCAMLOPTFLAGS +=
 OCAML_LINK_FLAGS +=
 OCAML_BYTE_LINK_FLAGS +=
@@ -100,6 +100,9 @@ LIB = nibkame
 
 .DEFAULT: $(OCamlLibrary $(LIB), $(NIBKAMEFILES))
 
+nibkametoplevel: $(addsuffix .ml, $(NIBKAMEFILES))
+    ocamlmktop -o $@ $+
+
 ################################################
 # Build an OCaml program
 #
@@ -107,12 +110,17 @@ LIB = nibkame
 NIBKAMECFILES[] =
     main
 
+NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
+BYTE_ENABLED = true
+
 PROGRAM = nibkamec
 NIBKAMEC = $(file nibkamec)
 OCAML_LIBS +=nibkame
 OCAML_CLIBS +=
 OCAML_OTHER_LIBS +=
 OCAML_LIB_FLAGS +=
+
+nibkamec: nibkamec.run
 
 OcamlSourceFiles(name) =
     MLFILE = $(addsuffix .ml, $(name))
@@ -144,3 +152,11 @@ OcamldocLaTeX(nibkamec, $(NIBKAMEFILES) $(NIBKAMECFILES))
 
 distclean:
     rm $(filter-proper-targets $(ls R, .))
+
+gcd.scm: nibkamec pervasives.nkl gcd.nkl
+    ./nibkamec gcd > $@ || echo
+
+loads.tl: OMakefile
+    echo > $@ 
+    foreach(nm, $(addsuffix .cmo, $(NIBKAMEFILES)))
+        echo "$(nm)" | sed -e 's/.*/#load "&";;/' >> $@

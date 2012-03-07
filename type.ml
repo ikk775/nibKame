@@ -122,9 +122,9 @@ let rec to_mt = function
 
 let gentypenum = ref 0
 
-let gentype () =
+let gentype stem =
   gentypenum := !gentypenum + 1;
-  Var (Format.sprintf "$t:%d" !gentypenum)
+  Var (Format.sprintf "%s_IT%d" (Mangle.escapex "_NT__" stem) !gentypenum)
 
 let rec mt_equal x y =
   to_mt x = to_mt y
@@ -166,6 +166,9 @@ let rec to_string = function
   | Var x -> 
     "v" ^ Mangle.write_id x
 
+let rec typed_id_to_string prefix id t =
+  prefix ^ Mangle.write_id id ^ "_CT" ^ to_string t
+    
 let rec g stm =
   let rec h () =
     match Stream.next stm with

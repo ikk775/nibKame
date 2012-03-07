@@ -32,9 +32,8 @@ val extexprenv : (string * TypingType.oType) list ref
 val get_extexprenv : (string * TypingType.oType) list
 val set_extexprenv : (string * TypingType.oType) list -> unit
 val add_extexprenv : string * TypingType.oType -> unit
-val gen_exprvar_num : int ref
-val gen_exprvar : unit -> expr
-val gen_exprvars : int -> expr list
+val gen_exprvar : string -> expr
+val gen_exprvars : string list -> expr list
 val substitute_env : TypingType.substitution list -> exprEnv -> exprEnv
 val add_env : exprEnv -> Id.t -> TypingType.typeScheme -> exprEnv
 val combine_env : exprEnv -> exprEnv -> exprEnv

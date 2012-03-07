@@ -160,6 +160,15 @@ let f e =
   List.rev !topDecls, e'
 
 let from_knormal k = fst (f k)
+  
+let from_knormal_topdecls ks =
+  let g' = g Id.Map.empty Id.Set.empty in
+  let h = function
+    | KNormal.FunDecl {KNormal.name=name, t;KNormal.args=args;KNormal.body=body} ->
+      FunDecl{fun_name=Id. L name, t; formal_fv=[]; args=args; body=g' body}
+    | KNormal.VarDecl {KNormal.var_name=name, t;KNormal.expr=expr} ->
+      VarDecl{var_name=Id. L name, t; expr=g' expr} in
+  List.map h ks
 
 let l_to_string = function
   | Id.L str ->  str
@@ -217,11 +226,11 @@ and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "c:fundef"; lt_to_sexpr x.fun_
 let topvar_to_sexpr tv = Sexpr.Sexpr [lt_to_sexpr tv.var_name; to_sexpr tv.expr]
 
 let topDecl_to_sexpr = function
-  | FunDecl fundef -> Sexpr.tagged_sexpr "fun-decl" [fundef_to_sexpr fundef]
-  | VarDecl topvar -> Sexpr.tagged_sexpr "var-decl" [topvar_to_sexpr topvar]
+  | FunDecl fundef -> Sexpr.tagged_sexpr "c:fun-decl" [fundef_to_sexpr fundef]
+  | VarDecl topvar -> Sexpr.tagged_sexpr "c:var-decl" [topvar_to_sexpr topvar]
 
 let topDecls_to_sexpr tds =
-	Sexpr.tagged_sexpr "top-decl-list" (List.map topDecl_to_sexpr tds)
+	Sexpr.tagged_sexpr "c:top-decl-list" (List.map topDecl_to_sexpr tds)
 	
 let topDecls : topDecl list ref = ref []
 

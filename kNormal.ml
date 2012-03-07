@@ -6,6 +6,8 @@ module TE = TypingExpr
 module TT = TypingType
 module L = LLifting
 
+let knormal_var_cls = "_NK"
+
 type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
   | Unit
@@ -58,22 +60,20 @@ type substitution =
 
 let gen_var_num = ref 0
 
-let gen_varname () =
+let gen_varname stem =
   gen_var_num := !gen_var_num + 1;
-  (Format.sprintf "$k:%d" !gen_var_num)
+  (Format.sprintf "%s_IK%d" (Mangle.escapex "_NK__" stem) !gen_var_num)
 
-let rec gen_varnames n =
-  if n > 0
-  then gen_varname () :: gen_varnames (n - 1)
-  else []
+let rec gen_varnames = function
+  | [] -> []
+  | s::xs -> gen_varname s :: gen_varnames xs
 
-let gen_var () =
-  Var (gen_varname ())
+let gen_var stem =
+  Var (gen_varname stem)
 
-let rec gen_vars n =
-  if n > 0
-  then gen_var () :: gen_vars (n - 1)
-  else []
+let rec gen_vars = function
+  | [] -> []
+  | s::xs -> gen_var s :: gen_vars xs
 
 let is_same_name_decl x y = match x, y with
   | VarDecl {var_name = n1}, VarDecl {var_name = n2} -> n1 = n2
@@ -129,6 +129,15 @@ let rec to_sexpr = function
   | ExtArray v -> Sexpr.Sexpr [Sexpr.Sident "k:ext-array"; Sexpr.Sident v]
   | ExtFunApply ((v, t), vs) -> Sexpr.Sexpr (Sexpr.Sident "k:ext-fun-apply" :: Sexpr.Sexpr [Sexpr.Sident v; Type.to_sexpr t] :: List.map (fun x -> Sexpr.Sident x) vs)
 and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "k:fundef"; vt_to_sexpr x.name; Sexpr.Sexpr (List.map vt_to_sexpr x.args); to_sexpr x.body]
+
+let topDecl_to_sexpr = function
+  | FunDecl fd ->
+    Sexpr.Sexpr [Sexpr.Sident "k:fun-decl"; fundef_to_sexpr fd]
+  | VarDecl {var_name=name; expr=expr} ->
+    Sexpr.Sexpr [Sexpr.Sident "k:var-decl"; to_sexpr expr]
+
+let topDecls_to_sexpr decls =
+  Sexpr.tagged_sexpr "k:decls" (List.map topDecl_to_sexpr decls)
 
 let rec of_sexpr = function
   | Sexpr.Sident "k:unit" -> Unit
@@ -239,14 +248,19 @@ and fundef_to_sexpr x = (undefined ())
 let internal_operator name t =
   let operator name ts t f = match ts with
     | [] -> 
-      VarDecl { var_name = name, t; expr =  f [] }, name
+      let name' = Type.typed_id_to_string knormal_var_cls name t in
+      VarDecl { var_name = name', t; expr =  f [] }, name'
     | [tf] -> 
-      let v = gen_varname () in
-      FunDecl { name = name, Type.Fun ([tf], t); args = [v, tf]; body =  f [v] }, name
+      let v = gen_varname (name) in
+      let t' = Type.Fun ([tf], t) in
+      let name' = Type.typed_id_to_string knormal_var_cls name t' in
+      FunDecl { name = name', t'; args = [v, tf]; body =  f [v] }, name'
     | _ -> 
-      let vs = gen_varnames (List.length ts) in
-      let v = gen_varname () in
-      FunDecl { name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, name
+      let vs = gen_varnames (List.map Type.to_string ts) in
+      let v = gen_varname (name) in
+      let t' = Type.Fun ([Type.Tuple ts], t) in
+      let name' = Type.typed_id_to_string knormal_var_cls name t' in
+      FunDecl { name = name', t'; args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, name'
   in
   let ext_func ts' t' qualifiers prefix name tg =
     let mname = Syntax.mangle qualifiers prefix name tg in
@@ -352,21 +366,25 @@ let rec from_typing_result r =
     | R.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
     | R.R_Apply (R.R_Variable (v, t), R.R_Variable (v', t')) ->
       Apply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
+    | R.R_Apply (R.R_External (v, t), R.R_Variable (v', t')) when v.[0] = '%' ->
+      let decl, name = internal_operator v t in
+      add_decl decl; 
+      f env (R.R_Apply (R.R_Variable (name, t), R.R_Variable (v', t')))
     | R.R_Apply (R.R_External (v, t), R.R_Variable (v', t')) ->
       ExtFunApply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
-    | R.R_Apply (R.R_Variable _ as vf, arg)
-    | R.R_Apply (R.R_External _ as vf, arg) ->
-      let bn = R.gen_varname () in
+    | R.R_Apply (R.R_Variable (v,t) as vf, arg)
+    | R.R_Apply (R.R_External (v,t) as vf, arg) ->
+      let bn = R.gen_varname (v ^ "_AK__Apply_ulVE") in
       let t = R.result_type arg in
       f env (R.R_Let ((bn, t), arg, (R.R_Apply (vf, R.R_Variable (bn, t)))))
     | R.R_Apply (lf, args) ->
-      let bn = R.gen_varname () in
+      let bn = R.gen_varname ("_AK__Apply") in
       let t = R.result_type lf in
       f env (R.R_Let ((bn, t), lf, R.R_Apply (R.R_Variable (bn, t), args)))
     | R.R_Tuple (es, t) when List.for_all (function R.R_Variable _ -> true | _ -> false) es ->
       Tuple (List.map R.varname es), TT.oType_to_type t
     | R.R_Tuple (es, t) ->
-      let bns = R.gen_varnames (List.length es) in
+      let bns = R.gen_varnames (List.iter_list (List.length es) (fun () -> "_AK__Tuple")) in
       let bs = List.map2 (fun x e -> R.R_Variable (x, R.result_type e)) bns es in
       let e' = List.fold_left2 (fun e' e b ->
         R.R_Let ((b, R.result_type e), e, e'))
@@ -376,7 +394,7 @@ let rec from_typing_result r =
     | R.R_Vector (es, t) when List.for_all (function R.R_Variable _ -> true | _ -> false) es ->
       undefined ()
     | R.R_Vector (es, t) ->
-      let bns = R.gen_varnames (List.length es) in
+      let bns = R.gen_varnames (List.iter_list (List.length es) (fun () -> "_AK__Vector")) in
       let bs = List.map2 (fun x e -> R.R_Variable (x, R.result_type e)) bns es in
       let e' = List.fold_left2 (fun e' e b ->
         R.R_Let ((b, R.result_type e), e, e'))
@@ -386,9 +404,11 @@ let rec from_typing_result r =
     | R.R_If (R.R_Variable (v, t), e2, e3) ->
       let e2', t2' = f env e2 in
       let e3', t3' = f env e3 in
-      If (Eq, v, "%true", e2', e3'), t2'
+      let decl, name = internal_operator "%false" t in
+      add_decl decl; 
+      If (NotEq, v, name, e2', e3'), t2'
     | R.R_If (e1, e2, e3) ->
-      let bn = R.gen_varname () in
+      let bn = R.gen_varname ("_AK__If") in
       let t1 = R.result_type e1 in
       let e' = R.R_Let((bn, t1), e1, R.R_If (R.R_Variable (bn, t1), e2, e3)) in
       f env e'
@@ -414,10 +434,13 @@ let rec from_typing_result r =
   k, List.unique ~eq:is_same_name_decl (VarDecl {var_name = ("%true", Type.Int); expr= Int 1} :: !ext_decls)
 
 let typing_result_split r =
+	let rec g = function
+	  | R.R_Fix(v, r, _) -> r
+	  | _ -> r in
 	let rec f args = function
 		| R.R_Fun (v, r) -> f (v :: args) r
 		| r' -> args, r' in
-  let args, r' = f [] r in
+  let args, r' = f [] (g r) in
 	List.rev args, r'
 	
 let from_module_expr_decl = function

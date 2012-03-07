@@ -57,14 +57,14 @@ val to_ec : t -> exprCategory
 type mType = (* OBSOLETED *)
   | C_Unit | C_Int | C_Float | C_Char | C_Tuple | C_Ref | C_Variant
 val to_mt : t -> mType
-val gentypenum : int ref
-val gentype : unit -> t
+val gentype : string -> t
 val mt_equal : t -> t -> bool
 val equal : t -> t -> bool
 val of_sexpr : Sexpr.t -> t
 val to_sexpr : t -> Sexpr.t
 
 val to_string : t -> string
+val typed_id_to_string : string -> Id.t -> t -> string
 val read_from_stream : char Stream.t -> t
 val of_string : string -> t
 

@@ -14,23 +14,32 @@ let pervasives =
   Module.compose Predefined.pervasives m
   
 let read_module stm =
+  Debug.dbgprint "Sexpr reading...";
   let syntaxs = TranslationUnit.read stm in
+  Debug.dbgprint "Sexpr modulizing...";
   TranslationUnit.modulize (Module.ext_expr_env pervasives) syntaxs
 
 let knormalize_module ch m =
-  Debug.dbgprint "compose modules.";
-  let m = Module.compose pervasives m in
-  Debug.dbgprint "unfold pattern.";
-  let m = Pattern.unfold_module m in
-  Debug.dbgprint "instantiate general functions.";
-  let m = Instantiate.instantiate m in
   Debug.dbgprint "coerce typevar to unit.";
   let m = Module.coerce_typevars (TypingType.O_Constant Type.Unit) m in
-  Sexpr.write (Format.formatter_of_out_channel ch) (Module.to_sexpr m);
-  Debug.dbgprint "convert module to single expr.";
-  let r = Module.gather_expr m in
+  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
+  Debug.dbgprint "compose modules.";
+  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
+  let m = Module.compose pervasives m in
+  Debug.dbgprint "unfold pattern.";
+  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
+  let m = Pattern.unfold_module m in
+  Debug.dbgprint "instantiate general functions.";
+  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
+  let m = Instantiate.instantiate m in
+  Debug.dbgprint "removing polymorphic function template.";
+  let m = Module.remove_polymorphic_functions m in
+  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
   Debug.dbgprint "convert expr to K-normal.";
-  fst (KNormal.from_typing_result r)
+  (* let s,t = KNormal.from_typing_result r in*)
+  let s = KNormal.from_module m in
+  Debug.dbgprintsexpr ~level:5 (KNormal.topDecls_to_sexpr s);
+  s 
 (*i  let k = fst (KNormal.from_typing_result r) in
   Debug.dbgprint "Alpha transform.";
   Alpha.f k i*)
@@ -39,9 +48,9 @@ let optimize_knormal k = k
 
 let compile_knormal ch k =
   let c = try
-  Closure.from_knormal k
+  Closure.from_knormal_topdecls k
   with Not_found -> failwith "end closure" in
-  Sexpr.write (Format.formatter_of_out_channel ch) (Closure.topDecls_to_sexpr c);
+  Debug.dbgprintsexpr (Closure.topDecls_to_sexpr c);
   Debug.dbgprint "compile to asm.";
   let va = VirtualAsm.f c in
   va
@@ -52,10 +61,13 @@ let emit_asm ch (funcs, fp_table) =
   
 
 let compile ch stm =
+  Debug.dbgprint "reading...";
   let m = read_module stm in
+  Debug.dbgprint "K-normalizing...";
   let k = knormalize_module ch m in
+  Debug.dbgprint "optimizing...";
   let k' = optimize_knormal k in
-  Sexpr.write (Format.formatter_of_out_channel ch) (KNormal.to_sexpr k');
+  Debug.dbgprintsexpr (KNormal.topDecls_to_sexpr k');
   let va = compile_knormal ch k' in
   emit_asm ch va
 
