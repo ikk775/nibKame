@@ -23,6 +23,18 @@ let escape str =
     | '+' -> "_pl"
     | '-' -> "_mn"
     | '*' -> "_as"
+    | '~' -> "_tl"
+    | '/' -> "_sl"
+    | '\\' -> "_bs"
+    | '=' -> "_eq"
+    | '(' -> "_po"
+    | ')' -> "_pc"
+    | '{' -> "_bo"
+    | '}' -> "_bc"
+    | '[' -> "_so"
+    | ']' -> "_sc"
+    | '<' -> "_lt"
+    | '>' -> "_gt"
     | x -> String.implode [x] in
   List.fold_left (^) "" (List.map f (String.explode str))
 
@@ -52,6 +64,18 @@ let unescape stm =
 	  | "pl" -> f ('+' :: cs)
 	  | "mn" -> f ('-' :: cs)
 	  | "as" -> f ('*' :: cs)
+	  | "tl" -> f ('~' :: cs)
+	  | "sl" -> f ('/' :: cs)
+	  | "bs" -> f ('\\' :: cs)
+	  | "eq" -> f ('=' :: cs)
+	  | "po" -> f ('(' :: cs)
+	  | "pc" -> f (')' :: cs)
+	  | "bo" -> f ('{' :: cs)
+	  | "bc" -> f ('}' :: cs)
+	  | "so" -> f ('[' :: cs)
+	  | "sc" -> f (']' :: cs)
+	  | "lt" -> f ('<' :: cs)
+	  | "gt" -> f ('>' :: cs)
 	  | _ -> failwith "undefined underline escape"
       end
 
@@ -126,6 +150,19 @@ let read_seq stm f =
              | <underline> 'p' 'l'     # '+'
              | <underline> 'm' 'n'     # '-'
              | <underline> 'a' 's'     # '*'
+             | <underline> 't' 'l'     # '~'
+             | <underline> 's' 'l'     # '/'
+             | <underline> 'b' 's'     # '\'
+             | <underline> 'e' 'q'     # '='
+             | <underline> 'p' 'o'     # '('
+             | <underline> 'p' 'c'     # ')'
+             | <underline> 'b' 'o'     # '{'
+             | <underline> 'b' 'c'     # '}'
+             | <underline> 's' 'o'     # '['
+             | <underline> 's' 'c'     # ']'
+             | <underline> 'l' 't'     # '<'
+             | <underline> 'g' 't'     # '>'
+             | <underline> <lowercase> <lowercase>   # 将来の拡張用
   <letter> ::= <uppercase> | <lowercase> | <symbol>
   <id> ::= { <letter> }
 
@@ -135,26 +172,33 @@ let read_seq stm f =
   <tag-prefix-name>       ::= 'N'
   <tag-prefix-unique-id>  ::= 'I'
   <tag-prefix-container>  ::= 'C'
-  <tag-prefix>            ::= <tag-prefix-name> | <tag-prefix-unique-id>
+  <tag-prefix-annotation> ::= 'A'
+  <tag-prefix>            ::= <tag-prefix-name>
+                            | <tag-prefix-unique-id>
+                            | <tag-prefix-container>
+                            | <uppercase> { <lowercase> } # 将来の拡張用
   
   <tag-class-source>      ::= 'S'
+  <tag-class-sread>       ::= 'S' 'R'
   <tag-class-expr>        ::= 'X'
   <tag-class-type>        ::= 'T'
   <tag-class-typing-type> ::= 'O'
   <tag-class-typing-expr> ::= 'E'
   <tag-class-typing>      ::= 'R'
+  <tag-class-typing-pat>  ::= 'R' 'P'
   <tag-class-module>      ::= 'M'
   <tag-class-K-normal>    ::= 'K'
   <tag-class-closure>     ::= 'C'
   
   <tag-class>             ::= <tag-class-source>
-                          |   <tag-class-expr>
-                          |   <tag-class-type>
-                          |   <tag-class-typing-type>
-                          |   <tag-class-typing-expr>
-                          |   <tag-class-typing>
-                          |   <tag-class-module>
-                          |   <tag-class-K-normal>
+                            | <tag-class-expr>
+                            | <tag-class-type>
+                            | <tag-class-typing-type>
+                            | <tag-class-typing-expr>
+                            | <tag-class-typing>
+                            | <tag-class-module>
+                            | <tag-class-K-normal>
+                            | <uppercase> { <letter> } # 将来の拡張用
 
   <tag-terminater>        ::= <underline> <underline>
   
