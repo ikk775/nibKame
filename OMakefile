@@ -100,8 +100,8 @@ LIB = nibkame
 
 .DEFAULT: $(OCamlLibrary $(LIB), $(NIBKAMEFILES))
 
-nibkametoplevel: $(addsuffix .ml, $(NIBKAMEFILES))
-    ocamlmktop -o $@ $+
+nibkametoplevel: $(addsuffix .ml, $(NIBKAMEFILES)) $(addsuffix .cmi, $(NIBKAMEFILES))
+    ocamlmktop -o $@ $(addsuffix .ml, $(NIBKAMEFILES))
 
 ################################################
 # Build an OCaml program
