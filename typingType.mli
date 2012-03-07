@@ -50,7 +50,7 @@ val gen_typevars : int -> oType list
 val get_oType_variable_name : oType -> typeVar
 val fun_args : oType -> oType list
 val remove_quantifier : typeScheme -> oType
-val bindedVars : typeScheme -> typeVar list
+val boundVars : typeScheme -> typeVar list
 val typevars : oType -> TypeVarSet.elt list
 val occur : TypeVarSet.elt -> oType -> bool
 val freetypevars : typeScheme -> typeVar list

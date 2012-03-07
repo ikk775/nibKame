@@ -85,25 +85,25 @@ let rec patternvars = function
   | RP_Not (p, t) -> patternvars p
   | RP_Tuple (ps, t) | RP_Vector (ps, t) -> List.unique (List.concat (List.map patternvars ps))
 
-let rec bindedvars : result -> (Id.t * TypingType.oType) list = function
+let rec boundvars : result -> (Id.t * TypingType.oType) list = function
   | R_Constant (l, t) -> []
   | R_Variable (v, t) -> []
-  | R_Fun((v, t), e) -> (v, t) :: bindedvars e
-  | R_Apply(e1, e2) -> List.append (bindedvars e1) (bindedvars e2)
-  | R_Tuple (es, t) -> List.concat (List.map bindedvars es)
-  | R_Vector (es, t) -> List.concat (List.map bindedvars es)
-  | R_If (e1, e2, e3) -> List.concat (List.map bindedvars [e1; e2; e3])
-  | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map bindedvars [e1; e2])
-  | R_Fix ((v, t), e, t') -> (v, t) :: bindedvars e
+  | R_Fun((v, t), e) -> (v, t) :: boundvars e
+  | R_Apply(e1, e2) -> List.append (boundvars e1) (boundvars e2)
+  | R_Tuple (es, t) -> List.concat (List.map boundvars es)
+  | R_Vector (es, t) -> List.concat (List.map boundvars es)
+  | R_If (e1, e2, e3) -> List.concat (List.map boundvars [e1; e2; e3])
+  | R_Let ((v, t), e1, e2) -> (v, t) :: List.concat (List.map boundvars [e1; e2])
+  | R_Fix ((v, t), e, t') -> (v, t) :: boundvars e
   | R_External _ -> []
   | R_Match (e, cls) -> 
     let g = function
       | pat, None, expr -> 
-        patternvars pat @ bindedvars expr
+        patternvars pat @ boundvars expr
       | pat, Some guard, expr -> 
-        patternvars pat @ bindedvars guard @ bindedvars expr
+        patternvars pat @ boundvars guard @ boundvars expr
     in
-    bindedvars e @ List.concat (List.map g cls)
+    boundvars e @ List.concat (List.map g cls)
     
 
 let rec pattern_freevars = function

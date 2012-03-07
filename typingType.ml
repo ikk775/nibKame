@@ -56,6 +56,8 @@ let rec bindedVars = function
   | OType t -> []
   | QType(qv, ts) -> MyUtil.List.unique (List.append qv (bindedVars ts))
 
+let boundVars = bindedVars
+
 let typevars ot =
   let rec typevars_sub = function
     | O_Constant _ -> TypeVarSet.empty

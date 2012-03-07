@@ -120,7 +120,7 @@ let rec subst : substitutions -> t -> t = fun ss m ->
           let e' = Typing.substitute_result_type tss e in
           let oet = TypingType.substitute tss (TypingType.remove_quantifier et) in
           let et' = Typing.value_restrict e' oet in
-          let qtvs' = MyUtil.List.setDiff (TypingType.bindedVars et') typedefns in
+          let qtvs' = MyUtil.List.setDiff (TypingType.boundVars et') typedefns in
           let et'' = TypingType.QType (qtvs', TypingType.OType (TypingType.remove_quantifier et')) in
           Expr (ev, (qtvs', et'', e'))
       in
@@ -203,7 +203,7 @@ let add_expr_with_env = fun env m ->
       let bn = TypingExpr.get_exprvar_name b in
       let eim' = {eim with eim_Expr = (ename, b) :: List.remove_assoc ename eim.eim_Expr} in
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
-      {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r)) :: m'.defs} 
+      {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.boundVars t, t, r)) :: m'.defs} 
 
 let add_expr m e = add_expr_with_env TypingExpr.empty_exprEnv m e
   
@@ -243,7 +243,7 @@ let add_typed_expr = fun m ->  function
       let iem' = Id.compose iem [Id.Substitution(bn, ename)] in
       let eim' = {eim with eim_Expr = (ename, be) :: List.remove_assoc ename eim.eim_Expr} in
       let r' = Typing.substitute_with_expr_subst eim.eim_Expr r in
-      {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.bindedVars t, t, r')) :: m'.defs} 
+      {m' with eim = eim'; iem = iem'; defs = Expr (bn, (TypingType.boundVars t, t, r')) :: m'.defs} 
 
 let add_mutual_recursive_expr_with_env m env ves =
   let vs, es = List.split ves in

@@ -23,7 +23,7 @@ and pattern =
   | RP_Vector of pattern list * TypingType.oType
 and clause = pattern * result option * result
 
-val bindedvars : result -> (Id.t * TypingType.oType) list
+val boundvars : result -> (Id.t * TypingType.oType) list
 val freevars : result -> (resultVar * TypingType.oType) list
 val pattern_freevars : pattern -> (resultVar * TypingType.oType) list
 type substitution = (resultVar * TypingType.oType) * result
