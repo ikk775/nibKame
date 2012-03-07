@@ -2,7 +2,18 @@
 
 
 
-Dependence:
-  - ./*.ml : ExtLib
-  - ./test/*.ml : ExtLib, ocaml-quickcheck(https://github.com/alanfalloon/ocaml-quickcheck)
+Dependencies for building programs:
+  - OCaml
+  - OMake (http://omake.metaprl.org/index.html)
+  - ExtLib (http://code.google.com/p/ocaml-extlib/)
+  - ocaml-quickcheck (https://github.com/alanfalloon/ocaml-quickcheck)
 
+Dependencies for building documents:
+  - TeXLive-2010 (or newer)
+  - asymptote (http://asymptote.sourceforge.net/)
+
+How to Build:
+to build program
+  $ omake nibkamec
+to build documents
+  $ omake doc
