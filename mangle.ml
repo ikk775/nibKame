@@ -95,3 +95,70 @@ let read_seq stm f =
   let xn = read_number stm in
   List.iter_list xn (fun () -> f stm)
 
+(*
+  マングリング名は以下の形式になる。
+  <underline> ::= '_'
+  <uppercase> ::= 'A' | ... | 'Z'
+  <lowercase> ::= 'a' | ... | 'z'
+  <digit-nonzero> ::= '1' | ... | '9'
+  <digit> ::= '0' | <digit-nonzero>
+  
+  <decimal> ::= <digit-nonzero> { <digit> }
+  
+  <symbol> ::= <underline> 'u' 'l'     # '_'
+             | <underline> 'p' 'c'     # '%'
+             | <underline> 'd' 'r'     # '$'
+             | <underline> 'd' 't'     # '.'
+             | <underline> 'c' 'm'     # ','
+             | <underline> 'c' 'l'     # ':'
+             | <underline> 's' 'c'     # ';'
+             | <underline> 's' 'p'     # ' '
+             | <underline> 'e' 'x'     # '!'
+             | <underline> 'q' 'u'     # '?'
+             | <underline> 'h' 's'     # '#'
+             | <underline> 'q' 't'     # '''
+             | <underline> 'q' 'q'     # '`'
+             | <underline> 'q' 'w'     # '"'
+             | <underline> 'o' 'r'     # '|'
+             | <underline> 'e' 't'     # '&'
+             | <underline> 'a' 't'     # '@'
+             | <underline> 'a' 'c'     # '^'
+             | <underline> 'p' 'l'     # '+'
+             | <underline> 'm' 'n'     # '-'
+             | <underline> 'a' 's'     # '*'
+  <letter> ::= <uppercase> | <lowercase> | <symbol>
+  <id> ::= { <letter> }
+
+  <mangled-id> ::= <decimal> 's' <id> # ただし、<decimal> は <id> （エスケープしたもの）の文字列長
+  <tag> ::= <underline> <uppercase>
+  
+  <tag-prefix-name>       ::= 'N'
+  <tag-prefix-unique-id>  ::= 'I'
+  <tag-prefix-container>  ::= 'C'
+  <tag-prefix>            ::= <tag-prefix-name> | <tag-prefix-unique-id>
+  
+  <tag-class-source>      ::= 'S'
+  <tag-class-expr>        ::= 'X'
+  <tag-class-type>        ::= 'T'
+  <tag-class-typing-type> ::= 'O'
+  <tag-class-typing-expr> ::= 'E'
+  <tag-class-typing>      ::= 'R'
+  <tag-class-module>      ::= 'M'
+  <tag-class-K-normal>    ::= 'K'
+  <tag-class-closure>     ::= 'C'
+  
+  <tag-class>             ::= <tag-class-source>
+                          |   <tag-class-expr>
+                          |   <tag-class-type>
+                          |   <tag-class-typing-type>
+                          |   <tag-class-typing-expr>
+                          |   <tag-class-typing>
+                          |   <tag-class-module>
+                          |   <tag-class-K-normal>
+
+  <tag-terminater>        ::= <underline> <underline>
+  
+  <tag>    ::= <underline> <tag-prefix> <tag-class> ( <tag-terminater> )
+  
+  <mangled-name> ::= { <tag> ( <mangled-id> | <id> ) }
+*)
