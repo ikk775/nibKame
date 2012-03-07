@@ -219,11 +219,11 @@ and fundef_to_sexpr x = Sexpr.Sexpr [Sexpr.Sident "c:fundef"; lt_to_sexpr x.fun_
 let topvar_to_sexpr tv = Sexpr.Sexpr [lt_to_sexpr tv.var_name; to_sexpr tv.expr]
 
 let topDecl_to_sexpr = function
-  | FunDecl fundef -> Sexpr.tagged_sexpr "fun-decl" [fundef_to_sexpr fundef]
-  | VarDecl topvar -> Sexpr.tagged_sexpr "var-decl" [topvar_to_sexpr topvar]
+  | FunDecl fundef -> Sexpr.tagged_sexpr "c:fun-decl" [fundef_to_sexpr fundef]
+  | VarDecl topvar -> Sexpr.tagged_sexpr "c:var-decl" [topvar_to_sexpr topvar]
 
 let topDecls_to_sexpr tds =
-	Sexpr.tagged_sexpr "top-decl-list" (List.map topDecl_to_sexpr tds)
+	Sexpr.tagged_sexpr "c:top-decl-list" (List.map topDecl_to_sexpr tds)
 	
 let topDecls : topDecl list ref = ref []
 
