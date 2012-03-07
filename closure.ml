@@ -161,7 +161,14 @@ let f e =
 
 let from_knormal k = fst (f k)
   
-let from_knormal_topdecls k = failwith "Closure.from_knormal_topdecls is not yet implemented!!"
+let from_knormal_topdecls ks =
+  let g' = g Id.Map.empty Id.Set.empty in
+  let h = function
+    | KNormal.FunDecl {KNormal.name=name, t;KNormal.args=args;KNormal.body=body} ->
+      FunDecl{fun_name=Id. L name, t; formal_fv=[]; args=args; body=g' body}
+    | KNormal.VarDecl {KNormal.var_name=name, t;KNormal.expr=expr} ->
+      VarDecl{var_name=Id. L name, t; expr=g' expr} in
+  List.map h ks
 
 let l_to_string = function
   | Id.L str ->  str
