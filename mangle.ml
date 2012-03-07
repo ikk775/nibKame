@@ -38,6 +38,11 @@ let escape str =
     | x -> String.implode [x] in
   List.fold_left (^) "" (List.map f (String.explode str))
 
+let escapex prefix str =
+  if str.[0] = '_'
+  then prefix ^ str
+  else escape str
+
 let unescape stm =
   let rec f cs =
     match Stream.next stm with
