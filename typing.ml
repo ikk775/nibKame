@@ -264,9 +264,9 @@ let rec w env expr =
       [], t, R_External (v, t)
     | E_Variable v ->
       let ts = E.get_variable_type env (E_Variable v) in
-      let freeTypeVarsTs = TypingType.freetypevars ts in
-      let newTypeVars = T.gen_typevars (List.length freeTypeVarsTs) in
-      let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
+      let boundTypeVarsTs = TypingType.boundVars ts in
+      let newTypeVars = T.gen_typevars (List.length boundTypeVarsTs) in
+      let subst = List.map (function x, y -> Substitution(x,y)) (List.combine boundTypeVarsTs newTypeVars) in
       let t = substitute subst (T.remove_quantifier ts) in
       subst, t, R_Variable(v, t)
     | E_Fun(v, expr) -> 
@@ -414,18 +414,13 @@ and w_pattern env = function
     let t = T.gen_typevar () in
     [], t, RP_Variable (None, t)
   | EP_Variable (Some v) ->
-    let ts = T.OType (T.gen_typevar ()) in
-    let env = E.add_env env v ts in
-    let freeTypeVarsTs = TypingType.freetypevars ts in
-    let newTypeVars = T.gen_typevars (List.length freeTypeVarsTs) in
-    let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
-    let t = substitute subst (T.remove_quantifier ts) in
-    subst, t, RP_Variable (Some v, t)
+    let t = T.gen_typevar () in
+    [], t, RP_Variable (Some v, t)
   | EP_Constructor v -> 
     let ts = E.get_variable_type env (E_Variable v) in
-    let freeTypeVarsTs = TypingType.freetypevars ts in
-    let newTypeVars = T.gen_typevars (List.length freeTypeVarsTs) in
-    let subst = List.map (function x, y -> Substitution(x,y)) (List.combine freeTypeVarsTs newTypeVars) in
+    let boundTypeVarsTs = TypingType.boundVars ts in
+    let newTypeVars = T.gen_typevars (List.length boundTypeVarsTs) in
+    let subst = List.map (function x, y -> Substitution(x,y)) (List.combine boundTypeVarsTs newTypeVars) in
     let t = substitute subst (T.remove_quantifier ts) in
     subst, t, RP_Constructor (v, t)
   | EP_Apply(p1, p2) -> 
