@@ -6,6 +6,8 @@ module TE = TypingExpr
 module TT = TypingType
 module L = LLifting
 
+let knormal_var_cls = "KN"
+
 type comp = Eq | NotEq | Ls | LsEq | Gt | GtEq
 type t =
   | Unit
@@ -248,14 +250,19 @@ and fundef_to_sexpr x = (undefined ())
 let internal_operator name t =
   let operator name ts t f = match ts with
     | [] -> 
-      VarDecl { var_name = name, t; expr =  f [] }, name
+      let name' = Type.typed_id_to_string knormal_var_cls name t in
+      VarDecl { var_name = name', t; expr =  f [] }, name'
     | [tf] -> 
       let v = gen_varname () in
-      FunDecl { name = name, Type.Fun ([tf], t); args = [v, tf]; body =  f [v] }, name
+      let t' = Type.Fun ([tf], t) in
+      let name' = Type.typed_id_to_string knormal_var_cls name t' in
+      FunDecl { name = name', t'; args = [v, tf]; body =  f [v] }, name'
     | _ -> 
       let vs = gen_varnames (List.length ts) in
       let v = gen_varname () in
-      FunDecl { name = name, Type.Fun ([Type.Tuple ts], t); args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, name
+      let t' = Type.Fun ([Type.Tuple ts], t) in
+      let name' = Type.typed_id_to_string knormal_var_cls name t' in
+      FunDecl { name = name', t'; args = [v, Type.Tuple ts]; body = LetTuple (List.combine vs ts, v, f vs) }, name'
   in
   let ext_func ts' t' qualifiers prefix name tg =
     let mname = Syntax.mangle qualifiers prefix name tg in
@@ -361,6 +368,10 @@ let rec from_typing_result r =
     | R.R_Variable (v, t) -> Var v, TypingType.oType_to_type t
     | R.R_Apply (R.R_Variable (v, t), R.R_Variable (v', t')) ->
       Apply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
+    | R.R_Apply (R.R_External (v, t), R.R_Variable (v', t')) when v.[0] = '%' ->
+      let decl, name = internal_operator v t in
+      add_decl decl; 
+      f env (R.R_Apply (R.R_Variable (name, t), R.R_Variable (v', t')))
     | R.R_Apply (R.R_External (v, t), R.R_Variable (v', t')) ->
       ExtFunApply ((v, TT.oType_to_type t), [v']), TT.oType_to_type (applied_type 1 t)
     | R.R_Apply (R.R_Variable _ as vf, arg)
