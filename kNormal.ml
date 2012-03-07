@@ -406,7 +406,9 @@ let rec from_typing_result r =
     | R.R_If (R.R_Variable (v, t), e2, e3) ->
       let e2', t2' = f env e2 in
       let e3', t3' = f env e3 in
-      If (Eq, v, "%true", e2', e3'), t2'
+      let decl, name = internal_operator "%false" t in
+      add_decl decl; 
+      If (NotEq, v, name, e2', e3'), t2'
     | R.R_If (e1, e2, e3) ->
       let bn = R.gen_varname () in
       let t1 = R.result_type e1 in
