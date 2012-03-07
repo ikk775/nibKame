@@ -166,6 +166,9 @@ let rec to_string = function
   | Var x -> 
     "v" ^ Mangle.write_id x
 
+let rec typed_id_to_string cls id t =
+  "_" ^ cls ^ "__" ^ Mangle.write_id id ^ "_T" ^ to_string t
+    
 let rec g stm =
   let rec h () =
     match Stream.next stm with
