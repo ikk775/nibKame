@@ -1,7 +1,7 @@
 
 SRCDIR=$(dir .)
 
-.PHONY: all install clean doc
+.PHONY: all install clean doc test-exec
 
 all: nibkamec nibkametoplevel
 .DEFAULT: all
@@ -153,11 +153,9 @@ OcamldocLaTeX(nibkamec, $(NIBKAMEFILES) $(NIBKAMECFILES))
 distclean:
     rm $(filter-proper-targets $(ls R, .))
 
-# 現段階で、 Pervasives モジュールがコンパイルできないので、それを利用しないようにする。
-%.s %.log: nibkamec %.nkl
-    ./nibkamec -o $* $* > $*.log || echo
-
 loads.tl: OMakefile
     echo > $@ 
     foreach(nm, $(addsuffix .cmo, $(NIBKAMEFILES)))
         echo "$(nm)" | sed -e 's/.*/#load "&";;/' >> $@
+
+.SUBDIRS: test-nkl

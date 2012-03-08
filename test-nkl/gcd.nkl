@@ -1,0 +1,7 @@
+(letrec gcd
+  (fun (x y)
+    (if (= y 0) x
+	(gcd y (- x y)))))
+
+(let x
+  (print-int (gcd 2 3)))
