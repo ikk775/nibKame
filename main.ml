@@ -1,17 +1,7 @@
 open MyUtil
 
-let pervasives_module_name = "pervasives.nkl"
 let _ = Debug.set_dbglevel 10
 
-let pervasives =
-  Debug.dbgprint "open Pervasives module.";
-  let ch = open_in pervasives_module_name in
-  Debug.dbgprint "opened channel to Pervasives module.";
-  let syntaxs = TranslationUnit.read (Stream.of_channel ch) in
-  Debug.dbgprint "read syntaxes of Pervasives module.";
-  let m = TranslationUnit.modulize (Module.ext_expr_env Predefined.pervasives) syntaxs in
-  Debug.dbgprint "modulized Pervasives module.";
-  Module.compose Predefined.pervasives m
   
 let read_module name env stm =
   Debug.dbgprint (name ^ " module reading...");
@@ -20,18 +10,17 @@ let read_module name env stm =
   TranslationUnit.modulize env syntaxs
 
 let knormalize_module ch m =
+(*
   Debug.dbgprint "coerce typevar to unit.";
   let m = Module.coerce_typevars (TypingType.O_Constant Type.Unit) m in
   Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
-  Debug.dbgprint "compose modules.";
-  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
-  let m = Module.compose pervasives m in
+*)
   Debug.dbgprint "unfold pattern.";
-  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
   let m = Pattern.unfold_module m in
-  Debug.dbgprint "instantiate general functions.";
   Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
+  Debug.dbgprint "instantiate general functions.";
   let m = Instantiate.instantiate m in
+  Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
   Debug.dbgprint "removing polymorphic function template.";
   let m = Module.remove_polymorphic_functions m in
   Debug.dbgprintsexpr ~level:5 (Module.to_sexpr m);
@@ -111,9 +100,14 @@ let () =
        Printf.sprintf "usage: %s filenames without \".nkl\"..." Sys.argv.(0));
   let outchan = open_out (!out_filename ^ ".s") in
   try
+    Debug.dbgprint ~level:10 "Predefined module is:";
+    Debug.dbgprintsexpr ~level:10 (Module.to_sexpr Predefined.pervasives);
     let m = List.fold_left
       (fun m f ->
-	read_module_from_file (Module.ext_expr_env m) f)
+	let m' = read_module_from_file (Module.ext_expr_env m) f in
+        Debug.dbgprint ~level:10 (f ^ "module is:");
+        Debug.dbgprintsexpr ~level:10 (Module.to_sexpr m);
+	Module.compose m m')
       Predefined.pervasives
       !files in
     compile outchan m
