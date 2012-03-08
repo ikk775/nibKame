@@ -1,6 +1,10 @@
   nibKame - a thin programming language like ML
 
 
+Important:
+  This is a prealpha version.
+  At present, it cannot compile even Pervasive module!!
+  Please see Restrictions section below.
 
 Dependencies for building programs:
   - OCaml
@@ -13,7 +17,22 @@ Dependencies for building documents:
   - asymptote (http://asymptote.sourceforge.net/)
 
 How to Build:
-to build program
-  $ omake nibkamec
-to build documents
-  $ omake doc
+  to build program
+    $ omake nibkamec
+  to build documents
+    $ omake doc
+  and you can compile test programs
+    $ omake test-exec
+
+Restrictions:
+  Source codes written only with S-expression (.nkl file) can read.
+  Pattern matching is not supported.
+  All functions you can use are as follows:
+    * arithmetic operators: (~), (+), (-), ( * ), (/), (~.), (+.), (-.), ( *. ), (/.)
+    * comparative operators: (=), (<>), (<), (<=), (>), (>=)
+    * list manipulators: cons (::), car, hd, cdr, tl
+    * array manipulators: array-alloc, array-ref, array-set
+    * reference manipulators: ref, set
+    * display functions: print-int, print-float, print-string
+    * others: ignore, (;)
+  
