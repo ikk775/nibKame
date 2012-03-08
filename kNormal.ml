@@ -431,7 +431,7 @@ let rec from_typing_result r =
       i*)
   in
   let k, t = f Id.Map.empty r in
-  k, List.unique ~eq:is_same_name_decl (VarDecl {var_name = ("%true", Type.Int); expr= Int 1} :: !ext_decls)
+  k, List.unique ~eq:is_same_name_decl !ext_decls
 
 let typing_result_split r =
 	let rec g = function
