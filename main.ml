@@ -13,11 +13,11 @@ let pervasives =
   Debug.dbgprint "modulized Pervasives module.";
   Module.compose Predefined.pervasives m
   
-let read_module stm =
-  Debug.dbgprint "Sexpr reading...";
+let read_module name env stm =
+  Debug.dbgprint (name ^ " module reading...");
   let syntaxs = TranslationUnit.read stm in
-  Debug.dbgprint "Sexpr modulizing...";
-  TranslationUnit.modulize (Module.ext_expr_env pervasives) syntaxs
+  Debug.dbgprint (name ^ " module modulizing...");
+  TranslationUnit.modulize env syntaxs
 
 let knormalize_module ch m =
   Debug.dbgprint "coerce typevar to unit.";
@@ -60,9 +60,7 @@ let emit_asm ch (funcs, fp_table) =
     List.iter (Asmx86.output_function ch) f
   
 
-let compile ch stm =
-  Debug.dbgprint "reading...";
-  let m = read_module stm in
+let compile ch m =
   Debug.dbgprint "K-normalizing...";
   let k = knormalize_module ch m in
   Debug.dbgprint "optimizing...";
@@ -71,24 +69,52 @@ let compile ch stm =
   let va = compile_knormal ch k' in
   emit_asm ch va
 
-let string str = compile stdout (Stream.of_string str)
+let compile_stm name env ch stm =
+  Debug.dbgprint "reading...";
+  let m = read_module name env stm in
+  Debug.dbgprint "K-normalizing...";
+  let k = knormalize_module ch m in
+  Debug.dbgprint "optimizing...";
+  let k' = optimize_knormal k in
+  Debug.dbgprintsexpr (KNormal.topDecls_to_sexpr k');
+  let va = compile_knormal ch k' in
+  emit_asm ch va
+
+let string name env str = compile_stm name env stdout (Stream.of_string str)
+
+let read_module_from_file env f =
+  let inchan = open_in (f ^ ".nkl") in
+  try
+    let m = read_module f env (Stream.of_channel inchan) in
+    close_in inchan;
+    m
+  with e -> (close_in inchan; raise e)
 
 let file f =
   let inchan = open_in (f ^ ".nkl") in
   let outchan = open_out (f ^ ".s") in
   try
-    compile outchan (Stream.of_channel inchan);
+    compile_stm f (Module.ext_expr_env Predefined.pervasives) outchan (Stream.of_channel inchan);
     close_in inchan;
     close_out outchan
   with e -> (close_in inchan; close_out outchan; raise e)
 
 let () = 
   let files = ref [] in
+  let out_filename = ref "a.s" in
   Arg.parse
-    [ ]
+    [
+      "-o", Arg.Set_string out_filename, "output file name";
+    ]
       (fun s -> files := !files @ [s])
       ("GuNCT nibKame Compiler\n" ^
        Printf.sprintf "usage: %s filenames without \".nkl\"..." Sys.argv.(0));
-  List.iter
-    (fun f -> ignore (file f))
-    !files
+  let outchan = open_out (!out_filename ^ ".s") in
+  try
+    let m = List.fold_left
+      (fun m f ->
+	read_module_from_file (Module.ext_expr_env m) f)
+      Predefined.pervasives
+      !files in
+    compile outchan m
+  with e -> (close_out outchan; raise e)

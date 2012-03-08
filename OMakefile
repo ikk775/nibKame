@@ -153,8 +153,9 @@ OcamldocLaTeX(nibkamec, $(NIBKAMEFILES) $(NIBKAMECFILES))
 distclean:
     rm $(filter-proper-targets $(ls R, .))
 
-gcd.scm: nibkamec pervasives.nkl gcd.nkl
-    ./nibkamec gcd > $@ || echo
+# 現段階で、 Pervasives モジュールがコンパイルできないので、それを利用しないようにする。
+%.s %.log: nibkamec %.nkl
+    ./nibkamec -o $* $* > $*.log || echo
 
 loads.tl: OMakefile
     echo > $@ 
