@@ -1,5 +1,6 @@
 module VA = VirtualAsm
 module BB = Basicblock
+module M = BB.M
 
 type reg =
   | EAX | EDX | ECX | EBX | ESI | EDI | EBP | ESP | TempR of Id.t
@@ -115,7 +116,7 @@ type inst =
   (* 以下特殊な命令 *)
   | SETcc of VA.cmp_op * reg
 
-type fundef = { name : Id.l; body : inst list }
+type fundef = { name : Id.l; body : inst list M.t }
 
 let str_of_reg = function
   | EAX -> "%eax"
@@ -335,55 +336,55 @@ let rec shift_width w n =
   else shift_width (w + 1) (n lsr 1)
 
 (* 演算の値が返る部分は Let の子になるよう調節する．*)
-let rec asmgen = function
+let rec asmgen' = function
   | [] -> []
-  | BB.Ret :: tail -> Leave :: Ret :: asmgen tail
-  | BB.Entry :: tail -> Entry :: asmgen tail
-  | BB.Jump l :: tail -> Jump l :: asmgen tail
-  | BB.Label l :: tail -> Label l :: asmgen tail
-  | BB.Nop :: tail ->  asmgen tail
+  | BB.Ret :: tail -> Leave :: Ret :: asmgen' tail
+  | BB.Entry :: tail -> Entry :: asmgen' tail
+  | BB.Jump l :: tail -> Jump l :: asmgen' tail
+  | BB.Label l :: tail -> Label l :: asmgen' tail
+  | BB.Nop :: tail ->  asmgen' tail
 
   | BB.Let ((dst, t), ins) :: tail ->
       begin match ins with
 	| BB.Let _ | BB.Entry | BB.Ret | BB.Jump _ | BB.Label _ | BB.Nop -> failwith "unreconized instruction."
-	| BB.Set imm -> Set (TempR dst, imm) :: asmgen tail
-	| BB.Mov (VA.V src) -> Mov (TempR dst, TempR src) :: asmgen tail
-	| BB.Mov (VA.C src) -> Set (TempR dst, VA.Int_l src) :: asmgen tail
-	| BB.Neg src -> let t = TempR dst in Mov (t, TempR src) :: Neg t :: asmgen tail
-	| BB.Add (src1, VA.C 1) -> let t = TempR dst in Mov (t, TempR src1) :: INC (R t) :: asmgen tail
-	| BB.Add (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Add (twoOp_to_twoOp dst src2) :: asmgen tail
-	| BB.Sub (src1, VA.C 1) -> let t = TempR dst in Mov (t, TempR src1) :: DEC (R t) :: asmgen tail
-	| BB.Sub (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Sub (twoOp_to_twoOp dst src2) :: asmgen tail
-	| BB.Mul (src1, VA.C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAL (RI (t, VA.Int_l (shift_width 0 src2))) :: asmgen tail
-	| BB.Mul (src1, VA.V src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (R (TempR src2))) :: asmgen tail
-	| BB.Mul (src1, VA.C src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (I (VA.Int_l src2))) :: asmgen tail
-	| BB.Div (src1, VA.C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAR (RI (t, VA.Int_l (shift_width 0 src2))) :: asmgen tail
-	| BB.Div (src1, VA.C src2) -> let t = tempR () in Mov (EAX, TempR src1) :: Set (t, VA.Int_l src2) :: CDQ :: Div t :: asmgen tail
-	| BB.Div (src1, VA.V src2) -> Mov (EAX, TempR src1) :: CDQ :: Div (TempR src2) :: asmgen tail
-	| BB.SLL (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: SHL (twoOp_to_twoOp dst src2) :: asmgen tail
-	| BB.SLR (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: SHR (twoOp_to_twoOp dst src2) :: asmgen tail
-	| BB.Ld (mem) -> Ld (TempR dst, to_mem mem) :: asmgen tail
+	| BB.Set imm -> Set (TempR dst, imm) :: asmgen' tail
+	| BB.Mov (VA.V src) -> Mov (TempR dst, TempR src) :: asmgen' tail
+	| BB.Mov (VA.C src) -> Set (TempR dst, VA.Int_l src) :: asmgen' tail
+	| BB.Neg src -> let t = TempR dst in Mov (t, TempR src) :: Neg t :: asmgen' tail
+	| BB.Add (src1, VA.C 1) -> let t = TempR dst in Mov (t, TempR src1) :: INC (R t) :: asmgen' tail
+	| BB.Add (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Add (twoOp_to_twoOp dst src2) :: asmgen' tail
+	| BB.Sub (src1, VA.C 1) -> let t = TempR dst in Mov (t, TempR src1) :: DEC (R t) :: asmgen' tail
+	| BB.Sub (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: Sub (twoOp_to_twoOp dst src2) :: asmgen' tail
+	| BB.Mul (src1, VA.C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAL (RI (t, VA.Int_l (shift_width 0 src2))) :: asmgen' tail
+	| BB.Mul (src1, VA.V src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (R (TempR src2))) :: asmgen' tail
+	| BB.Mul (src1, VA.C src2) -> let t = TempR dst in Mov (t, TempR src1) :: Mul (t, (I (VA.Int_l src2))) :: asmgen' tail
+	| BB.Div (src1, VA.C src2) when is_power2 src2 -> let t = TempR dst in Mov (t, TempR src1) :: SAR (RI (t, VA.Int_l (shift_width 0 src2))) :: asmgen' tail
+	| BB.Div (src1, VA.C src2) -> let t = tempR () in Mov (EAX, TempR src1) :: Set (t, VA.Int_l src2) :: CDQ :: Div t :: asmgen' tail
+	| BB.Div (src1, VA.V src2) -> Mov (EAX, TempR src1) :: CDQ :: Div (TempR src2) :: asmgen' tail
+	| BB.SLL (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: SHL (twoOp_to_twoOp dst src2) :: asmgen' tail
+	| BB.SLR (src1, src2) -> let t = TempR dst in Mov (t, TempR src1) :: SHR (twoOp_to_twoOp dst src2) :: asmgen' tail
+	| BB.Ld (mem) -> Ld (TempR dst, to_mem mem) :: asmgen' tail
 
-	| BB.FMov (src) -> FMov (TempF dst, TempF src) :: asmgen tail
-	| BB.FNeg (src) -> FSub (TempF dst, TempF dst) :: FSub (TempF dst, TempF src) :: asmgen tail
-	| BB.FAdd (src1, src2) -> FMov (TempF dst, TempF src1) :: FAdd (TempF dst, TempF src2) :: asmgen tail
-	| BB.FSub (src1, src2) -> FMov (TempF dst, TempF src1) :: FSub (TempF dst, TempF src2) :: asmgen tail
-	| BB.FMul (src1, src2) -> FMov (TempF dst, TempF src1) :: FMul (TempF dst, TempF src2) :: asmgen tail
-	| BB.FDiv (src1, src2) -> FMov (TempF dst, TempF src1) :: FDiv (TempF dst, TempF src2) :: asmgen tail
-	| BB.FLd (mem) -> FLd (TempF dst, to_mem mem) :: asmgen tail
-	| BB.BSt (src, mem) -> BSt (to_mem mem, TempR src) :: asmgen tail
-	| BB.St (src, mem) -> St (to_mem mem, TempR src) :: asmgen tail
-	| BB.FSt (src, mem) -> FSt (to_mem mem, TempF src) :: asmgen tail
-	| BB.BLd (mem) -> Ld (TempR dst, to_mem mem) :: asmgen tail
+	| BB.FMov (src) -> FMov (TempF dst, TempF src) :: asmgen' tail
+	| BB.FNeg (src) -> FSub (TempF dst, TempF dst) :: FSub (TempF dst, TempF src) :: asmgen' tail
+	| BB.FAdd (src1, src2) -> FMov (TempF dst, TempF src1) :: FAdd (TempF dst, TempF src2) :: asmgen' tail
+	| BB.FSub (src1, src2) -> FMov (TempF dst, TempF src1) :: FSub (TempF dst, TempF src2) :: asmgen' tail
+	| BB.FMul (src1, src2) -> FMov (TempF dst, TempF src1) :: FMul (TempF dst, TempF src2) :: asmgen' tail
+	| BB.FDiv (src1, src2) -> FMov (TempF dst, TempF src1) :: FDiv (TempF dst, TempF src2) :: asmgen' tail
+	| BB.FLd (mem) -> FLd (TempF dst, to_mem mem) :: asmgen' tail
+	| BB.BSt (src, mem) -> BSt (to_mem mem, TempR src) :: asmgen' tail
+	| BB.St (src, mem) -> St (to_mem mem, TempR src) :: asmgen' tail
+	| BB.FSt (src, mem) -> FSt (to_mem mem, TempF src) :: asmgen' tail
+	| BB.BLd (mem) -> Ld (TempR dst, to_mem mem) :: asmgen' tail
 
 	| BB.Comp (op, ty, src1, src2) ->
 	    begin match ty with
 	      | VA.Int | VA.Char ->
 		  (match src2 with 
-		     | VA.C 0 when op = VA.Eq -> Test (RR (TempR src1, TempR src1)) :: SETcc (op, TempR dst) :: asmgen tail
-		     | VA.C 0 when op = VA.NotEq -> Test (RR (TempR src1, TempR src1)) :: SETcc (op, TempR dst) :: asmgen tail
-		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: SETcc (op, TempR dst) :: asmgen tail)
-	      | VA.Float -> let VA.V s2 = src2 in FComp (TempF src1, TempF s2) :: SETcc (op, TempR dst) :: asmgen tail
+		     | VA.C 0 when op = VA.Eq -> Test (RR (TempR src1, TempR src1)) :: SETcc (op, TempR dst) :: asmgen' tail
+		     | VA.C 0 when op = VA.NotEq -> Test (RR (TempR src1, TempR src1)) :: SETcc (op, TempR dst) :: asmgen' tail
+		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: SETcc (op, TempR dst) :: asmgen' tail)
+	      | VA.Float -> let VA.V s2 = src2 in FComp (TempF src1, TempF s2) :: SETcc (op, TempR dst) :: asmgen' tail
 	      | VA.Pointer t when op = VA.Eq ->
 		  let func = match t with
 		    | VA.Array _ -> Id.L "_nibkame_array_compare_"
@@ -392,7 +393,7 @@ let rec asmgen = function
 		    | VA.Undefined -> Id.L "_nibkame_generic_comare_"
 		  in
 		    Push (id_or_imm_to_rmi src2) :: Push (R (TempR src1)) :: Call (func) :: Add (RI (ESP, VA.Int_l 8))
-		    :: Test (RR (EAX, EAX)) :: SETcc (VA.Eq, TempR dst) :: asmgen tail
+		    :: Test (RR (EAX, EAX)) :: SETcc (VA.Eq, TempR dst) :: asmgen' tail
 	      | VA.Pointer t when op = VA.NotEq ->
 		  let func = match t with
 		    | VA.Array _ -> Id.L "_nibkame_array_compare_"
@@ -401,27 +402,27 @@ let rec asmgen = function
 		    | VA.Undefined -> Id.L "_nibkame_generic_comare_"
 		  in
 		    Push (id_or_imm_to_rmi src2) :: Push (R (TempR src1)) :: Call (func) :: Add (RI (ESP, VA.Int_l 8))
-		    :: Test (RR (EAX, EAX)) :: SETcc (VA.NotEq, TempR dst) :: asmgen tail
+		    :: Test (RR (EAX, EAX)) :: SETcc (VA.NotEq, TempR dst) :: asmgen' tail
 	      | VA.Pointer _ | VA.Fun _ -> failwith "Not Supported Compare type."
 	    end
 
 	| BB.If _ -> failwith "unreconized instruction."
 	| BB.ApplyCls ((f, VA.Fun (t_args, ret)), args) -> 
 	    begin match t with
-	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I (TempR f) :: Add (RI (ESP, VA.Int_l ((VA.tuple_size t_args) + 4))):: FMov (TempF dst, XMM0) :: asmgen tail) args
-	      | _ ->  List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I (TempR f) :: Add (RI (ESP, VA.Int_l ((VA.tuple_size t_args) + 4))) :: Mov (TempR dst, EAX) :: asmgen tail) args
+	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I (TempR f) :: Add (RI (ESP, VA.Int_l ((VA.tuple_size t_args) + 4))):: FMov (TempF dst, XMM0) :: asmgen' tail) args
+	      | _ ->  List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Push (R (TempR f)) ::  Call_I (TempR f) :: Add (RI (ESP, VA.Int_l ((VA.tuple_size t_args) + 4))) :: Mov (TempR dst, EAX) :: asmgen' tail) args
 	    end
 	| BB.ApplyDir ((f, VA.Fun (t_args, ret)), args) -> 
 	    begin match t with
-	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Add (RI (ESP, VA.Int_l (VA.tuple_size t_args))) :: FMov (TempF dst, XMM0) :: asmgen tail) args
-	      | _ -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Add (RI (ESP, VA.Int_l (VA.tuple_size t_args))) :: Mov (TempR dst, EAX) :: asmgen tail) args
+	      | VA.Float -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Add (RI (ESP, VA.Int_l (VA.tuple_size t_args))) :: FMov (TempF dst, XMM0) :: asmgen' tail) args
+	      | _ -> List.fold_left (fun a b -> Push (R (TempR b)) :: a) (Call f :: Add (RI (ESP, VA.Int_l (VA.tuple_size t_args))) :: Mov (TempR dst, EAX) :: asmgen' tail) args
 	    end
-	| BB.Cons (h, t) -> Push (R (TempR t)) :: Push (R (TempR h)) :: Call (Id.L "_nibkame_cons_") :: Add (RI (ESP, VA.Int_l 8)) :: Mov (TempR dst, EAX) :: asmgen tail
-	| BB.Car l -> Ld (TempR dst, Base (TempR l)) :: asmgen tail
-	| BB.Cdr l -> Ld (TempR dst, Offset (TempR l, 4)) :: asmgen tail
-	| BB.FCons (h, t) -> Push (R (TempR t)) :: FPush (TempF h) :: Call (Id.L "_nibkame_fcons_") :: Add (RI (ESP, VA.Int_l 12)) :: FMov (TempF dst, XMM0) :: asmgen tail
-	| BB.FCar l -> FLd (TempF dst, Base (TempR l)) :: asmgen tail
-	| BB.FCdr l -> Ld (TempR dst, Offset (TempR l, 8)) :: asmgen tail
+	| BB.Cons (h, t) -> Push (R (TempR t)) :: Push (R (TempR h)) :: Call (Id.L "_nibkame_cons_") :: Add (RI (ESP, VA.Int_l 8)) :: Mov (TempR dst, EAX) :: asmgen' tail
+	| BB.Car l -> Ld (TempR dst, Base (TempR l)) :: asmgen' tail
+	| BB.Cdr l -> Ld (TempR dst, Offset (TempR l, 4)) :: asmgen' tail
+	| BB.FCons (h, t) -> Push (R (TempR t)) :: FPush (TempF h) :: Call (Id.L "_nibkame_fcons_") :: Add (RI (ESP, VA.Int_l 12)) :: FMov (TempF dst, XMM0) :: asmgen' tail
+	| BB.FCar l -> FLd (TempF dst, Base (TempR l)) :: asmgen' tail
+	| BB.FCdr l -> Ld (TempR dst, Offset (TempR l, 8)) :: asmgen' tail
 	| BB.TupleAlloc l ->
 	    let stores, _ =
 	      List.fold_left (fun a b -> 
@@ -431,20 +432,20 @@ let rec asmgen = function
 				    | _ -> St (Offset (EAX, snd a), TempR src) :: fst a, 4 + (snd a))
 		([], 0) l in
 	      [Push (I (VA.Int_l (VA.tuple_size (List.map snd l)))); Call (Id.L "_nibkame_tuple_alloc_"); Add (RI (ESP, VA.Int_l 4))]
-	      @ (List.rev stores) @ Mov (TempR dst, EAX) :: asmgen tail
-	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l (VA.sizeof t))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen tail
+	      @ (List.rev stores) @ Mov (TempR dst, EAX) :: asmgen' tail
+	| BB.ArrayAlloc (t, n) -> Push (I (VA.Int_l (VA.sizeof t))) :: Push (R (TempR n)) :: Call (Id.L "_nibkame_array_alloc_") :: Add (RI (ESP, VA.Int_l 4)) :: Mov (TempR dst, EAX) :: asmgen' tail
       end
 	
-  | BB.If (ins, b_label) :: tail ->
+  | BB.If (ins, b_label, b_false) :: tail ->
       begin match ins with
 	| BB.Comp (op, ty, src1, src2) ->
 	    begin match ty with
 	      | VA.Int | VA.Char ->
 		  (match src2 with
-		     | VA.C 0 when op = VA.Eq -> Test (RI (TempR src1, VA.Int_l 0)) :: Branch (Zero, b_label) :: asmgen tail
-		     | VA.C 0 when op = VA.NotEq -> Test (RI (TempR src1, VA.Int_l 0)) :: Branch (NotZero, b_label) :: asmgen tail
-		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: Branch (to_cmp op, b_label) :: asmgen tail)
-	      | VA.Float -> let VA.V s2 = src2 in FComp (TempF src1, TempF s2) :: Branch (to_cmp op, b_label) :: asmgen tail
+		     | VA.C 0 when op = VA.Eq -> Test (RI (TempR src1, VA.Int_l 0)) :: Branch (Zero, b_label) :: Jump (b_false) :: asmgen' tail
+		     | VA.C 0 when op = VA.NotEq -> Test (RI (TempR src1, VA.Int_l 0)) :: Branch (NotZero, b_label) :: Jump (b_false) :: asmgen' tail
+		     | _ -> Cmp (twoOp_to_twoOp src1 src2) :: Branch (to_cmp op, b_label) :: Jump (b_false) :: asmgen' tail)
+	      | VA.Float -> let VA.V s2 = src2 in FComp (TempF src1, TempF s2) :: Branch (to_cmp op, b_label) :: Jump (b_false) :: asmgen' tail
 	      | VA.Pointer t when op = VA.Eq ->
 		  let func = match t with
 		    | VA.Array _ -> Id.L "_nibkame_array_compare_"
@@ -453,7 +454,7 @@ let rec asmgen = function
 		    | VA.Undefined -> Id.L "_nibkame_generic_comare_"
 		  in
 		    Push (id_or_imm_to_rmi src2) :: Push (R (TempR src1)) :: Call (func) :: Add (RI (ESP, VA.Int_l 8))
-		    :: Test (RR (EAX, EAX)) :: Branch (Zero, b_label) :: asmgen tail
+		    :: Test (RR (EAX, EAX)) :: Branch (Zero, b_label) :: Jump (b_false) :: asmgen' tail
 	      | VA.Pointer t when op = VA.NotEq ->
 		  let func = match t with
 		    | VA.Array _ -> Id.L "_nibkame_array_compare_"
@@ -462,30 +463,37 @@ let rec asmgen = function
 		    | VA.Undefined -> Id.L "_nibkame_generic_comare_"
 		  in
 		    Push (id_or_imm_to_rmi src2) :: Push (R (TempR src1)) :: Call (func) :: Add (RI (ESP, VA.Int_l 8))
-		    :: Test (RR (EAX, EAX)) :: Branch (NotZero, b_label) :: asmgen tail
+		    :: Test (RR (EAX, EAX)) :: Branch (NotZero, b_label) :: Jump (b_false) :: asmgen' tail
 	      | VA.Pointer _ | VA.Fun _ -> failwith "Not Supported Compare type."
 	    end
 	| ins -> 
 	    let t = VA.temp () in
-	      asmgen (BB.Let ((t, VA.Int), ins) :: BB.If ((BB.Comp (VA.NotEq, VA.Int, t, VA.C 0)), b_label) :: tail)
+	      asmgen' (BB.Let ((t, VA.Int), ins) :: BB.If ((BB.Comp (VA.NotEq, VA.Int, t, VA.C 0)), b_label, b_false) :: tail)
       end
 
   (* 一時変数への副作用を持たないもの *)
-  | BB.St (src, mem) :: tail -> St (to_mem mem, TempR src) :: asmgen tail
-  | BB.FSt (src, mem) :: tail -> FSt (to_mem mem, TempF src) :: asmgen tail
-  | BB.BSt (src, mem) :: tail -> BSt (to_mem mem, TempR src) :: asmgen tail
+  | BB.St (src, mem) :: tail -> St (to_mem mem, TempR src) :: asmgen' tail
+  | BB.FSt (src, mem) :: tail -> FSt (to_mem mem, TempF src) :: asmgen' tail
+  | BB.BSt (src, mem) :: tail -> BSt (to_mem mem, TempR src) :: asmgen' tail
 
   (* 全てに代入先を用意 *)
   | single :: tail ->
       begin match get_type single with
-	| Some t -> asmgen (BB.Let ((VA.temp (), t), single) :: tail)
+	| Some t -> asmgen' (BB.Let ((VA.temp (), t), single) :: tail)
 	| None -> MyUtil.undefined () (* 全て対応したので到達しない筈． *)
       end
 
-let generate_function { BB.name = name; BB.body = body; BB.block_labels = labels } =
+let asmgen body = M.map asmgen' body
+
+let generate_function { BB.name = name; BB.body = body } =
   { name = name; body = asmgen body }
 
 let output_function chan { name = Id.L label; body = body } =
   output_string chan (Format.sprintf ".global %s\n" label);
-  List.iter (fun ins -> output_char chan '\n'; output_string chan (str_of_inst ins)) body;
+  M.iter
+    (fun _ block -> 
+      List.iter
+	(fun ins -> output_char chan '\n'; output_string chan (str_of_inst ins))
+	block)
+    body;    
   output_char chan '\n'
