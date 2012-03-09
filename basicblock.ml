@@ -39,7 +39,7 @@ type ins =
   | BSt of Id.t * VA.mem_op
 
   | Comp of VA.cmp_op * VA.ty * Id.t * VA.id_or_imm
-  | If of ins * Id.l (* 真のときのジャンプ先 *)
+  | If of ins * Id.l * Id.l (* 真および *)
 
   | ApplyCls of (Id.t * VA.ty) * Id.t list
   | ApplyDir of (Id.l * VA.ty)* Id.t list
@@ -55,7 +55,7 @@ type ins =
   | ArrayAlloc of VA.ty * Id.t
 
 
-type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list; ret : VA.ty; block_labels : Id.l list }
+type fundef = { name : Id.l; args : (Id.t * VA.ty) list; body : ins list M.t; ret : VA.ty }
 
 let counter : int ref = ref 0
 let mkblockname () =
@@ -103,40 +103,46 @@ let to_ins = function
   | VA.TupleAlloc (data) -> TupleAlloc data
   | VA.ArrayAlloc (ty, num) -> ArrayAlloc (ty, num)
 
+  | VA.If _ -> MyUtil.undefined () (* ここには到達しない筈 *)
 
-let rec linerize blocks stack = function
-  | VA.Ans (VA.If (cond, tr, fal)) ->
-      let block_tr = mkblockname () in
-	begin match stack with
-	  | [] ->
-	      blocks := M.add block_tr (Label block_tr :: linerize blocks [] tr) !blocks;
-	      If (to_ins cond,  block_tr) :: linerize blocks [] fal
-	  | continue :: next ->
-	      blocks := M.add block_tr (Label block_tr :: (List.rev (Jump continue  :: (List.rev (linerize blocks next tr))))) !blocks;
-	      If (to_ins cond, block_tr) :: linerize blocks next fal
-	end
-  | VA.Ans (t) -> [to_ins t]
-  | VA.Seq (t1, t2) -> 
-      let continue = mkblockname () in
-	linerize blocks (continue :: stack) t1 @ (Label (continue) :: linerize blocks stack t2)
-  | VA.Let (id, exp, next) ->
-      Let (id, to_ins exp) :: linerize blocks stack next
-
+(* 分岐(JumpとIf)で終わっていないブロックにRetを追加 *)
 let rec add_ret = function
   | [Jump label] as i -> i
+  | [If (_,_,_)] as i -> i
   | [] -> [Ret]
   | ins :: tail -> ins :: add_ret tail
 
-
-let linerize_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
+(*
+  conti : Seqの後続部分のラベル
+*)
+let rec blocking blocks conti = function
+  | VA.Seq (ins1, ins2) ->
+    let countinue = mkblockname () in
+    let b = blocking blocks conti ins2 in
+    blocks := M.add countinue (Label (countinue) :: b) !blocks;
+    blocking blocks (Some countinue) ins1
+  | VA.Let (id, exp, next) ->
+    Let (id, to_ins exp) :: blocking blocks conti next
+  | VA.Ans (VA.If (cond, tr, fal)) ->
+    let block_tr = mkblockname () in
+    let block_fal = mkblockname () in
+    let b1 = blocking blocks conti tr in
+    let b2 = blocking blocks conti fal in
+    blocks := M.add block_tr (Label (block_tr) :: b1) !blocks;
+    blocks := M.add block_fal (Label (block_fal) :: b2) !blocks;
+    [If (to_ins cond, block_tr, block_fal)]
+  | VA.Ans (t) ->
+    begin match conti with
+      | Some l -> [to_ins t; Jump (l)]
+      | None -> [to_ins t]
+    end
+	
+let blocking_func {VA.name = func_label; VA.args = args; VA.body = body; VA.ret = ret } =
   let blocks = ref M.empty in
-  let insts = linerize blocks [] body in
-  let insts' = add_ret insts in
-  let blocknames, inst = M.fold (fun key ins ret ->
-				   let block, inst = ret in
-				     key :: block, add_ret ins @ inst)
-                                !blocks ([], []) in
-    { name = func_label; args = args; body = Label func_label :: Entry :: insts' @ inst; ret = ret; block_labels = blocknames }
+  let insts = Label (func_label) :: Entry :: blocking blocks None body in
+  let blocks' = M.add func_label insts !blocks in
+  { name = func_label; args = args; body = M.map add_ret blocks'; ret = ret }
+
 
 let f funs =
-  List.map linerize_func funs
+  List.map blocking_func funs
