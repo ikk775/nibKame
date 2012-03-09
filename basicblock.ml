@@ -118,15 +118,18 @@ let rec add_ret = function
 let rec blocking blocks conti = function
   | VA.Seq (ins1, ins2) ->
     let countinue = mkblockname () in
-    blocks := M.add countinue (Label (countinue) :: blocking blocks conti ins2) !blocks;
+    let b = blocking blocks conti ins2 in
+    blocks := M.add countinue (Label (countinue) :: b) !blocks;
     blocking blocks (Some countinue) ins1
   | VA.Let (id, exp, next) ->
     Let (id, to_ins exp) :: blocking blocks conti next
   | VA.Ans (VA.If (cond, tr, fal)) ->
     let block_tr = mkblockname () in
     let block_fal = mkblockname () in
-    blocks := M.add block_tr (Label (block_tr) :: blocking blocks conti tr) !blocks;
-    blocks := M.add block_fal (Label (block_fal) :: blocking blocks conti fal) !blocks;
+    let b1 = blocking blocks conti tr in
+    let b2 = blocking blocks conti fal in
+    blocks := M.add block_tr (Label (block_tr) :: b1) !blocks;
+    blocks := M.add block_fal (Label (block_fal) :: b2) !blocks;
     [If (to_ins cond, block_tr, block_fal)]
   | VA.Ans (t) ->
     begin match conti with
