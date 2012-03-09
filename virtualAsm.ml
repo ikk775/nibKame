@@ -293,6 +293,8 @@ let f declears =
 	  fundefs := compile_fun func env :: !fundefs;
 	  env
   in
+  fundefs := [];
+  float_literal_list := [];
   let e = List.fold_right iter declears M.empty in
   let start = { name = Id.L("nibkame_entry"); args = []; body = !main; ret = Int } in
     (start :: !fundefs), !float_literal_list
