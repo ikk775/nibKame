@@ -617,14 +617,7 @@ let rec of_sexpr = function
     in
     R_Match (of_sexpr e, List.map f cls)
   | _ -> invalid_arg "unexpected token."
-and pattern_of_sexpr =
-  let nest f initial list =
-    let rec g p = function
-      | [] -> p
-      | p' :: ps' -> g (f p p') ps'
-    in
-    g initial list
-  in function
+and pattern_of_sexpr = function
   | Sexpr.Sexpr [Sexpr.Sident "rp:constant"; lit; t] -> RP_Constant (Syntax.lit_of_sexpr lit, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "rp:any"; t] -> RP_Variable (None, TypingType.oType_of_sexpr t)
   | Sexpr.Sexpr [Sexpr.Sident "rp:var"; Sexpr.Sident v; t] -> RP_Variable (Some v, TypingType.oType_of_sexpr t)
