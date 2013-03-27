@@ -89,6 +89,7 @@ let varname = function
 
 let rec of_sexpr = function
   | Literal lit -> lit_to_sexpr lit
+  | _ -> failwith "undefined Syntax.of_sexpr"
  
 let rec to_sexpr = function
   | lit -> lit_of_sexpr lit

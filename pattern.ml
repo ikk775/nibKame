@@ -98,6 +98,7 @@ let rec unify_and ss p1 p2 =
       R.RP_Vector(ps', t1), ss
     | R.RP_Not _, p
     | p, R.RP_Not _ -> failwith "negative pattern is not supported yet."
+    | _, _ -> failwith "given pattern is not supported yet."
 (*i
     | R.RP_Tuple (ps, t) -> List.map (function ps -> R.RP_Tuple (ps, t)) (MyUtil.List.select (List.map f ps))
     | R.RP_Vector (ps, t) -> List.map (function ps -> R.RP_Vector (ps, t)) (MyUtil.List.select (List.map f ps))
@@ -391,6 +392,7 @@ and merge_branch br br' = match br, br' with
   | TP_Value (TP_Constant _ as c1, tr1), TP_Value (TP_Constant _ as c2, tr2) -> invalid_arg "merge_branch"
   | TP_Value (TP_Constructor _ as c1, tr1), TP_Value (TP_Constructor _ as c2, tr2) when c1 = c2 -> TP_Value (c1, merge_tree tr1 tr2)
   | TP_Value (TP_Constructor _ as c1, tr1), TP_Value (TP_Constructor _ as c2, tr2) -> invalid_arg "merge_branch"
+  | _, _ -> invalid_arg "merge_branch"
 and merge_branches = function
   | [] -> invalid_arg "merge_branches"
   | [br] -> br

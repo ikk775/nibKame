@@ -163,6 +163,8 @@ let rec of_typint_expr r =
     | E.E_Tuple (rs) -> (Tuple (List.map f rs))
     | E.E_Vector (rs) -> (Vector (List.map f rs))
     | E.E_If (e1, e2, e3) -> If (f e1, f e2, f e3)
+    | E.E_Type (e1, t) -> failwith "No correspond from E_Type to LLifting"
+    | E.E_Declare (v, t, e) -> failwith "No correspond from E_Declare to LLifting"
     | E.E_Let ((v), e1, e2) ->
       begin match e1 with
         | E.E_Fix ((v'), e) ->
