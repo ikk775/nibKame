@@ -5,3 +5,9 @@
 
 (let x
   (print-int (gcd 2 3)))
+
+(let gcd2
+  (fun (x) (gcd 2 x)))
+
+(let y
+  (print-int (gcd2 3)))

@@ -95,6 +95,7 @@ NIBKAMEFILES[] =
     instantiate 
     translationUnit 
     predefined
+    targetScheme
 
 LIB = nibkame
 

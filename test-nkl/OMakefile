@@ -1,5 +1,5 @@
 
-test-exec: gcd.s gcd.cml gcd.log
+test-exec: gcd.s gcd.scm gcd.nkl gcd.log
 
 # 現段階で、 Pervasives モジュールがコンパイルできないので、それを利用しないようにする。
 %.s %.log: $(NIBKAMEC) %.nkl
@@ -7,3 +7,6 @@ test-exec: gcd.s gcd.cml gcd.log
 
 %.cml %.log: $(NIBKAMEC) %.nkl
     $(NIBKAMEC) --nkl-to-cml -o $* $* > $*.log
+
+%.scm %.log: $(NIBKAMEC) %.nkl
+    $(NIBKAMEC) --nkl-to-scm -o $* $* > $*.log

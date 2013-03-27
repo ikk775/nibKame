@@ -3,6 +3,7 @@ open MyUtil
 type action =
   | NklAsm
   | NklCml
+  | NklScm
 
 
 let _ = Debug.set_dbglevel 10
@@ -60,6 +61,11 @@ let compile_to_optimized_knormal ch m =
   Debug.dbgprint "optimizing...";
   optimize_knormal k
 
+let compile_to_scm ch m =
+  let k = compile_to_optimized_knormal ch m in
+  Debug.dbgprintsexpr ~level:5 (KNormal.topDecls_to_sexpr k);
+  List.iter (Sexpr.write (Format.formatter_of_out_channel ch)) (TargetScheme.output k)
+
 let compile_to_cml ch m =
   let k = compile_to_optimized_knormal ch m in
   Debug.dbgprintsexpr ~level:5 (KNormal.topDecls_to_sexpr k);
@@ -107,6 +113,7 @@ let () =
     [
       "--nkl-to-asm", Arg.Unit (fun () -> action := NklAsm), "set output assembler";
       "--nkl-to-cml", Arg.Unit (fun () -> action := NklCml), "set output intermediate code";
+      "--nkl-to-scm", Arg.Unit (fun () -> action := NklScm), "set output scheme code";
       "-o", Arg.Set_string out_filename_stem, "output file name";
     ]
       (fun s -> files := !files @ [s])
@@ -114,7 +121,8 @@ let () =
        Printf.sprintf "usage: %s filenames without \".nkl\"..." Sys.argv.(0));
   let out_filename_ext = match !action with
     | NklAsm -> ".s"
-    | NklCml -> ".cml" in
+    | NklCml -> ".cml"
+    | NklScm -> ".scm" in
   let out_filename = !out_filename_stem ^ out_filename_ext in
   let outchan = open_out out_filename in
   try
@@ -133,5 +141,7 @@ let () =
 	| NklAsm ->
 	  compile_to_asm outchan m
 	| NklCml ->
-	  compile_to_cml outchan m end
+	  compile_to_cml outchan m
+	| NklScm ->
+	  compile_to_scm outchan m end
   with e -> (close_out outchan; raise e)
