@@ -162,6 +162,7 @@ let rec typevars : result -> Id.t list = fun r ->
 
 let is_variable = function
   | R_Constant _ -> true
+  | _ -> false
 
 let gen_var_num = ref 0
 
