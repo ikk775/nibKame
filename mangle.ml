@@ -27,12 +27,12 @@ let escape str =
     | '/' -> "_sl"
     | '\\' -> "_bs"
     | '=' -> "_eq"
-    | '(' -> "_ps"
-    | ')' -> "_pf"
-    | '{' -> "_bs"
-    | '}' -> "_bf"
-    | '[' -> "_ss"
-    | ']' -> "_sf"
+    | '(' -> "_lp"
+    | ')' -> "_rp"
+    | '{' -> "_lb"
+    | '}' -> "_rb"
+    | '[' -> "_ls"
+    | ']' -> "_rs"
     | '<' -> "_lt"
     | '>' -> "_gt"
     | x -> String.implode [x] in
@@ -73,12 +73,12 @@ let unescape stm =
 	  | "sl" -> f ('/' :: cs)
 	  | "bs" -> f ('\\' :: cs)
 	  | "eq" -> f ('=' :: cs)
-	  | "ps" -> f ('(' :: cs)
-	  | "pf" -> f (')' :: cs)
-	  | "bs" -> f ('{' :: cs)
-	  | "bf" -> f ('}' :: cs)
-	  | "ss" -> f ('[' :: cs)
-	  | "sf" -> f (']' :: cs)
+	  | "lp" -> f ('(' :: cs)
+	  | "rp" -> f (')' :: cs)
+	  | "lb" -> f ('{' :: cs)
+	  | "rb" -> f ('}' :: cs)
+	  | "ls" -> f ('[' :: cs)
+	  | "rs" -> f (']' :: cs)
 	  | "lt" -> f ('<' :: cs)
 	  | "gt" -> f ('>' :: cs)
 	  | _ -> failwith "undefined underline escape"
