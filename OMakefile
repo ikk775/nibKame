@@ -50,7 +50,7 @@ BYTE_ENABLED = true
 #
 # Various options
 #
-OCAMLFLAGS    += -g -annot
+OCAMLFLAGS    += -g -annot -warn-error "-a"
 OCAMLCFLAGS   += -g
 OCAMLOPTFLAGS +=
 OCAML_LINK_FLAGS +=

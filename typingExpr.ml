@@ -316,6 +316,7 @@ and pattern_from_syntax_pattern = function
       | p :: ps -> EP_Apply (f ps, pattern_from_syntax_pattern p)
      in
     f ps'
+  | Syntax.P_And _ | Syntax.P_Or _ | Syntax.P_Not _ -> (undefined ())
   | Syntax.Any -> EP_Variable None
 let rec to_sexpr = function
   | E_Constant e -> Sexpr.Sexpr [Sexpr.Sident "e:constant"; Syntax.lit_to_sexpr e]
