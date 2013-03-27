@@ -204,7 +204,7 @@ let unify: oType -> oType -> substitution list = fun t1 t2 ->
   unify_u [(t1, t2)] []
 
 let unifiable t1 t2 =
-  try unify t1 t2; true
+  try ignore (unify t1 t2); true
   with Unification_Failure _ -> false
 
 let renew : oType -> oType -> substitution list = fun older newer -> 
